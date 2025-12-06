@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-primary: #0f1419;
+  --color-bg-secondary: #1a2027;
+  --color-bg-tertiary: #242d38;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a0aab8;
+  --color-text-muted: #6b7785;
+  --color-accent: #d4a574;
+  --color-accent-hover: #e9be94;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-border: #2d3a47;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--color-bg-primary)];
+  }
+
+  .btn-primary {
+    @apply bg-[var(--color-accent)] text-[var(--color-bg-primary)] hover:bg-[var(--color-accent-hover)];
+    @apply focus:ring-[var(--color-accent)];
+  }
+
+  .btn-secondary {
+    @apply bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] border border-[var(--color-border)];
+    @apply hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-text-muted)];
+    @apply focus:ring-[var(--color-border)];
+  }
+
+  .btn-danger {
+    @apply bg-red-600/20 text-red-400 border border-red-600/30;
+    @apply hover:bg-red-600/30 hover:border-red-500/50;
+    @apply focus:ring-red-500;
+  }
+
+  .card {
+    @apply bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg;
+    @apply text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)];
+    @apply focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent;
+    @apply transition-all duration-200;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-[var(--color-text-secondary)] mb-2;
+  }
+
+  /* Projection-friendly styles for large screens */
+  @screen lg {
+    .projection-mode {
+      @apply text-lg;
+    }
+
+    .projection-mode h1 {
+      @apply text-5xl;
+    }
+
+    .projection-mode h2 {
+      @apply text-3xl;
+    }
+
+    .projection-mode .card {
+      @apply p-6;
+    }
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Number input without spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
