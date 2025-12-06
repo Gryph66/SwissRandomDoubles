@@ -73,7 +73,11 @@ ROUND 1:
   • Byes: Randomly selected (if player count not divisible by 4)
 
 ROUND 2+:
-  • Standings calculated: Wins → Point Differential → Points For
+  • Standings calculated: Score → PF → PA → 20s
+    - Score = Wins×2 + Ties×1
+    - PF = Points For (higher is better)
+    - PA = Points Against (lower is better)
+    - 20s = Twenty count (higher is better)
   • Partners: Adjacent players in standings paired together
     - Avoids repeat partners when possible
   • Matchups: Teams with similar combined standings play each other
@@ -81,14 +85,13 @@ ROUND 2+:
   • Byes: 
     - Given to lowest ranked player without a bye
     - No one gets 2 byes until everyone has had 1
-    - Worth: 1 point (tie) + 4 pts + average 20s (if 2+ byes total)
-    - Worth: 2 points (win) + 4 pts + average 20s (if 0-1 byes total)
+    - Worth: 1 point (tie) + 4 PF + 4 PA (4-4 tie) + average 20s
 
 SCORING:
   • Win = 2 points
-  • Tie = 1 point
+  • Tie = 1 point  
   • Loss = 0 points
-  • Bye = Tie (1pt) if 2+ byes in tournament, else Win (2pt)
+  • Bye = Tie (1 point, 4-4 score, average 20s)
 `;
   text += '\n';
 

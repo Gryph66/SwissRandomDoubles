@@ -501,12 +501,6 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         const players = state.tournament.players.filter((p) => p.active);
         const matches = state.tournament.matches;
         
-        // Count total byes in the tournament to determine bye scoring
-        // If 2+ byes: bye = tie (1 point) + 4 pts + avg 20s
-        // If 0-1 byes: bye = win (2 points) + 4 pts + avg 20s
-        const totalByes = matches.filter(m => m.isBye && m.completed).length;
-        const byeCountsAsTie = totalByes >= 2;
-        
         // Calculate stats from MATCH DATA (not stored player stats) for accuracy
         const calculatePlayerStats = (playerId: string) => {
           let wins = 0, losses = 0, ties = 0;
@@ -522,13 +516,10 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
             if (!inTeam1 && !inTeam2) return;
 
             if (match.isBye) {
-              // Bye match - counts as tie if 2+ total byes, otherwise as win
-              if (byeCountsAsTie) {
-                ties += 1;
-              } else {
-                wins += 1;
-              }
+              // Bye is always a tie (1 point) with 4-4 score
+              ties += 1;
               pointsFor += match.score1 ?? 4;
+              pointsAgainst += match.score2 ?? 4; // 4 points against for bye (4-4 tie)
               twenties += match.twenties1 ?? 0;
               byeCount += 1;
             } else if (match.score1 !== null && match.score2 !== null) {
@@ -558,7 +549,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           const stats = calculatePlayerStats(player.id);
           
           // Challonge-style score: Win=2, Tie=1, Loss=0
-          // Bye scoring: If 2+ byes in tournament, bye=tie(1pt). Otherwise bye=win(2pts).
+          // Bye is always a tie (1 point) with 4-4 score
           const score = (stats.wins * 2) + (stats.ties * 1);
           
           return {
@@ -578,20 +569,22 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           };
         });
 
-        // Sort by: score desc, point diff desc, points for desc
+        // Sort by: Score → PF → PA → 20s
         standings.sort((a, b) => {
-          // Primary: Challonge score (Win=2, Tie=1, Loss=0, Bye=dynamic)
+          // Primary: Challonge score (Win=2, Tie=1, Loss=0, Bye=1)
           if (b.score !== a.score) {
             return b.score - a.score;
           }
-          // Secondary: point differential
-          const aDiff = a.player.pointsFor - a.player.pointsAgainst;
-          const bDiff = b.player.pointsFor - b.player.pointsAgainst;
-          if (bDiff !== aDiff) {
-            return bDiff - aDiff;
+          // Secondary: Points For (higher is better)
+          if (b.player.pointsFor !== a.player.pointsFor) {
+            return b.player.pointsFor - a.player.pointsFor;
           }
-          // Tertiary: points for
-          return b.player.pointsFor - a.player.pointsFor;
+          // Tertiary: Points Against (lower is better)
+          if (a.player.pointsAgainst !== b.player.pointsAgainst) {
+            return a.player.pointsAgainst - b.player.pointsAgainst;
+          }
+          // Quaternary: 20s (higher is better)
+          return b.player.twenties - a.player.twenties;
         });
 
         // Assign ranks
@@ -706,11 +699,14 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           let winner: string | undefined;
           if (t.status === 'completed') {
             const activePlayers = t.players.filter((p) => p.active);
+            // Sort by: Score → PF → PA → 20s
             const sorted = [...activePlayers].sort((a, b) => {
-              if (b.wins !== a.wins) return b.wins - a.wins;
-              const aDiff = a.pointsFor - a.pointsAgainst;
-              const bDiff = b.pointsFor - b.pointsAgainst;
-              return bDiff - aDiff;
+              const aScore = a.wins * 2 + a.ties;
+              const bScore = b.wins * 2 + b.ties;
+              if (bScore !== aScore) return bScore - aScore;
+              if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+              if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst;
+              return b.twenties - a.twenties;
             });
             winner = sorted[0]?.name;
           }

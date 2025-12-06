@@ -13,7 +13,10 @@ interface PlayerRoundData {
   wins: number;
   ties: number;
   score: number; // wins*2 + ties*1
-  pointDiff: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  twenties: number;
+  pointDiff: number; // Kept for display purposes
   partnerId: string | null;
   partnerRank: number | null;
   wasWinner: boolean | null;
@@ -27,15 +30,11 @@ export function SwissAnalysis() {
     if (!tournament || tournament.currentRound === 0) return null;
 
     const snapshots: RoundSnapshot[] = [];
-    const playerStats: Map<string, { wins: number; ties: number; pointsFor: number; pointsAgainst: number }> = new Map();
-
-    // Count total byes to determine bye scoring (tie if 2+, win if 0-1)
-    const totalByes = tournament.matches.filter(m => m.isBye && m.completed).length;
-    const byeCountsAsTie = totalByes >= 2;
+    const playerStats: Map<string, { wins: number; ties: number; pointsFor: number; pointsAgainst: number; twenties: number }> = new Map();
 
     // Initialize player stats
     tournament.players.forEach((p) => {
-      playerStats.set(p.id, { wins: 0, ties: 0, pointsFor: 0, pointsAgainst: 0 });
+      playerStats.set(p.id, { wins: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, twenties: 0 });
     });
 
     // Process each round
@@ -47,12 +46,11 @@ export function SwissAnalysis() {
         if (match.isBye) {
           const stats = playerStats.get(match.team1[0]);
           if (stats) {
-            if (byeCountsAsTie) {
-              stats.ties += 1;
-            } else {
-              stats.wins += 1;
-            }
+            // Bye is always a tie with 4-4 score
+            stats.ties += 1;
             stats.pointsFor += 4;
+            stats.pointsAgainst += 4;
+            stats.twenties += match.twenties1 || 0;
           }
         } else if (match.completed && match.score1 !== null && match.score2 !== null) {
           // Team 1
@@ -61,6 +59,7 @@ export function SwissAnalysis() {
             if (stats) {
               stats.pointsFor += match.score1!;
               stats.pointsAgainst += match.score2!;
+              stats.twenties += match.twenties1 || 0;
               if (match.score1! > match.score2!) {
                 stats.wins += 1;
               } else if (match.score1! === match.score2!) {
@@ -74,6 +73,7 @@ export function SwissAnalysis() {
             if (stats) {
               stats.pointsFor += match.score2!;
               stats.pointsAgainst += match.score1!;
+              stats.twenties += match.twenties2 || 0;
               if (match.score2! > match.score1!) {
                 stats.wins += 1;
               } else if (match.score2! === match.score1!) {
@@ -124,6 +124,9 @@ export function SwissAnalysis() {
             wins: stats.wins,
             ties: stats.ties,
             score,
+            pointsFor: stats.pointsFor,
+            pointsAgainst: stats.pointsAgainst,
+            twenties: stats.twenties,
             pointDiff: stats.pointsFor - stats.pointsAgainst,
             partnerId,
             partnerRank: null,
@@ -132,9 +135,11 @@ export function SwissAnalysis() {
           };
         })
         .sort((a, b) => {
-          // Sort by score (wins*2 + ties), then point diff
+          // Sort by: Score → PF → PA → 20s
           if (b.score !== a.score) return b.score - a.score;
-          return b.pointDiff - a.pointDiff;
+          if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+          if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst;
+          return b.twenties - a.twenties;
         });
 
       // Assign ranks

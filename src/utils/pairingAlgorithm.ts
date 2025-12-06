@@ -59,12 +59,14 @@ export function generateRoundPairings(
   };
   
   // Create standings snapshot for log
+  // Sort by: Score (wins*2 + ties) → PF → PA → 20s
   const sortedForSnapshot = [...activePlayers].sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    const aDiff = a.pointsFor - a.pointsAgainst;
-    const bDiff = b.pointsFor - b.pointsAgainst;
-    if (bDiff !== aDiff) return bDiff - aDiff;
-    return b.pointsFor - a.pointsFor;
+    const aScore = a.wins * 2 + a.ties;
+    const bScore = b.wins * 2 + b.ties;
+    if (bScore !== aScore) return bScore - aScore;
+    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+    if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst; // Lower PA is better
+    return b.twenties - a.twenties;
   });
   
   currentRoundLog.standingsSnapshot = sortedForSnapshot.map((p, idx) => ({
@@ -217,15 +219,14 @@ function selectByePlayer(players: Player[], round: number): Player {
   
   // Round 2+: Sort by standings (best to worst)
   // Best players at index 0, worst players at end
+  // Sort by: Score (wins*2 + ties) → PF → PA → 20s
   const sorted = [...players].sort((a, b) => {
-    // Primary: wins (more is better)
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    // Secondary: point differential
-    const aDiff = a.pointsFor - a.pointsAgainst;
-    const bDiff = b.pointsFor - b.pointsAgainst;
-    if (bDiff !== aDiff) return bDiff - aDiff;
-    // Tertiary: points for
-    return b.pointsFor - a.pointsFor;
+    const aScore = a.wins * 2 + a.ties;
+    const bScore = b.wins * 2 + b.ties;
+    if (bScore !== aScore) return bScore - aScore;
+    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+    if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst; // Lower PA is better
+    return b.twenties - a.twenties;
   });
   
   // Find the minimum bye count (no one gets 2 byes until everyone has 1)
@@ -296,8 +297,8 @@ function createByeMatch(player: Player, round: number, existingMatches: Match[])
     round,
     team1: [player.id],
     team2: null,
-    score1: 4, // Average points
-    score2: null,
+    score1: 4, // 4-4 tie
+    score2: 4, // 4 points against (bye is a tie)
     twenties1: averageTwenties,
     twenties2: 0,
     tableId: null,
@@ -328,13 +329,14 @@ function generateRandomTeams(players: Player[]): TeamPair[] {
  * Pair players with similar records, avoiding repeat partners
  */
 function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): TeamPair[] {
-  // Sort players by standings (wins, then point diff)
+  // Sort players by standings: Score → PF → PA → 20s
   const sorted = [...players].sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    const aDiff = a.pointsFor - a.pointsAgainst;
-    const bDiff = b.pointsFor - b.pointsAgainst;
-    if (bDiff !== aDiff) return bDiff - aDiff;
-    return b.pointsFor - a.pointsFor;
+    const aScore = a.wins * 2 + a.ties;
+    const bScore = b.wins * 2 + b.ties;
+    if (bScore !== aScore) return bScore - aScore;
+    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+    if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst;
+    return b.twenties - a.twenties;
   });
 
   logEntry('team_formation', 'Forming teams based on standings (Swiss)', [

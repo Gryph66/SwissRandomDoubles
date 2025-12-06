@@ -363,10 +363,6 @@ export function startTournament(code: string): boolean {
 function recalculatePlayerStats(room: TournamentRoom): void {
   const matches = room.tournament.matches;
   
-  // Count total byes to determine if bye = tie (2+) or win (0-1)
-  const totalByes = matches.filter(m => m.isBye && m.completed).length;
-  const byeCountsAsTie = totalByes >= 2;
-  
   // Reset all player stats
   room.tournament.players.forEach(player => {
     player.wins = 0;
@@ -385,12 +381,10 @@ function recalculatePlayerStats(room: TournamentRoom): void {
     if (match.isBye) {
       const player = room.tournament.players.find(p => p.id === match.team1[0]);
       if (player) {
-        if (byeCountsAsTie) {
-          player.ties += 1;
-        } else {
-          player.wins += 1;
-        }
+        // Bye is always a tie (1 point) with 4-4 score
+        player.ties += 1;
         player.pointsFor += match.score1 ?? 4;
+        player.pointsAgainst += match.score2 ?? 4; // 4 points against for bye
         player.twenties += match.twenties1 ?? 0;
         player.byeCount += 1;
       }
