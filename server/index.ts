@@ -36,20 +36,45 @@ const io = new Server<
   },
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  // After compilation, __dirname is dist-server/server/, so we need to go up 2 levels to project root
-  const distPath = path.join(__dirname, '../../dist');
-  app.use(express.static(distPath));
-  
-  // Handle client-side routing (Express 5 syntax)
-  app.get('/{*splat}', (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
-}
-
 // Server start time for uptime calculation
 const serverStartTime = Date.now();
+
+// Helper function to format duration in human-readable form
+function formatDuration(ms: number): string {
+  if (ms < 0) return '0s';
+  
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes % 60}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`;
+  } else {
+    return `${seconds}s`;
+  }
+}
+
+// Helper function to format uptime
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  parts.push(`${secs}s`);
+  
+  return parts.join(' ');
+}
+
+// ============================================
+// API Routes (must be BEFORE static file serving)
+// ============================================
 
 // API endpoint to check server status
 app.get('/api/status', (_req, res) => {
@@ -64,7 +89,7 @@ app.get('/api/status', (_req, res) => {
 });
 
 // API endpoint to get detailed room information
-app.get('/api/rooms', (req, res) => {
+app.get('/api/rooms', (_req, res) => {
   const rooms = RoomManager.getAllRooms();
   const now = Date.now();
   
@@ -123,37 +148,20 @@ app.get('/api/rooms', (req, res) => {
   });
 });
 
-// Helper function to format duration in human-readable form
-function formatDuration(ms: number): string {
-  if (ms < 0) return '0s';
-  
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  
-  if (hours > 0) {
-    return `${hours}h ${minutes % 60}m`;
-  } else if (minutes > 0) {
-    return `${minutes}m ${seconds % 60}s`;
-  } else {
-    return `${seconds}s`;
-  }
-}
+// ============================================
+// Static file serving (AFTER API routes)
+// ============================================
 
-// Helper function to format uptime
-function formatUptime(seconds: number): string {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  // After compilation, __dirname is dist-server/server/, so we need to go up 2 levels to project root
+  const distPath = path.join(__dirname, '../../dist');
+  app.use(express.static(distPath));
   
-  const parts = [];
-  if (days > 0) parts.push(`${days}d`);
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  parts.push(`${secs}s`);
-  
-  return parts.join(' ');
+  // Handle client-side routing (Express 5 syntax) - MUST be last
+  app.get('/{*splat}', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
 }
 
 // ============================================
