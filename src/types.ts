@@ -55,6 +55,7 @@ export interface Tournament {
   shareCode: string;
   createdAt: number;
   updatedAt: number;
+  pairingLogs?: RoundLog[]; // Optional for backwards compatibility
 }
 
 // Helper types for pairing algorithm
@@ -84,6 +85,43 @@ export interface PartnerHistory {
 // Match history tracking (which teams have played each other)
 export interface MatchHistory {
   [teamKey: string]: Set<string>; // teamKey is sorted player IDs joined
+}
+
+// Pairing log types for transparency
+export interface PairingLogEntry {
+  timestamp: string;
+  round: number;
+  phase: 'bye_selection' | 'team_formation' | 'match_pairing';
+  decision: string;
+  details: string[];
+}
+
+export interface PlayerSnapshot {
+  rank: number;
+  name: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  pointDiff: number;
+  byeCount: number;
+}
+
+export interface MatchPairingLog {
+  table?: string;
+  team1: string[];
+  team2: string[] | null;
+  isBye: boolean;
+  reasoning: string;
+}
+
+export interface RoundLog {
+  round: number;
+  generatedAt: string;
+  playerCount: number;
+  byesNeeded: number;
+  entries: PairingLogEntry[];
+  standingsSnapshot: PlayerSnapshot[];
+  finalPairings: MatchPairingLog[];
 }
 
 // View modes

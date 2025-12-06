@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scorecard } from './Scorecard';
-import { downloadLog, getPairingLogs, generateLogText } from '../../utils/pairingLog';
+import { downloadLog, generateLogText } from '../../utils/pairingLog';
 
 interface AdminPanelProps {
   socket?: {
@@ -339,9 +339,9 @@ export function AdminPanel({ socket }: AdminPanelProps) {
               {showPairingLog ? 'Hide Log' : 'View Log'}
             </button>
             <button
-              onClick={downloadLog}
+              onClick={() => downloadLog(tournament.pairingLogs)}
               className="btn btn-secondary text-sm"
-              disabled={getPairingLogs().length === 0}
+              disabled={!tournament.pairingLogs || tournament.pairingLogs.length === 0}
             >
               Download Log
             </button>
@@ -350,13 +350,13 @@ export function AdminPanel({ socket }: AdminPanelProps) {
         
         {showPairingLog && (
           <div className="mt-4">
-            {getPairingLogs().length === 0 ? (
+            {!tournament.pairingLogs || tournament.pairingLogs.length === 0 ? (
               <p className="text-sm text-[var(--color-text-muted)] italic">
                 No pairing logs available yet. Logs are generated when rounds are created.
               </p>
             ) : (
               <pre className="p-4 bg-[var(--color-bg-primary)] rounded-lg overflow-x-auto text-xs font-mono text-[var(--color-text-secondary)] max-h-[500px] overflow-y-auto whitespace-pre-wrap">
-                {generateLogText()}
+                {generateLogText(tournament.pairingLogs)}
               </pre>
             )}
           </div>

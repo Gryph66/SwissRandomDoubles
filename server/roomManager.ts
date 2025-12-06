@@ -3,6 +3,7 @@
 import type { Tournament, Player, Table, TournamentSettings, Match } from '../src/types.js';
 import { TournamentRoom, ConnectedPlayer, ROOM_CONFIG } from './types.js';
 import { generateRoundPairings } from '../src/utils/pairingAlgorithm.js';
+import { getPairingLogs } from '../src/utils/pairingLog.js';
 
 // In-memory room storage
 const rooms = new Map<string, TournamentRoom>();
@@ -350,6 +351,7 @@ export function startTournament(code: string): boolean {
   );
   
   room.tournament.matches = result.matches;
+  room.tournament.pairingLogs = getPairingLogs(); // Store logs for client access
   room.tournament.updatedAt = Date.now();
   touchRoom(code);
   
@@ -454,6 +456,7 @@ export function generateNextRound(code: string): boolean {
   );
   
   room.tournament.matches.push(...result.matches);
+  room.tournament.pairingLogs = getPairingLogs(); // Store logs for client access
   room.tournament.updatedAt = Date.now();
   touchRoom(code);
   

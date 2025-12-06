@@ -54,8 +54,9 @@ export function addRoundLog(log: RoundLog): void {
   pairingLogs.sort((a, b) => a.round - b.round);
 }
 
-export function generateLogText(): string {
-  if (pairingLogs.length === 0) {
+export function generateLogText(logs?: RoundLog[]): string {
+  const logsToUse = logs ?? pairingLogs;
+  if (logsToUse.length === 0) {
     return 'No pairing logs available yet. Start a tournament and generate rounds to see logs.';
   }
 
@@ -91,7 +92,7 @@ SCORING:
 `;
   text += '\n';
 
-  for (const roundLog of pairingLogs) {
+  for (const roundLog of logsToUse) {
     text += '═══════════════════════════════════════════════════════════════\n';
     text += `ROUND ${roundLog.round}\n`;
     text += `Generated: ${roundLog.generatedAt}\n`;
@@ -140,14 +141,14 @@ SCORING:
   return text;
 }
 
-export function downloadLog(): void {
+export function downloadLog(logs?: RoundLog[]): void {
   // Only run in browser environment
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     console.log('downloadLog() is only available in browser environment');
     return;
   }
   
-  const text = generateLogText();
+  const text = generateLogText(logs);
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
