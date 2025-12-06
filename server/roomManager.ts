@@ -356,6 +356,71 @@ export function startTournament(code: string): boolean {
   return true;
 }
 
+// Recalculate player stats from match data
+// This ensures bye selection has accurate standings
+function recalculatePlayerStats(room: TournamentRoom): void {
+  const matches = room.tournament.matches;
+  
+  // Count total byes to determine if bye = tie (2+) or win (0-1)
+  const totalByes = matches.filter(m => m.isBye && m.completed).length;
+  const byeCountsAsTie = totalByes >= 2;
+  
+  // Reset all player stats
+  room.tournament.players.forEach(player => {
+    player.wins = 0;
+    player.losses = 0;
+    player.ties = 0;
+    player.pointsFor = 0;
+    player.pointsAgainst = 0;
+    player.twenties = 0;
+    player.byeCount = 0;
+  });
+  
+  // Recalculate from completed matches
+  matches.forEach(match => {
+    if (!match.completed) return;
+    
+    if (match.isBye) {
+      const player = room.tournament.players.find(p => p.id === match.team1[0]);
+      if (player) {
+        if (byeCountsAsTie) {
+          player.ties += 1;
+        } else {
+          player.wins += 1;
+        }
+        player.pointsFor += match.score1 ?? 4;
+        player.twenties += match.twenties1 ?? 0;
+        player.byeCount += 1;
+      }
+    } else if (match.score1 !== null && match.score2 !== null) {
+      // Team 1
+      match.team1.forEach(playerId => {
+        const player = room.tournament.players.find(p => p.id === playerId);
+        if (player) {
+          player.pointsFor += match.score1!;
+          player.pointsAgainst += match.score2!;
+          player.twenties += match.twenties1 ?? 0;
+          if (match.score1! > match.score2!) player.wins += 1;
+          else if (match.score1! < match.score2!) player.losses += 1;
+          else player.ties += 1;
+        }
+      });
+      // Team 2
+      match.team2?.forEach(playerId => {
+        const player = room.tournament.players.find(p => p.id === playerId);
+        if (player) {
+          player.pointsFor += match.score2!;
+          player.pointsAgainst += match.score1!;
+          player.twenties += match.twenties2 ?? 0;
+          if (match.score2! > match.score1!) player.wins += 1;
+          else if (match.score2! < match.score1!) player.losses += 1;
+          else player.ties += 1;
+        }
+      });
+    }
+  });
+}
+
 export function generateNextRound(code: string): boolean {
   const room = getRoom(code);
   if (!room) return false;
@@ -373,6 +438,10 @@ export function generateNextRound(code: string): boolean {
   if (room.tournament.currentRound >= room.tournament.totalRounds) {
     return false;
   }
+  
+  // IMPORTANT: Recalculate player stats from match data before generating pairings
+  // This ensures bye selection uses accurate standings
+  recalculatePlayerStats(room);
   
   room.tournament.currentRound++;
   
