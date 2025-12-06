@@ -141,6 +141,12 @@ SCORING:
 }
 
 export function downloadLog(): void {
+  // Only run in browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    console.log('downloadLog() is only available in browser environment');
+    return;
+  }
+  
   const text = generateLogText();
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);

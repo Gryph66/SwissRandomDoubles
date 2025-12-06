@@ -11,7 +11,7 @@
     "declaration": false,
     "resolveJsonModule": true
   },
-  "include": ["server/**/*", "src/types.ts", "src/utils/pairingAlgorithm.ts"],
+  "include": ["server/**/*", "src/types.ts", "src/utils/pairingAlgorithm.ts", "src/utils/pairingLog.ts"],
   "exclude": ["node_modules", "dist", "dist-server"]
 }
 
