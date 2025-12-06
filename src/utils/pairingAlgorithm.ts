@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import type { Player, Match, Table, PartnerHistory, MatchHistory } from '../types';
+import { addRoundLog, type RoundLog, type PairingLogEntry, type PlayerSnapshot, type MatchPairingLog } from './pairingLog';
 
 interface PairingResult {
   matches: Match[];
@@ -9,6 +10,30 @@ interface PairingResult {
 interface TeamPair {
   player1: Player;
   player2: Player;
+}
+
+// Logging state for current round generation
+let currentRoundLog: {
+  round: number;
+  entries: PairingLogEntry[];
+  standingsSnapshot: PlayerSnapshot[];
+  finalPairings: MatchPairingLog[];
+} | null = null;
+
+function logEntry(phase: PairingLogEntry['phase'], decision: string, details: string[] = []): void {
+  if (currentRoundLog) {
+    currentRoundLog.entries.push({
+      timestamp: new Date().toISOString(),
+      round: currentRoundLog.round,
+      phase,
+      decision,
+      details,
+    });
+  }
+}
+
+function getPlayerName(player: Player): string {
+  return player.name;
 }
 
 /**
@@ -24,6 +49,39 @@ export function generateRoundPairings(
   assignTables: boolean
 ): PairingResult {
   const activePlayers = players.filter((p) => p.active);
+  
+  // Initialize logging for this round
+  currentRoundLog = {
+    round,
+    entries: [],
+    standingsSnapshot: [],
+    finalPairings: [],
+  };
+  
+  // Create standings snapshot for log
+  const sortedForSnapshot = [...activePlayers].sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aDiff = a.pointsFor - a.pointsAgainst;
+    const bDiff = b.pointsFor - b.pointsAgainst;
+    if (bDiff !== aDiff) return bDiff - aDiff;
+    return b.pointsFor - a.pointsFor;
+  });
+  
+  currentRoundLog.standingsSnapshot = sortedForSnapshot.map((p, idx) => ({
+    rank: idx + 1,
+    name: p.name,
+    wins: p.wins,
+    losses: p.losses,
+    ties: p.ties,
+    pointDiff: p.pointsFor - p.pointsAgainst,
+    byeCount: p.byeCount,
+  }));
+  
+  logEntry('team_formation', `Starting Round ${round} pairing generation`, [
+    `Active players: ${activePlayers.length}`,
+    `Byes needed: ${activePlayers.length % 4 === 0 ? 0 : (4 - (activePlayers.length % 4)) % 4 || activePlayers.length % 4}`,
+    round === 1 ? 'Using RANDOM pairing (Round 1)' : 'Using SWISS pairing (Round 2+)',
+  ]);
   
   // Build history from existing matches
   const partnerHistory = buildPartnerHistory(existingMatches);
@@ -49,13 +107,26 @@ export function generateRoundPairings(
     // Add bye matches for all bye players
     byePlayers.forEach((p) => {
       matches.push(createByeMatch(p, round, existingMatches));
+      currentRoundLog!.finalPairings.push({
+        team1: [p.name],
+        team2: null,
+        isBye: true,
+        reasoning: 'Not enough players for a match',
+      });
     });
     
     // Give remaining players byes too
     playersForRound.forEach((p) => {
       matches.push(createByeMatch(p, round, existingMatches));
+      currentRoundLog!.finalPairings.push({
+        team1: [p.name],
+        team2: null,
+        isBye: true,
+        reasoning: 'Not enough players for a match',
+      });
     });
     
+    saveRoundLog(activePlayers.length, byePlayers.length + playersForRound.length);
     return { matches, byePlayer: byePlayers[0] || null };
   }
 
@@ -72,27 +143,58 @@ export function generateRoundPairings(
   // Assign tables if enabled
   const sortedTables = [...tables].sort((a, b) => a.order - b.order);
 
-  // Create match objects
-  const matches: Match[] = matchPairings.map((pairing, idx) => ({
-    id: nanoid(8),
-    round,
-    team1: [pairing.team1.player1.id, pairing.team1.player2.id],
-    team2: [pairing.team2.player1.id, pairing.team2.player2.id],
-    score1: null,
-    score2: null,
-    twenties1: 0,
-    twenties2: 0,
-    tableId: assignTables && sortedTables[idx] ? sortedTables[idx].id : null,
-    completed: false,
-    isBye: false,
-  }));
+  // Create match objects and log them
+  const matches: Match[] = matchPairings.map((pairing, idx) => {
+    const tableName = assignTables && sortedTables[idx] ? sortedTables[idx].name : undefined;
+    
+    currentRoundLog!.finalPairings.push({
+      table: tableName,
+      team1: [getPlayerName(pairing.team1.player1), getPlayerName(pairing.team1.player2)],
+      team2: [getPlayerName(pairing.team2.player1), getPlayerName(pairing.team2.player2)],
+      isBye: false,
+      reasoning: round === 1 
+        ? 'Random pairing (Round 1)' 
+        : 'Swiss pairing based on combined team standings',
+    });
+    
+    return {
+      id: nanoid(8),
+      round,
+      team1: [pairing.team1.player1.id, pairing.team1.player2.id],
+      team2: [pairing.team2.player1.id, pairing.team2.player2.id],
+      score1: null,
+      score2: null,
+      twenties1: 0,
+      twenties2: 0,
+      tableId: assignTables && sortedTables[idx] ? sortedTables[idx].id : null,
+      completed: false,
+      isBye: false,
+    };
+  });
 
   // Add bye matches for all bye players
   byePlayers.forEach((p) => {
     matches.push(createByeMatch(p, round, existingMatches));
   });
 
+  saveRoundLog(activePlayers.length, byePlayers.length);
   return { matches, byePlayer: byePlayers[0] || null };
+}
+
+function saveRoundLog(playerCount: number, byesNeeded: number): void {
+  if (currentRoundLog) {
+    const roundLog: RoundLog = {
+      round: currentRoundLog.round,
+      generatedAt: new Date().toISOString(),
+      playerCount,
+      byesNeeded,
+      entries: currentRoundLog.entries,
+      standingsSnapshot: currentRoundLog.standingsSnapshot,
+      finalPairings: currentRoundLog.finalPairings,
+    };
+    addRoundLog(roundLog);
+    currentRoundLog = null;
+  }
 }
 
 /**
@@ -106,7 +208,11 @@ function selectByePlayer(players: Player[], round: number): Player {
   if (round === 1) {
     // Round 1: Completely random
     const randomIndex = Math.floor(Math.random() * players.length);
-    return players[randomIndex];
+    const selected = players[randomIndex];
+    logEntry('bye_selection', `Selected ${getPlayerName(selected)} for bye (Random - Round 1)`, [
+      `Randomly selected from ${players.length} players`,
+    ]);
+    return selected;
   }
   
   // Round 2+: Sort by standings (best to worst)
@@ -124,17 +230,45 @@ function selectByePlayer(players: Player[], round: number): Player {
   
   // Find the minimum bye count (no one gets 2 byes until everyone has 1)
   const minByeCount = Math.min(...sorted.map(p => p.byeCount));
+  const playersWithMinByes = sorted.filter(p => p.byeCount === minByeCount);
+  
+  logEntry('bye_selection', `Evaluating bye candidates`, [
+    `Minimum bye count: ${minByeCount}`,
+    `Players eligible (have ${minByeCount} byes): ${playersWithMinByes.length}`,
+    `Searching from bottom of standings upward...`,
+  ]);
   
   // Start from the BOTTOM (worst ranked) and work UP
   // Find the first player with the minimum bye count
   for (let i = sorted.length - 1; i >= 0; i--) {
     if (sorted[i].byeCount === minByeCount) {
-      return sorted[i];
+      const selected = sorted[i];
+      const rank = i + 1;
+      logEntry('bye_selection', `Selected ${getPlayerName(selected)} for bye`, [
+        `Rank: ${rank} of ${sorted.length} (lower = worse)`,
+        `Record: ${selected.wins}W-${selected.losses}L-${selected.ties}T`,
+        `Point diff: ${selected.pointsFor - selected.pointsAgainst >= 0 ? '+' : ''}${selected.pointsFor - selected.pointsAgainst}`,
+        `Previous byes: ${selected.byeCount}`,
+        `Reason: Lowest ranked player with minimum bye count (${minByeCount})`,
+      ]);
+      
+      currentRoundLog?.finalPairings.push({
+        team1: [getPlayerName(selected)],
+        team2: null,
+        isBye: true,
+        reasoning: `Rank ${rank}/${sorted.length}, ${selected.byeCount} previous byes - lowest ranked eligible`,
+      });
+      
+      return selected;
     }
   }
   
   // Fallback: shouldn't reach here, but just in case
-  return sorted[sorted.length - 1];
+  const fallback = sorted[sorted.length - 1];
+  logEntry('bye_selection', `Fallback: Selected ${getPlayerName(fallback)} for bye`, [
+    'No eligible player found with min bye count - using last player',
+  ]);
+  return fallback;
 }
 
 /**
@@ -203,6 +337,11 @@ function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): 
     return b.pointsFor - a.pointsFor;
   });
 
+  logEntry('team_formation', 'Forming teams based on standings (Swiss)', [
+    'Pairing adjacent players in standings',
+    'Avoiding repeat partners when possible',
+  ]);
+
   const teams: TeamPair[] = [];
   const used = new Set<string>();
 
@@ -212,6 +351,7 @@ function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): 
 
     const player1 = sorted[i];
     let partner: Player | null = null;
+    let usedFallback = false;
 
     // Find the next available player who hasn't been a partner before
     for (let j = i + 1; j < sorted.length; j++) {
@@ -228,6 +368,7 @@ function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): 
 
     // If no valid partner found (everyone has been partners), just take the next available
     if (!partner) {
+      usedFallback = true;
       for (let j = i + 1; j < sorted.length; j++) {
         if (!used.has(sorted[j].id)) {
           partner = sorted[j];
@@ -240,6 +381,12 @@ function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): 
       teams.push({ player1, player2: partner });
       used.add(player1.id);
       used.add(partner.id);
+      
+      logEntry('team_formation', `Team formed: ${getPlayerName(player1)} + ${getPlayerName(partner)}`, [
+        `${getPlayerName(player1)}: Rank ${i + 1}, ${player1.wins}W`,
+        `${getPlayerName(partner)}: ${partner.wins}W`,
+        usedFallback ? '⚠️ Had to use repeat partner (all others already partnered before)' : '✓ First time as partners',
+      ]);
     }
   }
 
@@ -285,6 +432,7 @@ function generateSwissMatchups(
       combinedWins,
       combinedDiff,
       teamKey: getTeamKey(team.player1.id, team.player2.id),
+      displayName: `${getPlayerName(team.player1)} + ${getPlayerName(team.player2)}`,
     };
   });
 
@@ -293,6 +441,11 @@ function generateSwissMatchups(
     if (b.combinedWins !== a.combinedWins) return b.combinedWins - a.combinedWins;
     return b.combinedDiff - a.combinedDiff;
   });
+
+  logEntry('match_pairing', 'Pairing teams by combined standings (Swiss)', [
+    'Teams sorted by combined wins, then combined point differential',
+    'Avoiding repeat matchups when possible',
+  ]);
 
   const matchups: { team1: TeamPair; team2: TeamPair }[] = [];
   const used = new Set<string>();
@@ -303,6 +456,7 @@ function generateSwissMatchups(
 
     const team1Data = teamsWithRank[i];
     let opponent: typeof team1Data | null = null;
+    let usedFallback = false;
 
     // Find the next available team that hasn't played this team before
     for (let j = i + 1; j < teamsWithRank.length; j++) {
@@ -319,6 +473,7 @@ function generateSwissMatchups(
 
     // If no valid opponent found, take the next available
     if (!opponent) {
+      usedFallback = true;
       for (let j = i + 1; j < teamsWithRank.length; j++) {
         if (!used.has(teamsWithRank[j].teamKey)) {
           opponent = teamsWithRank[j];
@@ -334,6 +489,12 @@ function generateSwissMatchups(
       });
       used.add(team1Data.teamKey);
       used.add(opponent.teamKey);
+      
+      logEntry('match_pairing', `Match: ${team1Data.displayName} vs ${opponent.displayName}`, [
+        `Team 1: ${team1Data.combinedWins} combined wins, ${team1Data.combinedDiff >= 0 ? '+' : ''}${team1Data.combinedDiff} diff`,
+        `Team 2: ${opponent.combinedWins} combined wins, ${opponent.combinedDiff >= 0 ? '+' : ''}${opponent.combinedDiff} diff`,
+        usedFallback ? '⚠️ Repeat matchup (no other valid opponents)' : '✓ First time playing each other',
+      ]);
     }
   }
 

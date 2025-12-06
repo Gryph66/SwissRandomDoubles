@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scorecard } from './Scorecard';
+import { downloadLog, getPairingLogs, generateLogText } from '../../utils/pairingLog';
 
 interface AdminPanelProps {
   socket?: {
@@ -36,6 +37,7 @@ export function AdminPanel({ socket }: AdminPanelProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showLoadConfirm, setShowLoadConfirm] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [showPairingLog, setShowPairingLog] = useState(false);
 
   const savedTournaments = getSavedTournamentSummaries();
 
@@ -318,6 +320,47 @@ export function AdminPanel({ socket }: AdminPanelProps) {
         <p className="text-xs text-[var(--color-text-muted)] mt-3">
           Saving stores the tournament in your browser for later review. Export creates a downloadable file.
         </p>
+      </section>
+
+      {/* Pairing Log */}
+      <section className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-display font-semibold">Swiss Pairing Log</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              View detailed decisions made by the pairing algorithm
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowPairingLog(!showPairingLog)}
+              className="btn btn-secondary text-sm"
+            >
+              {showPairingLog ? 'Hide Log' : 'View Log'}
+            </button>
+            <button
+              onClick={downloadLog}
+              className="btn btn-secondary text-sm"
+              disabled={getPairingLogs().length === 0}
+            >
+              Download Log
+            </button>
+          </div>
+        </div>
+        
+        {showPairingLog && (
+          <div className="mt-4">
+            {getPairingLogs().length === 0 ? (
+              <p className="text-sm text-[var(--color-text-muted)] italic">
+                No pairing logs available yet. Logs are generated when rounds are created.
+              </p>
+            ) : (
+              <pre className="p-4 bg-[var(--color-bg-primary)] rounded-lg overflow-x-auto text-xs font-mono text-[var(--color-text-secondary)] max-h-[500px] overflow-y-auto whitespace-pre-wrap">
+                {generateLogText()}
+              </pre>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Tournament History */}
