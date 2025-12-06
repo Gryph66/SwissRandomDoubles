@@ -70,7 +70,7 @@ export function RoundView({ socket }: RoundViewProps) {
 
       {/* Challonge-style horizontal rounds */}
       <div className="overflow-x-auto pb-4">
-        <div className="inline-flex gap-2 min-w-full">
+        <div className="inline-flex gap-2 min-w-full px-1">
           {rounds.map((round) => {
             const matches = getMatchesByRound(round).filter((m) => !m.isBye);
             const byeMatches = getMatchesByRound(round).filter((m) => m.isBye);
