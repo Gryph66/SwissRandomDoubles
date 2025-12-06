@@ -1,6 +1,6 @@
 // Landing page - Create or Join tournament
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface LandingPageProps {
   isConnected: boolean;
@@ -21,16 +21,28 @@ export function LandingPage({
   onLocalMode,
   joinError,
 }: LandingPageProps) {
-  const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose');
+  // Check URL for code parameter (from QR code scan)
+  const urlParams = new URLSearchParams(window.location.search);
+  const codeFromUrl = urlParams.get('code')?.toUpperCase() || '';
+  
+  // If code is in URL, go directly to join mode
+  const [mode, setMode] = useState<'choose' | 'create' | 'join'>(codeFromUrl ? 'join' : 'choose');
   
   // Create form state
   const [tournamentName, setTournamentName] = useState('');
   const [totalRounds, setTotalRounds] = useState('4');
   const [hostName, setHostName] = useState('');
   
-  // Join form state
-  const [joinCode, setJoinCode] = useState('');
+  // Join form state - pre-fill code from URL if present
+  const [joinCode, setJoinCode] = useState(codeFromUrl);
   const [playerName, setPlayerName] = useState('');
+  
+  // Clear URL param after reading (cleaner URLs)
+  useEffect(() => {
+    if (codeFromUrl) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [codeFromUrl]);
   
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();

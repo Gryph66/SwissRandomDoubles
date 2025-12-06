@@ -15,9 +15,11 @@ interface HeaderProps {
   connectedCount?: number;
   isOnline?: boolean;
   isHost?: boolean;
+  showQRCode?: boolean;
+  onToggleQRCode?: () => void;
 }
 
-export function Header({ connectedCount, isOnline, isHost: isHostProp }: HeaderProps) {
+export function Header({ connectedCount, isOnline, isHost: isHostProp, showQRCode, onToggleQRCode }: HeaderProps) {
   const { tournament, viewMode, setViewMode, isHost: storeIsHost } = useTournamentStore();
   const isHost = isHostProp ?? storeIsHost;
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -118,6 +120,16 @@ export function Header({ connectedCount, isOnline, isHost: isHostProp }: HeaderP
                   {tournament.shareCode}
                 </code>
               </div>
+            )}
+            
+            {/* QR Code Toggle - only for host in online mode */}
+            {isOnline && isHost && tournament?.shareCode && onToggleQRCode && (
+              <button
+                onClick={onToggleQRCode}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/10 transition-colors"
+              >
+                {showQRCode ? 'Hide QR' : 'Show QR'}
+              </button>
             )}
             
             {/* Fullscreen Button */}

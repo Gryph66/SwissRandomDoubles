@@ -13,8 +13,8 @@ const getServerUrl = () => {
   if (import.meta.env.PROD) {
     return window.location.origin;
   }
-  // In development, connect to the Express server
-  return 'http://localhost:3001';
+  // In development, use the same hostname (supports localhost and network IPs)
+  return `http://${window.location.hostname}:3001`;
 };
 
 interface UseSocketOptions {

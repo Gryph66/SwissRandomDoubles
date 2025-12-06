@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Header } from './components/shared/Header';
+import { FloatingQRCode } from './components/shared/FloatingQRCode';
 import { TournamentSetup } from './components/setup/TournamentSetup';
 import { RoundView } from './components/round/RoundView';
 import { Standings } from './components/standings/Standings';
@@ -21,12 +22,14 @@ function App() {
     setIsHost,
     setConnectedPlayerId,
     setOnlineMode,
+    setViewMode,
     isHost,
   } = useTournamentStore();
   
   const [appMode, setAppMode] = useState<AppMode>('landing');
   const [joinError, setJoinError] = useState<string | null>(null);
   const [connectedCount, setConnectedCount] = useState(0);
+  const [showQRCode, setShowQRCode] = useState(true);
   
   // Socket callbacks
   const handleTournamentCreated = useCallback((code: string, newTournament: Tournament) => {
@@ -38,14 +41,22 @@ function App() {
   }, [setTournament, setIsHost, setOnlineMode]);
   
   const handleTournamentJoined = useCallback((newTournament: Tournament, playerId: string | null, isHostFlag: boolean) => {
-    console.log('[App] Tournament joined, playerId:', playerId);
+    console.log('[App] Tournament joined, playerId:', playerId, 'status:', newTournament.status);
     setTournament(newTournament);
     setIsHost(isHostFlag);
     setConnectedPlayerId(playerId);
     setOnlineMode(true);
     setJoinError(null);
     setAppMode('online');
-  }, [setTournament, setIsHost, setConnectedPlayerId, setOnlineMode]);
+    
+    // Navigate to appropriate page based on tournament status
+    if (newTournament.status === 'active') {
+      setViewMode('history'); // Go to Matches page
+    } else if (newTournament.status === 'completed') {
+      setViewMode('standings'); // Go to Standings page
+    }
+    // If status is 'setup', stay on setup (default)
+  }, [setTournament, setIsHost, setConnectedPlayerId, setOnlineMode, setViewMode]);
   
   const handleJoinError = useCallback((message: string) => {
     console.error('[App] Join error:', message);
@@ -53,9 +64,25 @@ function App() {
   }, []);
   
   const handleStateUpdate = useCallback((updatedTournament: Tournament, count: number) => {
+    // Check if tournament just started or new round generated - navigate to Matches
+    const prevTournament = useTournamentStore.getState().tournament;
+    const justStarted = prevTournament?.status === 'setup' && updatedTournament.status === 'active';
+    const newRoundGenerated = prevTournament && 
+      updatedTournament.currentRound > prevTournament.currentRound;
+    
     setTournament(updatedTournament);
     setConnectedCount(count);
-  }, [setTournament]);
+    
+    // Navigate to Matches page when tournament starts or new round begins
+    if (justStarted || newRoundGenerated) {
+      setViewMode('history');
+    }
+    
+    // Navigate to Standings when tournament completes
+    if (prevTournament?.status === 'active' && updatedTournament.status === 'completed') {
+      setViewMode('standings');
+    }
+  }, [setTournament, setViewMode]);
   
   const handlePlayerConnected = useCallback((playerName: string, count: number) => {
     console.log('[App] Player connected:', playerName);
@@ -161,10 +188,18 @@ function App() {
         connectedCount={appMode === 'online' ? connectedCount : undefined}
         isOnline={appMode === 'online'}
         isHost={isHost}
+        showQRCode={showQRCode}
+        onToggleQRCode={() => setShowQRCode(!showQRCode)}
       />
       <main className="pb-12">
         {renderContent()}
       </main>
+      <FloatingQRCode 
+        isOnline={appMode === 'online'} 
+        isHost={isHost} 
+        isVisible={showQRCode}
+        onToggle={() => setShowQRCode(!showQRCode)}
+      />
     </div>
   );
 }

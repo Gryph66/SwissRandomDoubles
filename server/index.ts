@@ -31,7 +31,7 @@ const io = new Server<
   cors: {
     origin: process.env.NODE_ENV === 'production' 
       ? false  // Same origin in production
-      : ['http://localhost:5173', 'http://127.0.0.1:5173'],  // Vite dev server
+      : true,  // Allow all origins in development for local network testing
     methods: ['GET', 'POST'],
   },
 });
@@ -496,12 +496,14 @@ setInterval(cleanupInactiveRooms, ROOM_CONFIG.CLEANUP_INTERVAL);
 // ============================================
 
 const PORT = process.env.PORT || 3001;
+const HOST = '0.0.0.0'; // Listen on all interfaces for network access
 
-httpServer.listen(PORT, () => {
+httpServer.listen(Number(PORT), HOST, () => {
   console.log(`
 ╔════════════════════════════════════════════════╗
 ║     Swiss Doubles Tournament Server            ║
-║     Running on port ${PORT}                        ║
+║     Running on http://${HOST}:${PORT}              ║
+║     Network: http://<your-ip>:${PORT}            ║
 ╚════════════════════════════════════════════════╝
   `);
 });
