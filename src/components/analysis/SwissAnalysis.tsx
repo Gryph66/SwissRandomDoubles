@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
-import type { Player, Match } from '../../types';
+import type { Player } from '../../types';
 
 interface RoundSnapshot {
   round: number;

@@ -28,8 +28,6 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
     getSavedTournamentSummaries,
     loadTournament,
     deleteSavedTournament,
-    onlineMode,
-    isHost,
   } = useTournamentStore();
 
   // Use socket methods if in online mode, otherwise use local store

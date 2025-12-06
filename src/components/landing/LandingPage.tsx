@@ -50,6 +50,9 @@ export function LandingPage({
     onJoinTournament(joinCode.trim().toUpperCase(), playerName.trim());
   };
   
+  // BUG FIX: Disable buttons when not connected OR when there's an error
+  const isDisabledForConnection = !isConnected || !!error;
+  
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -89,7 +92,7 @@ export function LandingPage({
           <div className="space-y-4">
             <button
               onClick={() => setMode('create')}
-              disabled={!isConnected && !error}
+              disabled={isDisabledForConnection}
               className="w-full py-4 px-6 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] 
                        text-white font-semibold rounded-xl transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -99,7 +102,7 @@ export function LandingPage({
             
             <button
               onClick={() => setMode('join')}
-              disabled={!isConnected}
+              disabled={isDisabledForConnection}
               className="w-full py-4 px-6 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]
                        text-[var(--color-text-primary)] font-semibold rounded-xl transition-colors
                        border border-[var(--color-border)]
@@ -199,7 +202,7 @@ export function LandingPage({
             
             <button
               type="submit"
-              disabled={!isConnected || !tournamentName.trim() || !hostName.trim()}
+              disabled={isDisabledForConnection || !tournamentName.trim() || !hostName.trim()}
               className="w-full py-4 px-6 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] 
                        text-white font-semibold rounded-xl transition-colors mt-6
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -271,7 +274,7 @@ export function LandingPage({
             
             <button
               type="submit"
-              disabled={!isConnected || !joinCode.trim() || !playerName.trim()}
+              disabled={isDisabledForConnection || !joinCode.trim() || !playerName.trim()}
               className="w-full py-4 px-6 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] 
                        text-white font-semibold rounded-xl transition-colors mt-6
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -289,4 +292,3 @@ export function LandingPage({
     </div>
   );
 }
-

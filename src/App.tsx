@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Header } from './components/shared/Header';
 import { TournamentSetup } from './components/setup/TournamentSetup';
 import { RoundView } from './components/round/RoundView';
@@ -22,7 +22,6 @@ function App() {
     setConnectedPlayerId,
     setOnlineMode,
     isHost,
-    connectedPlayerId,
   } = useTournamentStore();
   
   const [appMode, setAppMode] = useState<AppMode>('landing');

@@ -165,7 +165,6 @@ export function Standings() {
                 const isTopThree = index < 3 && isComplete;
                 const poolIndex = getPoolForRank(standing.rank, poolSize);
                 const poolColor = getPoolColor(poolIndex);
-                const isFirstInPool = standing.rank === 1 || getPoolForRank(standing.rank - 1, poolSize) !== poolIndex;
                 
                 return (
                   <tr

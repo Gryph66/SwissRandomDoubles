@@ -5,7 +5,6 @@ import type {
   Tournament, 
   TournamentState, 
   Player, 
-  Match, 
   Table, 
   TournamentSettings,
   ViewMode,

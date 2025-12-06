@@ -38,7 +38,8 @@ const io = new Server<
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, '../dist');
+  // After compilation, __dirname is dist-server/server/, so we need to go up 2 levels to project root
+  const distPath = path.join(__dirname, '../../dist');
   app.use(express.static(distPath));
   
   // Handle client-side routing

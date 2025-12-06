@@ -345,7 +345,8 @@ export function startTournament(code: string): boolean {
     room.tournament.players,
     room.tournament.matches,
     1,
-    room.tournament.settings.tableAssignment ? room.tournament.tables : []
+    room.tournament.tables,
+    room.tournament.settings.tableAssignment
   );
   
   room.tournament.matches = result.matches;
@@ -379,7 +380,8 @@ export function generateNextRound(code: string): boolean {
     room.tournament.players,
     room.tournament.matches,
     room.tournament.currentRound,
-    room.tournament.settings.tableAssignment ? room.tournament.tables : []
+    room.tournament.tables,
+    room.tournament.settings.tableAssignment
   );
   
   room.tournament.matches.push(...result.matches);

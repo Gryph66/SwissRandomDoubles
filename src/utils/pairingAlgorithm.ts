@@ -365,9 +365,9 @@ function buildMatchHistory(matches: Match[]): MatchHistory {
   const history: MatchHistory = {};
 
   matches.forEach((match) => {
-    if (!match.isBye && match.team2) {
-      const team1Key = getTeamKey(match.team1[0], match.team1[1]);
-      const team2Key = getTeamKey(match.team2[0], match.team2[1]);
+    if (!match.isBye && match.team2 && match.team1.length === 2) {
+      const team1Key = getTeamKey(match.team1[0], match.team1[1]!);
+      const team2Key = getTeamKey(match.team2[0], match.team2[1]!);
 
       if (!history[team1Key]) history[team1Key] = new Set();
       if (!history[team2Key]) history[team2Key] = new Set();

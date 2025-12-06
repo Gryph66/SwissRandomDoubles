@@ -15,7 +15,6 @@ export function RoundView({ socket }: RoundViewProps) {
     generateNextRound: localGenerateNextRound,
     completeTournament: localCompleteTournament,
     getCurrentRoundMatches,
-    isHost,
   } = useTournamentStore();
   
   const generateNextRound = socket ? socket.generateNextRound : localGenerateNextRound;
