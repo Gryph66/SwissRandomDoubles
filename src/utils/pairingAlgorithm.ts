@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import type { Player, Match, Table, PartnerHistory, MatchHistory } from '../types';
-import { addRoundLog, type RoundLog, type PairingLogEntry, type PlayerSnapshot, type MatchPairingLog } from './pairingLog';
+import { addRoundLog, type RoundLog, type PairingLogEntry, type PlayerSnapshot, type MatchPairingLog } from './pairingLog.js';
 
 interface PairingResult {
   matches: Match[];
