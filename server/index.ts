@@ -48,6 +48,9 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Server start time for uptime calculation
+const serverStartTime = Date.now();
+
 // API endpoint to check server status
 app.get('/api/status', (_req, res) => {
   const rooms = RoomManager.getAllRooms();
@@ -55,8 +58,103 @@ app.get('/api/status', (_req, res) => {
     status: 'ok',
     activeRooms: rooms.size,
     uptime: process.uptime(),
+    uptimeFormatted: formatUptime(process.uptime()),
+    startedAt: new Date(serverStartTime).toISOString(),
   });
 });
+
+// API endpoint to get detailed room information
+app.get('/api/rooms', (req, res) => {
+  const rooms = RoomManager.getAllRooms();
+  const now = Date.now();
+  
+  const roomsData = Array.from(rooms.entries()).map(([code, room]) => {
+    // Get connected player details
+    const connectedPlayersArray = Array.from(room.connectedPlayers.values()).map(cp => ({
+      playerName: cp.playerName,
+      isHost: cp.isHost,
+      matchedToPlayer: cp.playerId !== null,
+      joinedAt: new Date(cp.joinedAt).toISOString(),
+      connectionDuration: formatDuration(now - cp.joinedAt),
+    }));
+
+    return {
+      code,
+      tournamentName: room.tournament.name,
+      status: room.tournament.status,
+      currentRound: room.tournament.currentRound,
+      totalRounds: room.tournament.totalRounds,
+      playerCount: room.tournament.players.filter(p => p.active).length,
+      matchCount: room.tournament.matches.length,
+      connectedCount: room.connectedPlayers.size,
+      connectedPlayers: connectedPlayersArray,
+      createdAt: new Date(room.createdAt).toISOString(),
+      lastActivity: new Date(room.lastActivity).toISOString(),
+      openDuration: formatDuration(now - room.createdAt),
+      idleTime: formatDuration(now - room.lastActivity),
+      idleMs: now - room.lastActivity,
+      warningsSent: room.warningsSent,
+      timeUntilCleanup: formatDuration(Math.max(0, ROOM_CONFIG.INACTIVITY_TIMEOUT - (now - room.lastActivity))),
+    };
+  });
+
+  res.json({
+    config: {
+      inactivity_timeout_hours: ROOM_CONFIG.INACTIVITY_TIMEOUT / (60 * 60 * 1000),
+      warning_time_minutes: ROOM_CONFIG.WARNING_TIME / (60 * 1000),
+      cleanup_interval_minutes: ROOM_CONFIG.CLEANUP_INTERVAL / (60 * 1000),
+      max_rooms: ROOM_CONFIG.MAX_ROOMS,
+      code_length: ROOM_CONFIG.CODE_LENGTH,
+    },
+    server: {
+      uptime: process.uptime(),
+      uptimeFormatted: formatUptime(process.uptime()),
+      startedAt: new Date(serverStartTime).toISOString(),
+      nodeVersion: process.version,
+      platform: process.platform,
+      memoryUsage: {
+        heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+        heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB',
+        rss: Math.round(process.memoryUsage().rss / 1024 / 1024) + ' MB',
+      },
+    },
+    total_rooms: rooms.size,
+    rooms: roomsData,
+  });
+});
+
+// Helper function to format duration in human-readable form
+function formatDuration(ms: number): string {
+  if (ms < 0) return '0s';
+  
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes % 60}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`;
+  } else {
+    return `${seconds}s`;
+  }
+}
+
+// Helper function to format uptime
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  parts.push(`${secs}s`);
+  
+  return parts.join(' ');
+}
 
 // ============================================
 // Socket.IO Event Handlers
