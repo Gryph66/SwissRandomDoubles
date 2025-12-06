@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 
-export function TableSetup() {
-  const { tournament, addTable, removeTable, updateTable } = useTournamentStore();
+interface TableSetupProps {
+  socket?: {
+    addTable: (name: string) => void;
+    removeTable: (tableId: string) => void;
+    updateTable: (tableId: string, name: string) => void;
+  };
+}
+
+export function TableSetup({ socket }: TableSetupProps) {
+  const { tournament, addTable: localAddTable, removeTable: localRemoveTable, updateTable: localUpdateTable } = useTournamentStore();
   const [newTableName, setNewTableName] = useState('');
+  
+  const addTable = socket ? socket.addTable : localAddTable;
+  const removeTable = socket ? socket.removeTable : localRemoveTable;
+  const updateTable = socket ? socket.updateTable : localUpdateTable;
 
   if (!tournament) return null;
 

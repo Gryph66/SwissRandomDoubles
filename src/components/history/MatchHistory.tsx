@@ -2,8 +2,31 @@ import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import type { Match } from '../../types';
 
-export function MatchHistory() {
-  const { tournament, getPlayerById, getMatchesByRound, submitScore, generateNextRound, completeTournament, setViewMode } = useTournamentStore();
+interface MatchHistoryProps {
+  socket?: {
+    submitScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+    editScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+    generateNextRound: () => void;
+    completeTournament: () => void;
+  };
+}
+
+export function MatchHistory({ socket }: MatchHistoryProps) {
+  const { 
+    tournament, 
+    getPlayerById, 
+    getMatchesByRound, 
+    submitScore: localSubmitScore, 
+    generateNextRound: localGenerateNextRound, 
+    completeTournament: localCompleteTournament, 
+    setViewMode,
+    isHost,
+    connectedPlayerId,
+  } = useTournamentStore();
+  
+  const submitScore = socket ? socket.submitScore : localSubmitScore;
+  const generateNextRound = socket ? socket.generateNextRound : localGenerateNextRound;
+  const completeTournament = socket ? socket.completeTournament : localCompleteTournament;
   const [viewRound, setViewRound] = useState<number | null>(null);
 
   if (!tournament) {
@@ -125,6 +148,9 @@ export function MatchHistory() {
             key={match.id} 
             match={match} 
             isCurrentRound={isCurrentRound}
+            submitScore={submitScore}
+            isHost={isHost}
+            connectedPlayerId={connectedPlayerId}
           />
         ))}
       </div>
@@ -154,8 +180,8 @@ export function MatchHistory() {
         </div>
       )}
 
-      {/* Next Round / Complete Tournament Button */}
-      {isCurrentRound && tournament.status !== 'completed' && (
+      {/* Next Round / Complete Tournament Button - Host Only */}
+      {isCurrentRound && tournament.status !== 'completed' && isHost && (
         <div className="max-w-7xl mx-auto text-center mt-8">
           <button
             onClick={handleNextRound}
@@ -189,8 +215,16 @@ export function MatchHistory() {
 }
 
 // Match Card with inline score entry
-function MatchCardWithEntry({ match, isCurrentRound }: { match: Match; isCurrentRound: boolean }) {
-  const { tournament, getPlayerById, submitScore } = useTournamentStore();
+interface MatchCardWithEntryProps {
+  match: Match;
+  isCurrentRound: boolean;
+  submitScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+  isHost: boolean;
+  connectedPlayerId: string | null;
+}
+
+function MatchCardWithEntry({ match, isCurrentRound, submitScore, isHost, connectedPlayerId }: MatchCardWithEntryProps) {
+  const { tournament, getPlayerById } = useTournamentStore();
   const [score1, setScore1] = useState(match.score1?.toString() ?? '');
   const [score2, setScore2] = useState(match.score2?.toString() ?? '');
   const [twenties1, setTwenties1] = useState(match.twenties1 ? match.twenties1.toString() : '');
@@ -211,6 +245,14 @@ function MatchCardWithEntry({ match, isCurrentRound }: { match: Match; isCurrent
   const isTeam2Winner = isComplete && match.score1 !== null && match.score2 !== null && match.score2 > match.score1;
   
   const pointsPerMatch = tournament.settings.pointsPerMatch || 8;
+  
+  // Check if this player can submit scores for this match
+  // Host can always submit; players can submit for their own matches
+  const canSubmitForMatch = isHost || 
+    (connectedPlayerId && (
+      match.team1.includes(connectedPlayerId) || 
+      match.team2?.includes(connectedPlayerId)
+    ));
 
   // Auto-fill the other team's score
   const handleScore1Change = (value: string) => {
@@ -244,7 +286,7 @@ function MatchCardWithEntry({ match, isCurrentRound }: { match: Match; isCurrent
     setIsEditing(false);
   };
 
-  const showEntry = (isCurrentRound && !isComplete) || isEditing;
+  const showEntry = canSubmitForMatch && ((isCurrentRound && !isComplete) || isEditing);
 
   return (
     <div
@@ -277,7 +319,7 @@ function MatchCardWithEntry({ match, isCurrentRound }: { match: Match; isCurrent
             </span>
           )}
         </div>
-        {isComplete && !isEditing && (
+        {isComplete && !isEditing && canSubmitForMatch && (
           <button
             onClick={() => setIsEditing(true)}
             className="text-sm font-semibold text-[var(--color-bg-primary)] bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition-colors"

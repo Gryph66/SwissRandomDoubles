@@ -16,6 +16,15 @@ import type {
 } from '../types';
 import { generateRoundPairings } from '../utils/pairingAlgorithm';
 
+// Extended state for online mode
+interface ExtendedTournamentState extends TournamentState {
+  connectedPlayerId: string | null;
+  onlineMode: boolean;
+  setTournament: (tournament: Tournament | null) => void;
+  setConnectedPlayerId: (playerId: string | null) => void;
+  setOnlineMode: (online: boolean) => void;
+}
+
 const createEmptyPlayer = (name: string): Player => ({
   id: nanoid(8),
   name,
@@ -49,13 +58,27 @@ const createEmptyTournament = (name: string, totalRounds: number): Tournament =>
   updatedAt: Date.now(),
 });
 
-export const useTournamentStore = create<TournamentState>()(
+export const useTournamentStore = create<ExtendedTournamentState>()(
   persist(
     (set, get) => ({
       tournament: null,
       savedTournaments: [],
       viewMode: 'setup',
       isHost: true,
+      connectedPlayerId: null,
+      onlineMode: false,
+
+      setTournament: (tournament: Tournament | null) => {
+        set({ tournament });
+      },
+
+      setConnectedPlayerId: (playerId: string | null) => {
+        set({ connectedPlayerId: playerId });
+      },
+
+      setOnlineMode: (online: boolean) => {
+        set({ onlineMode: online });
+      },
 
       createTournament: (name: string, totalRounds: number) => {
         set({
@@ -678,9 +701,11 @@ export const useTournamentStore = create<TournamentState>()(
     {
       name: 'swiss-doubles-tournament',
       partialize: (state) => ({
-        tournament: state.tournament,
+        // Only persist local mode data
         savedTournaments: state.savedTournaments,
-        isHost: state.isHost,
+        // Don't persist online tournament state - it comes from the server
+        tournament: state.onlineMode ? null : state.tournament,
+        isHost: state.onlineMode ? true : state.isHost,
       }),
     }
   )

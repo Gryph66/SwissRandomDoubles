@@ -1,9 +1,19 @@
 import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 
-export function PlayerRegistration() {
-  const { tournament, addPlayer, removePlayer } = useTournamentStore();
+interface PlayerRegistrationProps {
+  socket?: {
+    addPlayer: (name: string) => void;
+    removePlayer: (playerId: string) => void;
+  };
+}
+
+export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
+  const { tournament, addPlayer: localAddPlayer, removePlayer: localRemovePlayer } = useTournamentStore();
   const [newPlayerName, setNewPlayerName] = useState('');
+  
+  const addPlayer = socket ? socket.addPlayer : localAddPlayer;
+  const removePlayer = socket ? socket.removePlayer : localRemovePlayer;
 
   if (!tournament) return null;
 
@@ -89,14 +99,13 @@ export function PlayerRegistration() {
 
       {/* Quick Add Multiple */}
       <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
-        <QuickAddPlayers />
+        <QuickAddPlayers addPlayer={addPlayer} />
       </div>
     </section>
   );
 }
 
-function QuickAddPlayers() {
-  const { addPlayer } = useTournamentStore();
+function QuickAddPlayers({ addPlayer }: { addPlayer: (name: string) => void }) {
   const [bulkText, setBulkText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 

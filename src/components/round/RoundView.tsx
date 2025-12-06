@@ -1,14 +1,25 @@
 import { useTournamentStore } from '../../store/tournamentStore';
 
-export function RoundView() {
+interface RoundViewProps {
+  socket?: {
+    generateNextRound: () => void;
+    completeTournament: () => void;
+  };
+}
+
+export function RoundView({ socket }: RoundViewProps) {
   const { 
     tournament, 
     getMatchesByRound,
     getPlayerById,
-    generateNextRound,
-    completeTournament,
-    getCurrentRoundMatches
+    generateNextRound: localGenerateNextRound,
+    completeTournament: localCompleteTournament,
+    getCurrentRoundMatches,
+    isHost,
   } = useTournamentStore();
+  
+  const generateNextRound = socket ? socket.generateNextRound : localGenerateNextRound;
+  const completeTournament = socket ? socket.completeTournament : localCompleteTournament;
 
   if (!tournament) {
     return (

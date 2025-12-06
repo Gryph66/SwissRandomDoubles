@@ -3,18 +3,32 @@ import { useTournamentStore } from '../../store/tournamentStore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scorecard } from './Scorecard';
 
-export function AdminPanel() {
+interface AdminPanelProps {
+  socket?: {
+    addPlayer: (name: string) => void;
+    updatePlayer: (playerId: string, updates: any) => void;
+    updateSettings: (settings: any) => void;
+    resetTournament: () => void;
+  };
+}
+
+export function AdminPanel({ socket }: AdminPanelProps) {
   const { 
     tournament, 
-    resetTournament, 
-    addPlayer,
-    updatePlayer,
-    updateSettings,
+    resetTournament: localResetTournament, 
+    addPlayer: localAddPlayer,
+    updatePlayer: localUpdatePlayer,
+    updateSettings: localUpdateSettings,
     saveTournament,
     loadTournament,
     deleteSavedTournament,
     getSavedTournamentSummaries
   } = useTournamentStore();
+  
+  const addPlayer = socket ? socket.addPlayer : localAddPlayer;
+  const updatePlayer = socket ? socket.updatePlayer : localUpdatePlayer;
+  const updateSettings = socket ? socket.updateSettings : localUpdateSettings;
+  const resetTournament = socket ? socket.resetTournament : localResetTournament;
   
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');

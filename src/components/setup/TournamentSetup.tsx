@@ -3,18 +3,40 @@ import { useTournamentStore } from '../../store/tournamentStore';
 import { PlayerRegistration } from './PlayerRegistration';
 import { TableSetup } from './TableSetup';
 
-export function TournamentSetup() {
+interface TournamentSetupProps {
+  socket?: {
+    addPlayer: (name: string) => void;
+    removePlayer: (playerId: string) => void;
+    updateSettings: (settings: any) => void;
+    updateTournamentName: (name: string) => void;
+    updateTotalRounds: (rounds: number) => void;
+    startTournament: () => void;
+    addTable: (name: string) => void;
+    removeTable: (tableId: string) => void;
+    updateTable: (tableId: string, name: string) => void;
+  };
+}
+
+export function TournamentSetup({ socket }: TournamentSetupProps) {
   const { 
     tournament, 
     createTournament, 
-    updateTournamentName, 
-    updateTotalRounds,
-    updateSettings,
-    startTournament,
+    updateTournamentName: localUpdateName, 
+    updateTotalRounds: localUpdateRounds,
+    updateSettings: localUpdateSettings,
+    startTournament: localStartTournament,
     getSavedTournamentSummaries,
     loadTournament,
-    deleteSavedTournament
+    deleteSavedTournament,
+    onlineMode,
+    isHost,
   } = useTournamentStore();
+
+  // Use socket methods if in online mode, otherwise use local store
+  const updateTournamentName = socket ? socket.updateTournamentName : localUpdateName;
+  const updateTotalRounds = socket ? socket.updateTotalRounds : localUpdateRounds;
+  const updateSettings = socket ? socket.updateSettings : localUpdateSettings;
+  const startTournament = socket ? socket.startTournament : localStartTournament;
 
   const [name, setName] = useState(tournament?.name || '');
   const [roundsInput, setRoundsInput] = useState((tournament?.totalRounds || 4).toString());
@@ -224,10 +246,10 @@ export function TournamentSetup() {
           </section>
 
           {/* Table Setup */}
-          {showTableSetup && <TableSetup />}
+          {showTableSetup && <TableSetup socket={socket} />}
 
           {/* Player Registration */}
-          <PlayerRegistration />
+          <PlayerRegistration socket={socket} />
 
           {/* Start Tournament */}
           <section className="card p-6">

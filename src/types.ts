@@ -108,6 +108,8 @@ export interface TournamentState {
   savedTournaments: Tournament[];
   viewMode: ViewMode;
   isHost: boolean;
+  connectedPlayerId: string | null;
+  onlineMode: boolean;
   
   // Actions
   createTournament: (name: string, totalRounds: number) => void;
@@ -140,6 +142,9 @@ export interface TournamentState {
   
   setViewMode: (mode: ViewMode) => void;
   setIsHost: (isHost: boolean) => void;
+  setTournament: (tournament: Tournament | null) => void;
+  setConnectedPlayerId: (playerId: string | null) => void;
+  setOnlineMode: (online: boolean) => void;
   
   // Utility
   getPlayerById: (playerId: string) => Player | undefined;

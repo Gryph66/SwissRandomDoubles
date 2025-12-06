@@ -2,17 +2,24 @@ import { useState, useEffect } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import type { ViewMode } from '../../types';
 
-const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; large?: boolean }[] = [
-  { mode: 'setup', label: 'Setup', requiresTournament: false },
+const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; large?: boolean; hostOnly?: boolean }[] = [
+  { mode: 'setup', label: 'Setup', requiresTournament: false, hostOnly: true },
   { mode: 'history', label: 'Matches', requiresTournament: true, large: true },
   { mode: 'rounds', label: 'Scores', requiresTournament: true },
   { mode: 'standings', label: 'Standings', requiresTournament: true },
   { mode: 'analysis', label: 'Analysis', requiresTournament: true },
-  { mode: 'admin', label: 'Admin', requiresTournament: true },
+  { mode: 'admin', label: 'Admin', requiresTournament: true, hostOnly: true },
 ];
 
-export function Header() {
-  const { tournament, viewMode, setViewMode, isHost } = useTournamentStore();
+interface HeaderProps {
+  connectedCount?: number;
+  isOnline?: boolean;
+  isHost?: boolean;
+}
+
+export function Header({ connectedCount, isOnline, isHost: isHostProp }: HeaderProps) {
+  const { tournament, viewMode, setViewMode, isHost: storeIsHost } = useTournamentStore();
+  const isHost = isHostProp ?? storeIsHost;
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -65,7 +72,8 @@ export function Header() {
             {navItems.map((item) => {
               const isDisabled = item.requiresTournament && !tournament;
               const isActive = viewMode === item.mode;
-              const showItem = isHost || item.mode !== 'admin';
+              // Hide host-only items from non-hosts
+              const showItem = !item.hostOnly || isHost;
 
               if (!showItem) return null;
 
@@ -91,8 +99,18 @@ export function Header() {
             })}
           </nav>
 
-          {/* Share Code & Fullscreen */}
+          {/* Online Status, Share Code & Fullscreen */}
           <div className="flex items-center gap-4">
+            {/* Online indicator */}
+            {isOnline && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  {connectedCount} online
+                </span>
+              </div>
+            )}
+            
             {tournament && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-[var(--color-text-muted)]">Code:</span>
