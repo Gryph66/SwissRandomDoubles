@@ -440,8 +440,30 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
       },
 
       resetTournament: () => {
+        const state = get();
+        if (!state.tournament) return;
+        
+        // Reset tournament to setup state but keep players, tables, settings
+        const resetPlayers = state.tournament.players.map(p => ({
+          ...p,
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          pointsFor: 0,
+          pointsAgainst: 0,
+          twenties: 0,
+          byeCount: 0,
+        }));
+        
         set({
-          tournament: null,
+          tournament: {
+            ...state.tournament,
+            matches: [],
+            currentRound: 0,
+            status: 'setup',
+            players: resetPlayers,
+            updatedAt: Date.now(),
+          },
           viewMode: 'setup',
         });
       },
