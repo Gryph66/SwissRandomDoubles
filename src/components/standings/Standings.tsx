@@ -258,7 +258,7 @@ export function Standings() {
         <span>W = Wins</span>
         <span>L = Losses</span>
         <span>T = Ties</span>
-        <span className="text-[var(--color-accent)]">Score = W×2 + T×1 (Bye=Win)</span>
+        <span className="text-[var(--color-accent)]">Score = W×2 + T×1 (Bye=Tie if 2+ byes)</span>
         <span>PF = Points For</span>
         <span>PA = Points Against</span>
         <span>+/- = Differential</span>

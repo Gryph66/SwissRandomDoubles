@@ -479,6 +479,12 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         const players = state.tournament.players.filter((p) => p.active);
         const matches = state.tournament.matches;
         
+        // Count total byes in the tournament to determine bye scoring
+        // If 2+ byes: bye = tie (1 point) + 4 pts + avg 20s
+        // If 0-1 byes: bye = win (2 points) + 4 pts + avg 20s
+        const totalByes = matches.filter(m => m.isBye && m.completed).length;
+        const byeCountsAsTie = totalByes >= 2;
+        
         // Calculate stats from MATCH DATA (not stored player stats) for accuracy
         const calculatePlayerStats = (playerId: string) => {
           let wins = 0, losses = 0, ties = 0;
@@ -494,8 +500,12 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
             if (!inTeam1 && !inTeam2) return;
 
             if (match.isBye) {
-              // Bye match
-              wins += 1;
+              // Bye match - counts as tie if 2+ total byes, otherwise as win
+              if (byeCountsAsTie) {
+                ties += 1;
+              } else {
+                wins += 1;
+              }
               pointsFor += match.score1 ?? 4;
               twenties += match.twenties1 ?? 0;
               byeCount += 1;
@@ -525,8 +535,8 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         const standings: PlayerStanding[] = players.map((player) => {
           const stats = calculatePlayerStats(player.id);
           
-          // Challonge-style score: Win=2, Tie=1, Loss=0, Bye=2 (same as win)
-          // All wins (including byes) = 2 points each
+          // Challonge-style score: Win=2, Tie=1, Loss=0
+          // Bye scoring: If 2+ byes in tournament, bye=tie(1pt). Otherwise bye=win(2pts).
           const score = (stats.wins * 2) + (stats.ties * 1);
           
           return {
@@ -548,7 +558,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
 
         // Sort by: score desc, point diff desc, points for desc
         standings.sort((a, b) => {
-          // Primary: Challonge score (Win=2, Tie=1, Bye=1, Loss=0)
+          // Primary: Challonge score (Win=2, Tie=1, Loss=0, Bye=dynamic)
           if (b.score !== a.score) {
             return b.score - a.score;
           }
