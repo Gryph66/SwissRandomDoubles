@@ -98,10 +98,9 @@ export function generateRoundPairings(
 /**
  * Select player for bye
  * Round 1: Completely random
- * Round 2+: 
- *   - No one gets a 2nd bye until everyone has had 1
- *   - Among eligible players, prefer lowest ranked (by standings)
- *   - If all lowest ranked have had a bye, move up to next lowest
+ * Round 2+: Start from lowest ranked player and work up
+ *   - Give bye to the lowest ranked player who hasn't had a bye yet
+ *   - No one gets 2 byes until everyone has had 1
  */
 function selectByePlayer(players: Player[], round: number): Player {
   if (round === 1) {
@@ -111,7 +110,7 @@ function selectByePlayer(players: Player[], round: number): Player {
   }
   
   // Round 2+: Sort by standings (best to worst)
-  // Best players at index 0, worst at end
+  // Best players at index 0, worst players at end
   const sorted = [...players].sort((a, b) => {
     // Primary: wins (more is better)
     if (b.wins !== a.wins) return b.wins - a.wins;
@@ -123,40 +122,19 @@ function selectByePlayer(players: Player[], round: number): Player {
     return b.pointsFor - a.pointsFor;
   });
   
-  // Rule 1: No one gets a 2nd bye until everyone has had 1
+  // Find the minimum bye count (no one gets 2 byes until everyone has 1)
   const minByeCount = Math.min(...sorted.map(p => p.byeCount));
-  const playersWithMinByes = sorted.filter(p => p.byeCount === minByeCount);
   
-  // Rule 2: Among players with min byes, prefer those at the bottom of standings
-  // Find the lowest ranked players (end of sorted array) who have min byes
-  // Start from the bottom and work up until we find someone with min byes
+  // Start from the BOTTOM (worst ranked) and work UP
+  // Find the first player with the minimum bye count
   for (let i = sorted.length - 1; i >= 0; i--) {
     if (sorted[i].byeCount === minByeCount) {
-      // Found a candidate at position i (lower in standings)
-      // Collect all players at similar ranking level with same bye count
-      // Look for players in the bottom portion who are eligible
-      const eligibleFromBottom: Player[] = [];
-      
-      // Gather eligible players from the bottom up
-      for (let j = sorted.length - 1; j >= 0; j--) {
-        if (sorted[j].byeCount === minByeCount) {
-          eligibleFromBottom.push(sorted[j]);
-          // Stop once we have a reasonable pool (at least 1, up to ~25% of eligible)
-          if (eligibleFromBottom.length >= Math.max(1, Math.ceil(playersWithMinByes.length * 0.25))) {
-            break;
-          }
-        }
-      }
-      
-      // Randomly select from the bottom eligible players
-      const randomIndex = Math.floor(Math.random() * eligibleFromBottom.length);
-      return eligibleFromBottom[randomIndex];
+      return sorted[i];
     }
   }
   
   // Fallback: shouldn't reach here, but just in case
-  const randomIndex = Math.floor(Math.random() * players.length);
-  return players[randomIndex];
+  return sorted[sorted.length - 1];
 }
 
 /**
