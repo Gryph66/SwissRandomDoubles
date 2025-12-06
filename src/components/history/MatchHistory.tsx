@@ -21,7 +21,6 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
     completeTournament: localCompleteTournament, 
     setViewMode,
     isHost,
-    connectedPlayerId,
   } = useTournamentStore();
   
   const submitScore = socket ? socket.submitScore : localSubmitScore;
@@ -149,8 +148,6 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
             match={match} 
             isCurrentRound={isCurrentRound}
             submitScore={submitScore}
-            isHost={isHost}
-            connectedPlayerId={connectedPlayerId}
           />
         ))}
       </div>
@@ -219,11 +216,9 @@ interface MatchCardWithEntryProps {
   match: Match;
   isCurrentRound: boolean;
   submitScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
-  isHost: boolean;
-  connectedPlayerId: string | null;
 }
 
-function MatchCardWithEntry({ match, isCurrentRound, submitScore, isHost, connectedPlayerId }: MatchCardWithEntryProps) {
+function MatchCardWithEntry({ match, isCurrentRound, submitScore }: MatchCardWithEntryProps) {
   const { tournament, getPlayerById } = useTournamentStore();
   const [score1, setScore1] = useState(match.score1?.toString() ?? '');
   const [score2, setScore2] = useState(match.score2?.toString() ?? '');
@@ -246,13 +241,9 @@ function MatchCardWithEntry({ match, isCurrentRound, submitScore, isHost, connec
   
   const pointsPerMatch = tournament.settings.pointsPerMatch || 8;
   
-  // Check if this player can submit scores for this match
-  // Host can always submit; players can submit for their own matches
-  const canSubmitForMatch = isHost || 
-    (connectedPlayerId && (
-      match.team1.includes(connectedPlayerId) || 
-      match.team2?.includes(connectedPlayerId)
-    ));
+  // Any connected user can submit scores for any match
+  // (Host always can, and any player in the tournament can help enter scores)
+  const canSubmitForMatch = true;
 
   // Auto-fill the other team's score
   const handleScore1Change = (value: string) => {

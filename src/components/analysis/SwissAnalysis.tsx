@@ -178,22 +178,23 @@ export function SwissAnalysis() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-4 md:space-y-8">
       <div>
-        <h2 className="text-2xl font-display font-bold">Swiss Analysis</h2>
-        <p className="text-[var(--color-text-secondary)] mt-1">
+        <h2 className="text-xl md:text-2xl font-display font-bold">Swiss Analysis</h2>
+        <p className="text-sm md:text-base text-[var(--color-text-secondary)] mt-1">
           See how the Swiss system separates players by skill over {analysis.length} rounds
         </p>
       </div>
 
       {/* Pool Separation */}
-      <section className="card p-6">
+      <section className="card p-4 md:p-6">
         <h3 className="text-xl font-display font-semibold mb-4">Pool Separation</h3>
-        <p className="text-base text-[var(--color-text-muted)] mb-6">
+        <p className="text-sm md:text-base text-[var(--color-text-muted)] mb-4 md:mb-6">
           Players are grouped into pools of {poolSize} based on their final ranking. 
           The Swiss format pairs similar-ranked players as partners, causing skill levels to naturally separate.
         </p>
-        <div className="grid grid-cols-4 gap-4">
+        {/* Mobile: stack vertically, Desktop: 4-column grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {Array.from({ length: Math.min(numPools, 8) }).map((_, poolIdx) => {
             const color = getPoolColor(poolIdx);
             const startRank = poolIdx * poolSize + 1;
@@ -201,12 +202,14 @@ export function SwissAnalysis() {
             const poolPlayers = finalRanking.filter((r) => getPoolForRank(r.rank) === poolIdx);
 
             return (
-              <div key={poolIdx} className={`p-5 rounded-lg border ${color.bg} ${color.border}`}>
-                <div className={`text-xl font-bold ${color.text}`}>Pool {getPoolLabel(poolIdx)}</div>
-                <div className="text-base text-[var(--color-text-muted)] mb-3">({startRank}-{endRank})</div>
-                <div className="space-y-1">
+              <div key={poolIdx} className={`p-3 md:p-5 rounded-lg border ${color.bg} ${color.border}`}>
+                <div className="flex items-baseline gap-2 mb-2 md:mb-3">
+                  <span className={`text-lg md:text-xl font-bold ${color.text}`}>Pool {getPoolLabel(poolIdx)}</span>
+                  <span className="text-sm text-[var(--color-text-muted)]">({startRank}-{endRank})</span>
+                </div>
+                <div className="space-y-0.5 md:space-y-1">
                   {poolPlayers.map((r) => (
-                    <div key={r.player.id} className="text-lg font-medium text-[var(--color-text-primary)]">
+                    <div key={r.player.id} className="text-base md:text-lg font-medium text-[var(--color-text-primary)]">
                       {r.rank}. {r.player.name}
                     </div>
                   ))}
@@ -216,14 +219,14 @@ export function SwissAnalysis() {
           })}
         </div>
         {numPools > 8 && (
-          <p className="text-base text-[var(--color-text-muted)] mt-4">
+          <p className="text-sm md:text-base text-[var(--color-text-muted)] mt-4">
             + {numPools - 8} more pools not shown
           </p>
         )}
       </section>
 
-      {/* Rank Progression Table */}
-      <section className="card p-6">
+      {/* Rank Progression Table - hidden on mobile, shown on larger screens */}
+      <section className="card p-4 md:p-6 hidden md:block">
         <h3 className="text-lg font-display font-semibold mb-4">Rank Progression</h3>
         <p className="text-sm text-[var(--color-text-muted)] mb-4">
           Track how each player's ranking changed after each round. 
@@ -307,13 +310,13 @@ export function SwissAnalysis() {
       </section>
 
       {/* Partner Pairing Analysis */}
-      <section className="card p-6">
+      <section className="card p-4 md:p-6">
         <h3 className="text-lg font-display font-semibold mb-4">Partner Pairing Quality</h3>
         <p className="text-sm text-[var(--color-text-muted)] mb-4">
           Shows the average rank difference between partners each round. 
           Lower numbers mean players are being paired with others of similar skill.
         </p>
-        <div className="flex gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
           {analysis.map((snapshot) => {
             // Calculate average rank difference between partners
             const pairDiffs: number[] = [];
@@ -352,8 +355,8 @@ export function SwissAnalysis() {
         </p>
       </section>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs text-[var(--color-text-muted)]">
+      {/* Legend - hidden on mobile since the detailed table is hidden */}
+      <div className="hidden md:flex flex-wrap gap-4 text-xs text-[var(--color-text-muted)]">
         <div className="flex items-center gap-2">
           <span className="w-4 h-4 rounded bg-[var(--color-success)]/20"></span>
           <span>Won</span>

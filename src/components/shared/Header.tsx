@@ -87,9 +87,7 @@ export function Header({ connectedCount, isOnline, isHost: isHostProp, showQRCod
                   className={`
                     ${item.large ? 'px-5 py-2 text-base' : 'px-3 py-2 text-sm'} font-medium rounded-lg transition-all duration-200
                     ${isActive
-                      ? item.large 
-                        ? 'bg-[var(--color-accent)] text-[var(--color-bg-primary)]'
-                        : 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-bg-primary)]'
                       : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
                     }
                     ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
