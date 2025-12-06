@@ -1,6 +1,6 @@
 // Shared types for Socket.IO communication
 
-import type { Tournament, Player, Table, TournamentSettings } from '../src/types';
+import type { Tournament, Player, Table, TournamentSettings } from '../src/types.js';
 
 // Room/Session types
 export interface ConnectedPlayer {

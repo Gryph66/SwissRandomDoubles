@@ -12,9 +12,9 @@ import type {
   InterServerEvents, 
   SocketData,
   TournamentRoom 
-} from './types';
-import { ROOM_CONFIG } from './types';
-import * as RoomManager from './roomManager';
+} from './types.js';
+import { ROOM_CONFIG } from './types.js';
+import * as RoomManager from './roomManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

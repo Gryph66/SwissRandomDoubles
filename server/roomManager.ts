@@ -1,8 +1,8 @@
 // Room management for tournament sessions
 
-import type { Tournament, Player, Table, TournamentSettings, Match } from '../src/types';
-import { TournamentRoom, ConnectedPlayer, ROOM_CONFIG } from './types';
-import { generateRoundPairings } from '../src/utils/pairingAlgorithm';
+import type { Tournament, Player, Table, TournamentSettings, Match } from '../src/types.js';
+import { TournamentRoom, ConnectedPlayer, ROOM_CONFIG } from './types.js';
+import { generateRoundPairings } from '../src/utils/pairingAlgorithm.js';
 
 // In-memory room storage
 const rooms = new Map<string, TournamentRoom>();
