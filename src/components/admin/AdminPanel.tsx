@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scorecard } from './Scorecard';
+import { ManualRoundEntry } from './ManualRoundEntry';
 import { downloadLog, generateLogText } from '../../utils/pairingLog';
 
 interface AdminPanelProps {
@@ -38,6 +39,7 @@ export function AdminPanel({ socket }: AdminPanelProps) {
   const [showLoadConfirm, setShowLoadConfirm] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showPairingLog, setShowPairingLog] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
 
   const savedTournaments = getSavedTournamentSummaries();
 
@@ -363,6 +365,28 @@ export function AdminPanel({ socket }: AdminPanelProps) {
         )}
       </section>
 
+      {/* Manual Round Entry */}
+      <section className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-display font-semibold">Manual Round Entry</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Manually enter match results for previous rounds (data recovery)
+            </p>
+          </div>
+          <button
+            onClick={() => setShowManualEntry(true)}
+            className="btn btn-secondary"
+          >
+            Enter Rounds Manually
+          </button>
+        </div>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Use this if you need to enter results from rounds that were played but not recorded in the app.
+          The Swiss algorithm will use this history for future pairings.
+        </p>
+      </section>
+
       {/* Tournament History */}
       <section className="card p-6">
         <h3 className="text-lg font-display font-semibold mb-4">Tournament History</h3>
@@ -504,6 +528,11 @@ export function AdminPanel({ socket }: AdminPanelProps) {
           </div>
         )}
       </section>
+
+      {/* Manual Round Entry Modal */}
+      {showManualEntry && (
+        <ManualRoundEntry onClose={() => setShowManualEntry(false)} />
+      )}
     </div>
   );
 }
