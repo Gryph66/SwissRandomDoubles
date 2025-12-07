@@ -35,6 +35,12 @@ export interface ClientToServerEvents {
     playerName: string;
   }) => void;
   
+  rejoin_tournament: (data: {
+    code: string;
+    playerName: string;
+    isHost: boolean;
+  }) => void;
+  
   leave_tournament: () => void;
   
   keep_alive: () => void;

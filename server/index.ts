@@ -265,6 +265,78 @@ io.on('connection', (socket) => {
     leaveCurrentRoom(socket);
   });
   
+  // Handle reconnection - rejoin tournament after socket disconnect/reconnect
+  socket.on('rejoin_tournament', (data) => {
+    const { code, playerName, isHost } = data;
+    const normalizedCode = code.toUpperCase().trim();
+    
+    console.log(`[Rejoin] "${playerName}" attempting to rejoin ${normalizedCode} as ${isHost ? 'host' : 'player'}`);
+    
+    const room = RoomManager.getRoom(normalizedCode);
+    
+    if (!room) {
+      console.log(`[Rejoin] Tournament ${normalizedCode} not found`);
+      socket.emit('join_error', {
+        message: `Tournament "${normalizedCode}" no longer exists. It may have been closed due to inactivity.`,
+      });
+      return;
+    }
+    
+    // For host rejoin, verify they were the original host
+    let actuallyHost = isHost;
+    if (isHost) {
+      // Check if there's currently no host connected, or the host name matches
+      const existingHost = Array.from(room.connectedPlayers.values()).find(p => p.isHost);
+      if (existingHost && existingHost.socketId !== socket.id) {
+        // There's already a different host connected - join as regular player
+        console.log(`[Rejoin] Host already connected, joining as player`);
+        actuallyHost = false;
+      }
+    }
+    
+    // Add as connected player
+    const connectedPlayer = RoomManager.addConnectedPlayer(
+      normalizedCode, 
+      socket.id, 
+      playerName, 
+      actuallyHost
+    );
+    
+    if (!connectedPlayer) {
+      socket.emit('join_error', {
+        message: 'Failed to rejoin tournament.',
+      });
+      return;
+    }
+    
+    // Update host socket ID if rejoining as host
+    if (actuallyHost) {
+      room.hostSocketId = socket.id;
+    }
+    
+    // Join socket to room
+    socket.join(normalizedCode);
+    socket.data.roomCode = normalizedCode;
+    socket.data.playerName = playerName;
+    socket.data.playerId = connectedPlayer.playerId;
+    socket.data.isHost = actuallyHost;
+    
+    // Send tournament state to rejoining player
+    socket.emit('tournament_joined', {
+      tournament: room.tournament,
+      playerId: connectedPlayer.playerId,
+      isHost: actuallyHost,
+    });
+    
+    // Notify others in the room
+    socket.to(normalizedCode).emit('player_connected', {
+      playerName,
+      connectedCount: RoomManager.getConnectedCount(normalizedCode),
+    });
+    
+    console.log(`[Rejoin] "${playerName}" rejoined ${normalizedCode} as ${actuallyHost ? 'host' : 'player'}`);
+  });
+  
   socket.on('keep_alive', () => {
     if (socket.data.roomCode) {
       RoomManager.touchRoom(socket.data.roomCode);

@@ -68,6 +68,20 @@ interface UseSocketReturn {
   editScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
 }
 
+// Store session info for reconnection
+interface SessionInfo {
+  roomCode: string | null;
+  playerName: string;
+  isHost: boolean;
+}
+
+// Persist session across reconnects
+let sessionInfo: SessionInfo = {
+  roomCode: null,
+  playerName: '',
+  isHost: false,
+};
+
 export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   const socketRef = useRef<TypedSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -88,8 +102,9 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     const socket = io(getServerUrl(), {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     }) as TypedSocket;
     
     socket.on('connect', () => {
@@ -97,11 +112,22 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
       setIsConnected(true);
       setIsConnecting(false);
       setError(null);
+      
+      // Auto-rejoin tournament if we were in one
+      if (sessionInfo.roomCode && sessionInfo.playerName) {
+        console.log(`[Socket] Auto-rejoining tournament ${sessionInfo.roomCode} as ${sessionInfo.isHost ? 'host' : 'player'}`);
+        socket.emit('rejoin_tournament', {
+          code: sessionInfo.roomCode,
+          playerName: sessionInfo.playerName,
+          isHost: sessionInfo.isHost,
+        });
+      }
     });
     
     socket.on('disconnect', (reason) => {
       console.log('[Socket] Disconnected:', reason);
       setIsConnected(false);
+      // Don't clear session info - we want to rejoin on reconnect
     });
     
     socket.on('connect_error', (err) => {
@@ -112,10 +138,17 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     
     // Tournament events
     socket.on('tournament_created', (data) => {
+      // Store session info for reconnection
+      sessionInfo.roomCode = data.code;
+      sessionInfo.isHost = true;
+      console.log(`[Socket] Session stored: host of ${data.code}`);
       optionsRef.current.onTournamentCreated?.(data.code, data.tournament);
     });
     
     socket.on('tournament_joined', (data) => {
+      // Store session info for reconnection (update with server's response)
+      sessionInfo.isHost = data.isHost;
+      console.log(`[Socket] Session updated: ${data.isHost ? 'host' : 'player'} in ${sessionInfo.roomCode}`);
       optionsRef.current.onTournamentJoined?.(data.tournament, data.playerId, data.isHost);
     });
     
@@ -185,14 +218,26 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   // ----------------------------------------
   
   const createTournament = useCallback((tournamentName: string, totalRounds: number, hostName: string) => {
+    // Store session info before creating (will be confirmed by tournament_created event)
+    sessionInfo.playerName = hostName;
+    sessionInfo.isHost = true;
     socketRef.current?.emit('create_tournament', { tournamentName, totalRounds, hostName });
   }, []);
   
   const joinTournament = useCallback((code: string, playerName: string) => {
+    // Store session info before joining (will be confirmed by tournament_joined event)
+    sessionInfo.roomCode = code.toUpperCase().trim();
+    sessionInfo.playerName = playerName;
+    sessionInfo.isHost = false;
     socketRef.current?.emit('join_tournament', { code, playerName });
   }, []);
   
   const leaveTournament = useCallback(() => {
+    // Clear session info when intentionally leaving
+    sessionInfo.roomCode = null;
+    sessionInfo.playerName = '';
+    sessionInfo.isHost = false;
+    console.log('[Socket] Session cleared');
     socketRef.current?.emit('leave_tournament');
   }, []);
   
