@@ -143,6 +143,22 @@ function App() {
     socket.joinTournament(code, playerName);
   }, [socket]);
   
+  // Handle loading a tournament from JSON file (goes to local/offline mode)
+  const handleLoadTournament = useCallback((loadedTournament: Tournament) => {
+    setTournament(loadedTournament);
+    setIsHost(true);
+    setOnlineMode(false);
+    setAppMode('local');
+    // Set view based on tournament status
+    if (loadedTournament.status === 'setup') {
+      setViewMode('setup');
+    } else if (loadedTournament.status === 'completed') {
+      setViewMode('standings');
+    } else {
+      setViewMode('history'); // Show match history for active tournaments
+    }
+  }, [setTournament, setIsHost, setOnlineMode, setViewMode]);
+
   // Show landing page if not in a mode yet
   if (appMode === 'landing') {
     return (
@@ -153,6 +169,7 @@ function App() {
         onCreateTournament={handleCreateTournament}
         onJoinTournament={handleJoinTournament}
         onLocalMode={handleLocalMode}
+        onLoadTournament={handleLoadTournament}
         joinError={joinError}
       />
     );

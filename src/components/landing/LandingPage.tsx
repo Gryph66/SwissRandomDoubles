@@ -1,6 +1,7 @@
 // Landing page - Create or Join tournament
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { Tournament } from '../../types';
 
 // Get build info
 const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
@@ -14,6 +15,7 @@ interface LandingPageProps {
   onCreateTournament: (tournamentName: string, totalRounds: number, hostName: string) => void;
   onJoinTournament: (code: string, playerName: string) => void;
   onLocalMode: () => void;
+  onLoadTournament?: (tournament: Tournament) => void;
   joinError: string | null;
 }
 
@@ -24,6 +26,7 @@ export function LandingPage({
   onCreateTournament,
   onJoinTournament,
   onLocalMode,
+  onLoadTournament,
   joinError,
 }: LandingPageProps) {
   // Check URL for code parameter (from QR code scan)
@@ -36,6 +39,8 @@ export function LandingPage({
   // Create form state
   const [tournamentName, setTournamentName] = useState('');
   const [hostName, setHostName] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Join form state - pre-fill code from URL if present
   const [joinCode, setJoinCode] = useState(codeFromUrl);
@@ -65,6 +70,52 @@ export function LandingPage({
     if (!joinCode.trim() || !playerName.trim()) return;
     
     onJoinTournament(joinCode.trim().toUpperCase(), playerName.trim());
+  };
+  
+  // Handle loading tournament from JSON file
+  const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onLoadTournament) return;
+    
+    setLoadError(null);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        
+        // Validate basic structure
+        if (!json.players || !Array.isArray(json.players)) {
+          throw new Error('Invalid tournament file - missing players');
+        }
+        
+        // Create tournament object
+        const tournament: Tournament = {
+          id: json.id || crypto.randomUUID(),
+          name: json.name || 'Loaded Tournament',
+          players: json.players,
+          matches: json.matches || [],
+          tables: json.tables || [],
+          currentRound: json.currentRound || 0,
+          totalRounds: json.totalRounds || 6,
+          status: json.status || 'setup',
+          settings: json.settings || { allowTies: true, pointsForWin: 2, pointsForTie: 1, pointsForLoss: 0 },
+          shareCode: '',
+          createdAt: json.createdAt || Date.now(),
+          updatedAt: Date.now(),
+          pairingLogs: json.pairingLogs || [],
+        };
+        
+        onLoadTournament(tournament);
+      } catch (err) {
+        setLoadError(err instanceof Error ? err.message : 'Failed to load file');
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
   
   // BUG FIX: Disable buttons when not connected OR when there's an error
@@ -180,6 +231,36 @@ export function LandingPage({
                 </div>
               </div>
             </div>
+            
+            {/* Load Tournament */}
+            <div className="flex justify-center mb-6">
+              <label className="
+                flex items-center gap-3 px-6 py-3 rounded-xl border border-dashed border-[var(--color-border)]
+                bg-[var(--color-bg-secondary)]/30 cursor-pointer
+                hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-bg-secondary)]/50
+                transition-all duration-300
+              ">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-[var(--color-text-muted)]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <span className="text-[var(--color-text-secondary)] font-medium">
+                  Load Tournament from File
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileLoad}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            
+            {loadError && (
+              <div className="text-center mb-6">
+                <span className="text-red-400 text-sm">{loadError}</span>
+              </div>
+            )}
             
             {/* Offline Mode */}
             <div className="text-center">
