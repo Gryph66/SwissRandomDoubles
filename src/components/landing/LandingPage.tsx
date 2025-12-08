@@ -30,7 +30,6 @@ export function LandingPage({
   
   // Create form state
   const [tournamentName, setTournamentName] = useState('');
-  const [totalRounds, setTotalRounds] = useState('4');
   const [hostName, setHostName] = useState('');
   
   // Join form state - pre-fill code from URL if present
@@ -48,9 +47,10 @@ export function LandingPage({
     e.preventDefault();
     if (!tournamentName.trim() || !hostName.trim()) return;
     
+    // Default to 6 rounds - can be changed in Admin settings
     onCreateTournament(
       tournamentName.trim(),
-      parseInt(totalRounds) || 4,
+      6,
       hostName.trim()
     );
   };
@@ -246,22 +246,6 @@ export function LandingPage({
                              rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]
                              focus:outline-none focus:border-[var(--color-accent)]"
                     required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                    Number of Rounds
-                  </label>
-                  <input
-                    type="number"
-                    value={totalRounds}
-                    onChange={(e) => setTotalRounds(e.target.value)}
-                    min="1"
-                    max="20"
-                    className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]
-                             rounded-lg text-[var(--color-text-primary)]
-                             focus:outline-none focus:border-[var(--color-accent)]"
                   />
                 </div>
               </div>

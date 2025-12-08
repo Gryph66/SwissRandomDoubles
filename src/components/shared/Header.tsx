@@ -14,15 +14,23 @@ const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; la
 interface HeaderProps {
   connectedCount?: number;
   isOnline?: boolean;
+  isConnected?: boolean;
   isHost?: boolean;
   showQRCode?: boolean;
   onToggleQRCode?: () => void;
 }
 
-export function Header({ connectedCount, isOnline, isHost: isHostProp, showQRCode, onToggleQRCode }: HeaderProps) {
+export function Header({ connectedCount, isOnline, isConnected, isHost: isHostProp, showQRCode, onToggleQRCode }: HeaderProps) {
   const { tournament, viewMode, setViewMode, isHost: storeIsHost } = useTournamentStore();
   const isHost = isHostProp ?? storeIsHost;
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showVersionInfo, setShowVersionInfo] = useState(false);
+
+  // Get build info
+  const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
+  const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'local';
+  const gitDate = typeof __GIT_DATE__ !== 'undefined' ? __GIT_DATE__ : '';
+  const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -99,15 +107,65 @@ export function Header({ connectedCount, isOnline, isHost: isHostProp, showQRCod
             })}
           </nav>
 
-          {/* Online Status, Share Code & Fullscreen */}
+          {/* Connection Status, Share Code & Fullscreen */}
           <div className="flex items-center gap-4">
-            {/* Online indicator */}
+            {/* Connection indicator */}
             {isOnline && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-xs text-[var(--color-text-muted)]">
-                  {connectedCount} online
-                </span>
+              <div 
+                className="flex items-center gap-2 cursor-pointer relative"
+                onClick={() => setShowVersionInfo(!showVersionInfo)}
+                title="Click for version info"
+              >
+                {isConnected ? (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-green-400">
+                      Connected
+                    </span>
+                    {connectedCount && connectedCount > 1 && (
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        ({connectedCount})
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <span className="text-xs text-red-400">
+                      Disconnected
+                    </span>
+                  </>
+                )}
+                
+                {/* Version info popup */}
+                {showVersionInfo && (
+                  <div className="absolute top-full right-0 mt-2 p-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 whitespace-nowrap">
+                    <div className="text-xs space-y-1">
+                      <div className="flex justify-between gap-4">
+                        <span className="text-[var(--color-text-muted)]">Version:</span>
+                        <span className="text-[var(--color-text-primary)] font-mono">{version}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-[var(--color-text-muted)]">Build:</span>
+                        <span className="text-[var(--color-accent)] font-mono">{gitCommit}</span>
+                      </div>
+                      {gitDate && (
+                        <div className="flex justify-between gap-4">
+                          <span className="text-[var(--color-text-muted)]">Date:</span>
+                          <span className="text-[var(--color-text-secondary)] font-mono">{gitDate}</span>
+                        </div>
+                      )}
+                      {buildTime && (
+                        <div className="flex justify-between gap-4">
+                          <span className="text-[var(--color-text-muted)]">Built:</span>
+                          <span className="text-[var(--color-text-secondary)] font-mono text-[10px]">
+                            {new Date(buildTime).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             

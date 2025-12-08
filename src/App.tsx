@@ -187,6 +187,7 @@ function App() {
       <Header 
         connectedCount={appMode === 'online' ? connectedCount : undefined}
         isOnline={appMode === 'online'}
+        isConnected={socket.isConnected}
         isHost={isHost}
         showQRCode={showQRCode}
         onToggleQRCode={() => setShowQRCode(!showQRCode)}
