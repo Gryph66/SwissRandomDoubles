@@ -281,30 +281,30 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
       </div>
 
       {/* Content */}
-      <div className="p-2 bg-[var(--color-bg-secondary)] space-y-1.5">
+      <div className="p-1.5 bg-[var(--color-bg-secondary)] space-y-1">
         {/* Team 1 Row */}
-        <div className={`flex items-center justify-between rounded p-1.5 ${
+        <div className={`flex items-center justify-between rounded px-1.5 py-1 ${
           isTeam1Winner ? 'bg-[var(--color-success)]/10' : 'bg-[var(--color-bg-tertiary)]'
         }`}>
-          <div className="flex-1 min-w-0 mr-2">
-            <div className={`text-sm font-semibold truncate ${isTeam1Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
+          <div className="flex-1 min-w-0">
+            <div className={`text-sm font-semibold truncate leading-tight ${isTeam1Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
               {team1Names[0]}
             </div>
             {team1Names[1] && (
-              <div className={`text-sm font-semibold truncate ${isTeam1Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
+              <div className={`text-sm font-semibold truncate leading-tight ${isTeam1Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
                 {team1Names[1]}
               </div>
             )}
           </div>
           {showEntry ? (
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
               <input
                 type="number"
                 min={0}
                 max={pointsPerMatch}
                 value={score1}
                 onChange={(e) => handleScore1Change(e.target.value)}
-                className="w-10 h-8 text-center text-sm font-mono font-bold rounded 
+                className="w-9 h-7 text-center text-sm font-mono font-bold rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
                 placeholder="Pts"
@@ -314,15 +314,15 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
                 min={0}
                 value={twenties1}
                 onChange={(e) => setTwenties1(e.target.value)}
-                className="w-10 h-8 text-center text-sm font-mono rounded 
+                className="w-9 h-7 text-center text-sm font-mono rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
                 placeholder="20s"
               />
             </div>
           ) : (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className={`text-xl font-mono font-bold ${isTeam1Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`}>
+            <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+              <span className={`text-lg font-mono font-bold ${isTeam1Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`}>
                 {match.score1 ?? '-'}
               </span>
               {(match.twenties1 ?? 0) > 0 && (
@@ -336,28 +336,28 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
         <div className="text-center text-xs text-[var(--color-text-muted)]">vs</div>
 
         {/* Team 2 Row */}
-        <div className={`flex items-center justify-between rounded p-1.5 ${
+        <div className={`flex items-center justify-between rounded px-1.5 py-1 ${
           isTeam2Winner ? 'bg-[var(--color-success)]/10' : 'bg-[var(--color-bg-tertiary)]'
         }`}>
-          <div className="flex-1 min-w-0 mr-2">
-            <div className={`text-sm font-semibold truncate ${isTeam2Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
+          <div className="flex-1 min-w-0">
+            <div className={`text-sm font-semibold truncate leading-tight ${isTeam2Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
               {team2Names[0]}
             </div>
             {team2Names[1] && (
-              <div className={`text-sm font-semibold truncate ${isTeam2Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
+              <div className={`text-sm font-semibold truncate leading-tight ${isTeam2Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>
                 {team2Names[1]}
               </div>
             )}
           </div>
           {showEntry ? (
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
               <input
                 type="number"
                 min={0}
                 max={pointsPerMatch}
                 value={score2}
                 onChange={(e) => handleScore2Change(e.target.value)}
-                className="w-10 h-8 text-center text-sm font-mono font-bold rounded 
+                className="w-9 h-7 text-center text-sm font-mono font-bold rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
                 placeholder="Pts"
@@ -367,15 +367,15 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
                 min={0}
                 value={twenties2}
                 onChange={(e) => setTwenties2(e.target.value)}
-                className="w-10 h-8 text-center text-sm font-mono rounded 
+                className="w-9 h-7 text-center text-sm font-mono rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
                 placeholder="20s"
               />
             </div>
           ) : (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className={`text-xl font-mono font-bold ${isTeam2Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`}>
+            <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+              <span className={`text-lg font-mono font-bold ${isTeam2Winner ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`}>
                 {match.score2 ?? '-'}
               </span>
               {(match.twenties2 ?? 0) > 0 && (
@@ -389,7 +389,7 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
         {showEntry && (
           <button
             onClick={handleSubmit}
-            className="w-full btn btn-primary text-sm py-1.5"
+            className="w-full btn btn-primary text-sm py-1"
           >
             {isComplete ? 'Update' : 'Submit'}
           </button>

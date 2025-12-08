@@ -6,25 +6,22 @@ import { execSync } from 'child_process'
 function getGitInfo() {
   // Check for Railway environment variables first (Railway provides these during build)
   const railwayCommit = process.env.RAILWAY_GIT_COMMIT_SHA
-  const railwayBranch = process.env.RAILWAY_GIT_BRANCH
   
-  if (railwayCommit) {
-    // We're on Railway - use their env vars
-    return { 
-      commitHash: railwayCommit.substring(0, 7), 
-      commitDate: new Date().toISOString().split('T')[0],
-      commitCount: process.env.RAILWAY_DEPLOYMENT_ID || 'railway'
-    }
-  }
-  
-  // Try local git
+  // Try local git first (works in both local dev and Railway since Railway clones the repo)
   try {
     const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
     const commitDate = execSync('git log -1 --format=%cd --date=short').toString().trim()
-    // Get commit count as a build number
     const commitCount = execSync('git rev-list --count HEAD').toString().trim()
     return { commitHash, commitDate, commitCount }
   } catch {
+    // Fallback for Railway if git commands fail
+    if (railwayCommit) {
+      return { 
+        commitHash: railwayCommit.substring(0, 7), 
+        commitDate: new Date().toISOString().split('T')[0],
+        commitCount: '0'
+      }
+    }
     return { commitHash: 'dev', commitDate: new Date().toISOString().split('T')[0], commitCount: '0' }
   }
 }
