@@ -1,17 +1,28 @@
 import { useMemo, useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 
-// Pool colors matching the rest of the app
-const POOL_COLORS = [
-  '#10b981', // emerald
-  '#3b82f6', // blue
-  '#f59e0b', // amber
-  '#a855f7', // purple
-  '#f43f5e', // rose
+// Vibrant colors for top 2 pools (16 players if pool size 8)
+const TOP_POOL_COLORS = [
+  '#10b981', // emerald - Pool A
+  '#22c55e', // green
+  '#14b8a6', // teal
   '#06b6d4', // cyan
-  '#f97316', // orange
+  '#0ea5e9', // sky
+  '#3b82f6', // blue
   '#6366f1', // indigo
+  '#8b5cf6', // violet
+  '#a855f7', // purple
+  '#d946ef', // fuchsia
+  '#ec4899', // pink
+  '#f43f5e', // rose
+  '#ef4444', // red
+  '#f97316', // orange
+  '#f59e0b', // amber
+  '#eab308', // yellow
 ];
+
+// Muted color for lower pools
+const MUTED_COLOR = '#64748b'; // slate-500
 
 interface PlayerRankData {
   playerId: string;
@@ -19,6 +30,7 @@ interface PlayerRankData {
   ranks: number[]; // rank at each round
   finalRank: number;
   poolIndex: number;
+  isTopPool: boolean;
 }
 
 export function RankRibbonChart() {
@@ -30,6 +42,7 @@ export function RankRibbonChart() {
     if (!tournament || tournament.currentRound === 0) return null;
 
     const poolSize = tournament.settings.poolSize || 8;
+    const topPoolsCutoff = poolSize * 2; // Top 2 pools
     const playerRanks: Map<string, number[]> = new Map();
 
     // Initialize with empty ranks
@@ -119,6 +132,7 @@ export function RankRibbonChart() {
           ranks,
           finalRank,
           poolIndex: Math.floor((finalRank - 1) / poolSize),
+          isTopPool: finalRank <= topPoolsCutoff,
         });
       }
     });
@@ -130,6 +144,7 @@ export function RankRibbonChart() {
       players: data,
       rounds: tournament.currentRound,
       poolSize,
+      topPoolsCutoff,
     };
   }, [tournament]);
 
@@ -141,7 +156,7 @@ export function RankRibbonChart() {
     );
   }
 
-  const { players, rounds } = chartData;
+  const { players, rounds, topPoolsCutoff } = chartData;
   const numPlayers = players.length;
 
   // Chart dimensions
@@ -181,7 +196,14 @@ export function RankRibbonChart() {
     return path;
   };
 
-  const getPoolColor = (poolIndex: number) => POOL_COLORS[poolIndex % POOL_COLORS.length];
+  // Get color for a player based on final rank
+  const getPlayerColor = (player: PlayerRankData) => {
+    if (player.isTopPool) {
+      // Use rank-1 as index into top pool colors (wrapping if needed)
+      return TOP_POOL_COLORS[(player.finalRank - 1) % TOP_POOL_COLORS.length];
+    }
+    return MUTED_COLOR;
+  };
 
   return (
     <div className="w-full overflow-x-auto">
@@ -233,7 +255,7 @@ export function RankRibbonChart() {
             stroke="var(--color-border)"
             strokeWidth={1}
             strokeDasharray="4,4"
-            opacity={0.5}
+            opacity={0.3}
           />
         ))}
 
@@ -245,10 +267,10 @@ export function RankRibbonChart() {
               <path
                 d={generatePath(player.ranks)}
                 fill="none"
-                stroke={getPoolColor(player.poolIndex)}
-                strokeWidth={hoveredPlayer ? 1.5 : 2.5}
+                stroke={getPlayerColor(player)}
+                strokeWidth={hoveredPlayer ? 2 : 3.5}
                 strokeLinecap="round"
-                opacity={hoveredPlayer ? 0.2 : 0.7}
+                opacity={hoveredPlayer ? 0.15 : (player.isTopPool ? 0.7 : 0.4)}
                 className="transition-all duration-200"
               />
               {/* Invisible wider path for hover detection */}
@@ -256,7 +278,7 @@ export function RankRibbonChart() {
                 d={generatePath(player.ranks)}
                 fill="none"
                 stroke="transparent"
-                strokeWidth={12}
+                strokeWidth={14}
                 strokeLinecap="round"
                 onMouseEnter={() => setHoveredPlayer(player.playerId)}
                 onMouseLeave={() => setHoveredPlayer(null)}
@@ -273,8 +295,8 @@ export function RankRibbonChart() {
               <path
                 d={generatePath(player.ranks)}
                 fill="none"
-                stroke={getPoolColor(player.poolIndex)}
-                strokeWidth={4}
+                stroke={getPlayerColor(player)}
+                strokeWidth={5}
                 strokeLinecap="round"
                 opacity={1}
                 className="transition-all duration-200"
@@ -285,8 +307,8 @@ export function RankRibbonChart() {
                   key={idx}
                   cx={xScale(idx + 1)}
                   cy={yScale(rank)}
-                  r={5}
-                  fill={getPoolColor(player.poolIndex)}
+                  r={6}
+                  fill={getPlayerColor(player)}
                   stroke="var(--color-bg-primary)"
                   strokeWidth={2}
                 />
@@ -296,7 +318,7 @@ export function RankRibbonChart() {
                 d={generatePath(player.ranks)}
                 fill="none"
                 stroke="transparent"
-                strokeWidth={12}
+                strokeWidth={14}
                 strokeLinecap="round"
                 onMouseEnter={() => setHoveredPlayer(player.playerId)}
                 onMouseLeave={() => setHoveredPlayer(null)}
@@ -309,7 +331,8 @@ export function RankRibbonChart() {
         {players.map((player) => {
           const startRank = player.ranks[0];
           const isHovered = player.playerId === hoveredPlayer;
-          const showLabel = showAllLabels || isHovered || player.finalRank <= 3;
+          // Show labels for top 2 pools, hovered, or if show all is enabled
+          const showLabel = showAllLabels || isHovered || player.isTopPool;
 
           return (
             <g key={`label-left-${player.playerId}`}>
@@ -319,24 +342,28 @@ export function RankRibbonChart() {
                   y={yScale(startRank)}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  className={`text-xs transition-all duration-200 ${
+                  className={`transition-all duration-200 ${
                     isHovered 
                       ? 'fill-[var(--color-text-primary)] font-bold' 
-                      : 'fill-[var(--color-text-muted)]'
+                      : player.isTopPool
+                        ? 'fill-[var(--color-text-secondary)]'
+                        : 'fill-[var(--color-text-muted)]'
                   }`}
                   style={{ fontSize: isHovered ? '12px' : '10px' }}
                 >
                   {player.name}
                 </text>
               )}
-              {/* Start rank indicator */}
-              <circle
-                cx={margin.left - 3}
-                cy={yScale(startRank)}
-                r={showLabel ? 0 : 3}
-                fill={getPoolColor(player.poolIndex)}
-                opacity={0.5}
-              />
+              {/* Start rank indicator for hidden labels */}
+              {!showLabel && (
+                <circle
+                  cx={margin.left - 3}
+                  cy={yScale(startRank)}
+                  r={3}
+                  fill={getPlayerColor(player)}
+                  opacity={0.4}
+                />
+              )}
             </g>
           );
         })}
@@ -345,36 +372,38 @@ export function RankRibbonChart() {
         {players.map((player) => {
           const endRank = player.ranks[player.ranks.length - 1];
           const isHovered = player.playerId === hoveredPlayer;
-          const showLabel = showAllLabels || isHovered || player.finalRank <= 3;
+          const showLabel = showAllLabels || isHovered || player.isTopPool;
 
           return (
             <g key={`label-right-${player.playerId}`}>
               {showLabel && (
-                <>
-                  <text
-                    x={width - margin.right + 8}
-                    y={yScale(endRank)}
-                    textAnchor="start"
-                    dominantBaseline="middle"
-                    className={`text-xs transition-all duration-200 ${
-                      isHovered 
-                        ? 'fill-[var(--color-text-primary)] font-bold' 
+                <text
+                  x={width - margin.right + 8}
+                  y={yScale(endRank)}
+                  textAnchor="start"
+                  dominantBaseline="middle"
+                  className={`transition-all duration-200 ${
+                    isHovered 
+                      ? 'fill-[var(--color-text-primary)] font-bold' 
+                      : player.isTopPool
+                        ? 'fill-[var(--color-text-secondary)]'
                         : 'fill-[var(--color-text-muted)]'
-                    }`}
-                    style={{ fontSize: isHovered ? '12px' : '10px' }}
-                  >
-                    #{endRank} {player.name}
-                  </text>
-                </>
+                  }`}
+                  style={{ fontSize: isHovered ? '12px' : '10px' }}
+                >
+                  #{endRank} {player.name}
+                </text>
               )}
-              {/* End rank dot */}
-              <circle
-                cx={width - margin.right + 3}
-                cy={yScale(endRank)}
-                r={showLabel ? 0 : 3}
-                fill={getPoolColor(player.poolIndex)}
-                opacity={0.5}
-              />
+              {/* End rank dot for hidden labels */}
+              {!showLabel && (
+                <circle
+                  cx={width - margin.right + 3}
+                  cy={yScale(endRank)}
+                  r={3}
+                  fill={getPlayerColor(player)}
+                  opacity={0.4}
+                />
+              )}
             </g>
           );
         })}
@@ -384,16 +413,20 @@ export function RankRibbonChart() {
           const player = players.find(p => p.playerId === hoveredPlayer);
           if (!player) return null;
           
+          const movement = player.ranks[0] - player.finalRank;
+          const arrow = movement > 0 ? '↑' : movement < 0 ? '↓' : '→';
+          
           return (
             <g>
               <rect
-                x={width / 2 - 100}
+                x={width / 2 - 110}
                 y={5}
-                width={200}
+                width={220}
                 height={28}
                 rx={4}
                 fill="var(--color-bg-tertiary)"
-                stroke="var(--color-border)"
+                stroke={getPlayerColor(player)}
+                strokeWidth={2}
               />
               <text
                 x={width / 2}
@@ -401,8 +434,8 @@ export function RankRibbonChart() {
                 textAnchor="middle"
                 className="fill-[var(--color-text-primary)] text-sm font-semibold"
               >
-                {player.name}: {player.ranks[0]} → {player.finalRank}
-                {player.ranks[0] > player.finalRank ? ' ↑' : player.ranks[0] < player.finalRank ? ' ↓' : ' →'}
+                {player.name}: #{player.ranks[0]} → #{player.finalRank} {arrow}
+                {movement !== 0 && ` (${movement > 0 ? '+' : ''}${movement})`}
               </text>
             </g>
           );
@@ -411,19 +444,26 @@ export function RankRibbonChart() {
 
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-4 mt-4 text-xs">
-        {Array.from({ length: Math.ceil(numPlayers / (chartData.poolSize)) }, (_, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: getPoolColor(i) }}
-            />
-            <span className="text-[var(--color-text-muted)]">
-              Pool {String.fromCharCode(65 + i)}
-            </span>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-0.5">
+            {TOP_POOL_COLORS.slice(0, 6).map((color, i) => (
+              <div
+                key={i}
+                className="w-2 h-3 rounded-sm"
+                style={{ backgroundColor: color, opacity: 0.8 }}
+              />
+            ))}
           </div>
-        ))}
+          <span className="text-[var(--color-text-muted)]">Top {topPoolsCutoff} (Pools A-B)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-4 h-3 rounded-sm"
+            style={{ backgroundColor: MUTED_COLOR, opacity: 0.5 }}
+          />
+          <span className="text-[var(--color-text-muted)]">Others</span>
+        </div>
       </div>
     </div>
   );
 }
-
