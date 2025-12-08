@@ -30,6 +30,10 @@ export interface ClientToServerEvents {
     hostName: string;
   }) => void;
   
+  create_tournament_with_data: (data: {
+    tournament: Tournament;
+  }) => void;
+  
   join_tournament: (data: { 
     code: string; 
     playerName: string;

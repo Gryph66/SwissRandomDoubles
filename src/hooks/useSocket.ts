@@ -42,6 +42,7 @@ interface UseSocketReturn {
   
   // Room management
   createTournament: (tournamentName: string, totalRounds: number, hostName: string) => void;
+  createTournamentWithData: (tournament: Tournament) => void;
   joinTournament: (code: string, playerName: string) => void;
   leaveTournament: () => void;
   
@@ -224,6 +225,13 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     socketRef.current?.emit('create_tournament', { tournamentName, totalRounds, hostName });
   }, []);
   
+  const createTournamentWithData = useCallback((tournament: Tournament) => {
+    // Create a room with existing tournament data (for loading from JSON)
+    sessionInfo.playerName = 'Host';
+    sessionInfo.isHost = true;
+    socketRef.current?.emit('create_tournament_with_data', { tournament });
+  }, []);
+  
   const joinTournament = useCallback((code: string, playerName: string) => {
     // Store session info before joining (will be confirmed by tournament_joined event)
     sessionInfo.roomCode = code.toUpperCase().trim();
@@ -325,6 +333,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     connect,
     disconnect,
     createTournament,
+    createTournamentWithData,
     joinTournament,
     leaveTournament,
     addPlayer,

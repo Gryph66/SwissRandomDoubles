@@ -30,20 +30,19 @@ export function Schedule() {
     );
   }
 
-  const matchCount = currentMatches.length;
+  // Total items = matches + bye boxes (each bye gets own box)
+  const totalItems = currentMatches.length + byeMatches.length;
   
-  // Calculate grid layout based on match count
-  // Goal: fit all matches in viewport without scrolling
-  // For 16 matches: 4x4 grid, for fewer: adjust to be larger
+  // Calculate grid layout based on total item count
   const getGridConfig = () => {
-    if (matchCount <= 4) return { cols: 2, rows: 2 };
-    if (matchCount <= 6) return { cols: 3, rows: 2 };
-    if (matchCount <= 8) return { cols: 4, rows: 2 };
-    if (matchCount <= 9) return { cols: 3, rows: 3 };
-    if (matchCount <= 12) return { cols: 4, rows: 3 };
-    if (matchCount <= 16) return { cols: 4, rows: 4 };
-    if (matchCount <= 20) return { cols: 5, rows: 4 };
-    return { cols: 6, rows: 4 }; // Max for very large tournaments
+    if (totalItems <= 4) return { cols: 2 };
+    if (totalItems <= 6) return { cols: 3 };
+    if (totalItems <= 8) return { cols: 4 };
+    if (totalItems <= 9) return { cols: 3 };
+    if (totalItems <= 12) return { cols: 4 };
+    if (totalItems <= 16) return { cols: 4 };
+    if (totalItems <= 20) return { cols: 5 };
+    return { cols: 6 };
   };
 
   const { cols } = getGridConfig();
@@ -65,85 +64,110 @@ export function Schedule() {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col p-4">
-      {/* Round Header */}
-      <div className="text-center mb-4 flex-shrink-0">
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--color-accent)]">
+    <div className="h-[calc(100vh-120px)] flex flex-col p-2 md:p-4">
+      {/* Round Header - Compact */}
+      <div className="text-center mb-2 flex-shrink-0">
+        <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--color-accent)]">
           Round {tournament.currentRound}
         </h1>
-        <p className="text-[var(--color-text-muted)] text-sm mt-1">
-          {matchCount} matches {byeMatches.length > 0 && `• ${byeMatches.length} bye${byeMatches.length > 1 ? 's' : ''}`}
-        </p>
       </div>
 
       {/* Desktop: Fixed grid that scales to fit */}
       <div className="hidden md:flex flex-1 items-center justify-center overflow-hidden">
         <div 
-          className="w-full h-full grid gap-3 p-2"
+          className="w-full h-full grid gap-2"
           style={{
             gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
             gridAutoRows: '1fr',
           }}
         >
+          {/* Regular Matches */}
           {currentMatches.map((match, index) => (
             <div
               key={match.id}
               className={`
-                relative flex flex-col justify-center
-                bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]
-                border-2 rounded-xl overflow-hidden
-                ${match.completed 
-                  ? 'border-[var(--color-success)]/50' 
-                  : 'border-[var(--color-accent)]/30 hover:border-[var(--color-accent)]/60'}
-                transition-all duration-200
+                relative flex flex-col justify-center items-center
+                bg-[var(--color-bg-secondary)] rounded-lg
+                border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]/40'}
               `}
             >
-              {/* Match Label */}
-              <div className="absolute top-0 left-0 right-0 bg-[var(--color-bg-primary)]/80 px-2 py-1">
-                <span className="text-xs font-bold tracking-wider text-[var(--color-accent)] uppercase">
+              {/* Match Label - Top Left */}
+              <div className="absolute top-1 left-2">
+                <span className="text-[0.65rem] font-bold tracking-wider text-[var(--color-accent)] uppercase">
                   {getMatchLabel(match, index)}
                 </span>
               </div>
 
-              {/* Teams */}
-              <div className="flex-1 flex flex-col justify-center px-3 pt-6 pb-2">
+              {/* Teams - Centered, Large */}
+              <div className="flex flex-col justify-center items-center px-2 w-full">
                 {/* Team 1 */}
-                <div className="text-center mb-1">
-                  <span className="text-[clamp(0.75rem,2vw,1.25rem)] font-semibold text-[var(--color-text-primary)] leading-tight">
+                <div className="text-center leading-none">
+                  <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {getPlayerName(match.team1[0])}
                   </span>
-                  <span className="text-[clamp(0.6rem,1.5vw,1rem)] text-[var(--color-text-muted)] mx-1">&</span>
-                  <span className="text-[clamp(0.75rem,2vw,1.25rem)] font-semibold text-[var(--color-text-primary)] leading-tight">
+                  <span className="text-[clamp(0.8rem,2vw,1.2rem)] text-[var(--color-text-muted)] mx-1">&</span>
+                  <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {getPlayerName(match.team1[1])}
                   </span>
                 </div>
 
-                {/* VS Divider */}
-                <div className="text-center my-1">
-                  <span className="text-[clamp(0.5rem,1vw,0.75rem)] font-bold text-[var(--color-accent)] tracking-widest">
-                    VS
-                  </span>
+                {/* VS */}
+                <div className="text-[clamp(0.6rem,1.2vw,0.8rem)] font-bold text-[var(--color-accent)] tracking-widest my-0.5">
+                  vs
                 </div>
 
                 {/* Team 2 */}
-                <div className="text-center">
-                  <span className="text-[clamp(0.75rem,2vw,1.25rem)] font-semibold text-[var(--color-text-primary)] leading-tight">
+                <div className="text-center leading-none">
+                  <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {match.team2 && getPlayerName(match.team2[0])}
                   </span>
-                  <span className="text-[clamp(0.6rem,1.5vw,1rem)] text-[var(--color-text-muted)] mx-1">&</span>
-                  <span className="text-[clamp(0.75rem,2vw,1.25rem)] font-semibold text-[var(--color-text-primary)] leading-tight">
+                  <span className="text-[clamp(0.8rem,2vw,1.2rem)] text-[var(--color-text-muted)] mx-1">&</span>
+                  <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {match.team2 && getPlayerName(match.team2[1])}
                   </span>
                 </div>
+              </div>
 
-                {/* Score if completed */}
-                {match.completed && match.score1 !== null && (
-                  <div className="absolute bottom-1 left-0 right-0 text-center">
-                    <span className="text-xs font-bold text-[var(--color-success)]">
-                      {match.score1} - {match.score2}
-                    </span>
-                  </div>
-                )}
+              {/* Score if completed */}
+              {match.completed && match.score1 !== null && (
+                <div className="absolute bottom-1 left-0 right-0 text-center">
+                  <span className="text-[clamp(0.7rem,1.5vw,1rem)] font-bold text-[var(--color-success)]">
+                    {match.score1} - {match.score2}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Bye Boxes - Different color scheme */}
+          {byeMatches.map((match, index) => (
+            <div
+              key={match.id}
+              className="
+                relative flex flex-col justify-center items-center
+                bg-purple-900/30 rounded-lg
+                border-2 border-purple-500/50
+              "
+            >
+              {/* BYE Label - Top Left */}
+              <div className="absolute top-1 left-2">
+                <span className="text-[0.65rem] font-bold tracking-wider text-purple-400 uppercase">
+                  Bye {byeMatches.length > 1 ? index + 1 : ''}
+                </span>
+              </div>
+
+              {/* Player Name - Centered, Large */}
+              <div className="text-center px-2">
+                <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-purple-300">
+                  {getPlayerName(match.team1[0])}
+                </span>
+              </div>
+
+              {/* Bye info */}
+              <div className="absolute bottom-1 left-0 right-0 text-center">
+                <span className="text-[clamp(0.6rem,1.2vw,0.8rem)] text-purple-400/70">
+                  4-4 tie
+                </span>
               </div>
             </div>
           ))}
@@ -151,74 +175,56 @@ export function Schedule() {
       </div>
 
       {/* Mobile: Scrollable stacked list */}
-      <div className="md:hidden flex-1 overflow-y-auto space-y-3 pb-4">
+      <div className="md:hidden flex-1 overflow-y-auto space-y-2 pb-4">
         {currentMatches.map((match, index) => (
           <div
             key={match.id}
             className={`
-              p-4 rounded-xl
-              bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]
-              border-2
-              ${match.completed 
-                ? 'border-[var(--color-success)]/50' 
-                : 'border-[var(--color-accent)]/30'}
+              p-3 rounded-lg bg-[var(--color-bg-secondary)]
+              border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]/40'}
             `}
           >
             {/* Match Label */}
-            <div className="text-center mb-2">
-              <span className="text-xs font-bold tracking-wider text-[var(--color-accent)] uppercase">
-                {getMatchLabel(match, index)}
-              </span>
+            <div className="text-xs font-bold tracking-wider text-[var(--color-accent)] uppercase mb-1">
+              {getMatchLabel(match, index)}
             </div>
 
             {/* Teams */}
             <div className="text-center">
-              {/* Team 1 */}
-              <div className="text-lg font-semibold text-[var(--color-text-primary)]">
+              <div className="text-base font-bold text-[var(--color-text-primary)]">
                 {getPlayerName(match.team1[0])} <span className="text-[var(--color-text-muted)]">&</span> {getPlayerName(match.team1[1])}
               </div>
-
-              {/* VS */}
-              <div className="text-sm font-bold text-[var(--color-accent)] tracking-widest my-1">
-                VS
-              </div>
-
-              {/* Team 2 */}
-              <div className="text-lg font-semibold text-[var(--color-text-primary)]">
+              <div className="text-xs font-bold text-[var(--color-accent)] my-0.5">vs</div>
+              <div className="text-base font-bold text-[var(--color-text-primary)]">
                 {match.team2 && getPlayerName(match.team2[0])} <span className="text-[var(--color-text-muted)]">&</span> {match.team2 && getPlayerName(match.team2[1])}
               </div>
-
-              {/* Score if completed */}
               {match.completed && match.score1 !== null && (
-                <div className="mt-2 text-sm font-bold text-[var(--color-success)]">
-                  Final: {match.score1} - {match.score2}
+                <div className="text-sm font-bold text-[var(--color-success)] mt-1">
+                  {match.score1} - {match.score2}
                 </div>
               )}
             </div>
           </div>
         ))}
 
-        {/* Byes section for mobile */}
-        {byeMatches.length > 0 && (
-          <div className="p-4 rounded-xl bg-[var(--color-bg-tertiary)]/50 border border-dashed border-[var(--color-border)]">
-            <div className="text-center text-sm text-[var(--color-text-muted)]">
-              <span className="font-medium">Bye this round:</span>{' '}
-              {byeMatches.map(m => getPlayerName(m.team1[0])).join(', ')}
+        {/* Bye cards for mobile */}
+        {byeMatches.map((match, index) => (
+          <div
+            key={match.id}
+            className="p-3 rounded-lg bg-purple-900/30 border-2 border-purple-500/50"
+          >
+            <div className="text-xs font-bold tracking-wider text-purple-400 uppercase mb-1">
+              Bye {byeMatches.length > 1 ? index + 1 : ''}
+            </div>
+            <div className="text-center">
+              <span className="text-base font-bold text-purple-300">
+                {getPlayerName(match.team1[0])}
+              </span>
+              <span className="text-xs text-purple-400/70 ml-2">(4-4 tie)</span>
             </div>
           </div>
-        )}
+        ))}
       </div>
-
-      {/* Desktop: Byes footer */}
-      {byeMatches.length > 0 && (
-        <div className="hidden md:block text-center py-2 flex-shrink-0">
-          <span className="text-sm text-[var(--color-text-muted)]">
-            <span className="font-medium">Bye:</span>{' '}
-            {byeMatches.map(m => getPlayerName(m.team1[0])).join(', ')}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
-

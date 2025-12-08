@@ -76,6 +76,39 @@ export function createRoom(tournament: Tournament, hostSocketId: string): Tourna
   return room;
 }
 
+// Create a room with an existing tournament (for JSON import)
+export function createRoomWithTournament(tournament: Tournament, hostSocketId: string): TournamentRoom {
+  const code = generateRoomCode();
+  
+  // Update the tournament with the new room code
+  const updatedTournament: Tournament = {
+    ...tournament,
+    shareCode: code,
+    updatedAt: Date.now(),
+  };
+  
+  const room: TournamentRoom = {
+    code,
+    tournament: updatedTournament,
+    hostSocketId,
+    connectedPlayers: new Map(),
+    createdAt: Date.now(),
+    lastActivity: Date.now(),
+    warningsSent: false,
+  };
+  
+  rooms.set(code, room);
+  return room;
+}
+
+// Public function to recalculate stats for a room
+export function recalculateStats(code: string): boolean {
+  const room = getRoom(code);
+  if (!room) return false;
+  recalculatePlayerStats(room);
+  return true;
+}
+
 // Get a room by code
 export function getRoom(code: string): TournamentRoom | undefined {
   return rooms.get(code.toUpperCase());

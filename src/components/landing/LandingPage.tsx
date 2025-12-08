@@ -16,6 +16,7 @@ interface LandingPageProps {
   onJoinTournament: (code: string, playerName: string) => void;
   onLocalMode: () => void;
   onLoadTournament?: (tournament: Tournament) => void;
+  onLoadTournamentOnline?: (tournament: Tournament) => void;
   joinError: string | null;
 }
 
@@ -27,6 +28,7 @@ export function LandingPage({
   onJoinTournament,
   onLocalMode,
   onLoadTournament,
+  onLoadTournamentOnline,
   joinError,
 }: LandingPageProps) {
   // Check URL for code parameter (from QR code scan)
@@ -75,7 +77,7 @@ export function LandingPage({
   // Handle loading tournament from JSON file
   const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !onLoadTournament) return;
+    if (!file) return;
     
     setLoadError(null);
     const reader = new FileReader();
@@ -105,7 +107,13 @@ export function LandingPage({
           pairingLogs: json.pairingLogs || [],
         };
         
-        onLoadTournament(tournament);
+        // If connected and online handler available, create a room
+        // Otherwise fall back to offline mode
+        if (isConnected && onLoadTournamentOnline) {
+          onLoadTournamentOnline(tournament);
+        } else if (onLoadTournament) {
+          onLoadTournament(tournament);
+        }
       } catch (err) {
         setLoadError(err instanceof Error ? err.message : 'Failed to load file');
       }

@@ -208,6 +208,36 @@ io.on('connection', (socket) => {
     console.log(`[Create] Tournament created with code: ${room.code}`);
   });
   
+  // Create tournament with existing data (from JSON import)
+  socket.on('create_tournament_with_data', (data) => {
+    const { tournament } = data;
+    
+    console.log(`[Create] Creating room for imported tournament "${tournament.name}"`);
+    
+    // Create room with the provided tournament data
+    const room = RoomManager.createRoomWithTournament(tournament, socket.id);
+    
+    // Add host as connected player
+    RoomManager.addConnectedPlayer(room.code, socket.id, 'Host', true);
+    
+    // Recalculate player stats from matches
+    RoomManager.recalculateStats(room.code);
+    
+    // Join socket to room
+    socket.join(room.code);
+    socket.data.roomCode = room.code;
+    socket.data.playerName = 'Host';
+    socket.data.isHost = true;
+    
+    // Send response
+    socket.emit('tournament_created', {
+      code: room.code,
+      tournament: room.tournament,
+    });
+    
+    console.log(`[Create] Tournament "${tournament.name}" loaded with code: ${room.code}`);
+  });
+  
   socket.on('join_tournament', (data) => {
     const { code, playerName } = data;
     const normalizedCode = code.toUpperCase().trim();

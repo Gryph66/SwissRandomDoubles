@@ -160,6 +160,23 @@ function App() {
     }
   }, [setTournament, setIsHost, setOnlineMode, setViewMode]);
 
+  // Handle loading a tournament from JSON and creating an online room
+  const handleLoadTournamentOnline = useCallback((loadedTournament: Tournament) => {
+    // Create a room with this tournament data
+    socket.createTournamentWithData(loadedTournament);
+    setAppMode('online');
+    setIsHost(true);
+    setOnlineMode(true);
+    // Set view based on tournament status
+    if (loadedTournament.status === 'setup') {
+      setViewMode('setup');
+    } else if (loadedTournament.status === 'completed') {
+      setViewMode('standings');
+    } else {
+      setViewMode('schedule'); // Show schedule for active tournaments
+    }
+  }, [socket, setIsHost, setOnlineMode, setViewMode]);
+
   // Show landing page if not in a mode yet
   if (appMode === 'landing') {
     return (
@@ -171,6 +188,7 @@ function App() {
         onJoinTournament={handleJoinTournament}
         onLocalMode={handleLocalMode}
         onLoadTournament={handleLoadTournament}
+        onLoadTournamentOnline={handleLoadTournamentOnline}
         joinError={joinError}
       />
     );
