@@ -5,15 +5,17 @@ interface PlayerRegistrationProps {
   socket?: {
     addPlayer: (name: string) => void;
     removePlayer: (playerId: string) => void;
+    updatePlayer: (playerId: string, updates: any) => void;
   };
 }
 
 export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
-  const { tournament, addPlayer: localAddPlayer, removePlayer: localRemovePlayer } = useTournamentStore();
+  const { tournament, addPlayer: localAddPlayer, removePlayer: localRemovePlayer, updatePlayer: localUpdatePlayer } = useTournamentStore();
   const [newPlayerName, setNewPlayerName] = useState('');
   
   const addPlayer = socket ? socket.addPlayer : localAddPlayer;
   const removePlayer = socket ? socket.removePlayer : localRemovePlayer;
+  const updatePlayer = socket ? socket.updatePlayer : localUpdatePlayer;
 
   if (!tournament) return null;
 
@@ -31,13 +33,16 @@ export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
   };
 
   const canRemove = tournament.status === 'setup';
+  const isActive = tournament.status === 'active';
+  const activePlayers = tournament.players.filter(p => p.active);
+  const inactivePlayers = tournament.players.filter(p => !p.active);
 
   return (
     <section className="card p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-display font-semibold">Players</h2>
         <span className="text-sm text-[var(--color-text-muted)]">
-          {tournament.players.length} registered
+          {activePlayers.length} active{inactivePlayers.length > 0 && ` (${inactivePlayers.length} inactive)`}
         </span>
       </div>
 
@@ -70,28 +75,60 @@ export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
           {tournament.players.map((player, index) => (
             <div
               key={player.id}
-              className="flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] rounded-lg group"
+              className={`flex items-center justify-between p-3 rounded-lg group transition-all ${
+                player.active 
+                  ? 'bg-[var(--color-bg-tertiary)]' 
+                  : 'bg-[var(--color-bg-tertiary)]/50 opacity-60'
+              }`}
             >
               <div className="flex items-center gap-3">
                 <span className="text-sm text-[var(--color-text-muted)] font-mono w-6">
                   {index + 1}
                 </span>
-                <span className="text-[var(--color-text-primary)] font-medium">
+                <span className={`font-medium ${
+                  player.active 
+                    ? 'text-[var(--color-text-primary)]' 
+                    : 'text-[var(--color-text-muted)] line-through'
+                }`}>
                   {player.name}
                 </span>
+                {!player.active && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                    inactive
+                  </span>
+                )}
               </div>
-              {canRemove && (
-                <button
-                  onClick={() => removePlayer(player.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-[var(--color-text-muted)] 
-                           hover:text-red-400 transition-all duration-200"
-                  title="Remove player"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {/* Activate/Deactivate toggle - shown during active tournament */}
+                {isActive && (
+                  <button
+                    onClick={() => updatePlayer(player.id, { active: !player.active })}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      player.active ? 'bg-[var(--color-success)]' : 'bg-[var(--color-bg-primary)]'
+                    }`}
+                    title={player.active ? 'Deactivate player' : 'Reactivate player'}
+                  >
+                    <span
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                        player.active ? 'translate-x-4' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                )}
+                {/* Remove button - only during setup */}
+                {canRemove && (
+                  <button
+                    onClick={() => removePlayer(player.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-[var(--color-text-muted)] 
+                             hover:text-red-400 transition-all duration-200"
+                    title="Remove player"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

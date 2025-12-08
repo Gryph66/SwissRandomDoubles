@@ -9,7 +9,6 @@ interface AdminPanelProps {
   socket?: {
     socket: ReturnType<typeof import('socket.io-client').io> | null;
     addPlayer: (name: string) => void;
-    updatePlayer: (playerId: string, updates: any) => void;
     updateSettings: (settings: any) => void;
     resetTournament: () => void;
   };
@@ -22,7 +21,6 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
     tournament, 
     resetTournament: localResetTournament, 
     addPlayer: localAddPlayer,
-    updatePlayer: localUpdatePlayer,
     updateSettings: localUpdateSettings,
     saveTournament,
     loadTournament,
@@ -31,7 +29,6 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
   } = useTournamentStore();
   
   const addPlayer = socket ? socket.addPlayer : localAddPlayer;
-  const updatePlayer = socket ? socket.updatePlayer : localUpdatePlayer;
   const updateSettings = socket ? socket.updateSettings : localUpdateSettings;
   const resetTournament = socket ? socket.resetTournament : localResetTournament;
   
@@ -258,40 +255,6 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
           </div>
         </section>
       )}
-
-      {/* Player Management */}
-      <section className="card p-6">
-        <h3 className="text-lg font-display font-semibold mb-4">Player Management</h3>
-        <div className="space-y-2">
-          {tournament.players.map((player) => (
-            <div
-              key={player.id}
-              className="flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] rounded-lg"
-            >
-              <span className={`font-medium ${!player.active ? 'line-through text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
-                {player.name}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-[var(--color-text-muted)]">
-                  {player.wins}W-{player.losses}L-{player.ties}T
-                </span>
-                {tournament.status === 'active' && (
-                  <button
-                    onClick={() => updatePlayer(player.id, { active: !player.active })}
-                    className={`px-3 py-1 text-sm rounded ${
-                      player.active 
-                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-                        : 'bg-[var(--color-success)]/20 text-[var(--color-success)] hover:bg-[var(--color-success)]/30'
-                    }`}
-                  >
-                    {player.active ? 'Deactivate' : 'Reactivate'}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Save & Export Data */}
       <section className="card p-6">

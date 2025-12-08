@@ -7,6 +7,7 @@ interface TournamentSetupProps {
   socket?: {
     addPlayer: (name: string) => void;
     removePlayer: (playerId: string) => void;
+    updatePlayer: (playerId: string, updates: any) => void;
     updateSettings: (settings: any) => void;
     updateTournamentName: (name: string) => void;
     updateTotalRounds: (rounds: number) => void;
