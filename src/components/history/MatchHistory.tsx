@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import type { Match } from '../../types';
 
@@ -8,6 +8,16 @@ interface MatchHistoryProps {
     editScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
     generateNextRound: () => void;
     completeTournament: () => void;
+  };
+}
+
+// Store scores for all matches
+interface MatchScores {
+  [matchId: string]: {
+    score1: string;
+    score2: string;
+    twenties1: string;
+    twenties2: string;
   };
 }
 
@@ -27,6 +37,32 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
   const generateNextRound = socket ? socket.generateNextRound : localGenerateNextRound;
   const completeTournament = socket ? socket.completeTournament : localCompleteTournament;
   const [viewRound, setViewRound] = useState<number | null>(null);
+  const [scores, setScores] = useState<MatchScores>({});
+  const [editingMatches, setEditingMatches] = useState<Set<string>>(new Set());
+
+  // Determine which round to display
+  const maxRound = tournament?.status === 'completed' ? tournament.totalRounds : (tournament?.currentRound ?? 0);
+  const displayRound = viewRound ?? maxRound;
+  const currentMatches = tournament ? getMatchesByRound(displayRound) : [];
+  
+  const regularMatches = currentMatches.filter((m) => !m.isBye);
+  const byeMatches = currentMatches.filter((m) => m.isBye);
+  const isCurrentRound = tournament && displayRound === tournament.currentRound && tournament.status !== 'completed';
+  
+  // Initialize scores from match data
+  useEffect(() => {
+    const newScores: MatchScores = {};
+    regularMatches.forEach(match => {
+      newScores[match.id] = {
+        score1: match.score1?.toString() ?? '',
+        score2: match.score2?.toString() ?? '',
+        twenties1: match.twenties1 ? match.twenties1.toString() : '',
+        twenties2: match.twenties2 ? match.twenties2.toString() : '',
+      };
+    });
+    setScores(newScores);
+    setEditingMatches(new Set());
+  }, [displayRound, tournament?.updatedAt]);
 
   if (!tournament) {
     return (
@@ -36,20 +72,12 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
     );
   }
 
-  // Determine which round to display
-  const maxRound = tournament.status === 'completed' ? tournament.totalRounds : tournament.currentRound;
-  const displayRound = viewRound ?? maxRound;
-  const currentMatches = getMatchesByRound(displayRound);
-  
-  const regularMatches = currentMatches.filter((m) => !m.isBye);
-  const byeMatches = currentMatches.filter((m) => m.isBye);
-  const isCurrentRound = displayRound === tournament.currentRound && tournament.status !== 'completed';
-  
   // Check if all matches in current round are complete
   const currentRoundMatches = getMatchesByRound(tournament.currentRound);
   const allMatchesComplete = currentRoundMatches.every((m) => m.completed);
   const pendingCount = regularMatches.filter(m => !m.completed).length;
   const isLastRound = tournament.currentRound >= tournament.totalRounds;
+  const pointsPerMatch = tournament.settings.pointsPerMatch || 8;
 
   const handleNextRound = () => {
     if (isLastRound) {
@@ -57,9 +85,106 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
       setViewMode('standings');
     } else {
       generateNextRound();
-      setViewRound(null); // Reset to show the new current round
+      setViewRound(null);
     }
   };
+
+  // Update individual score
+  const updateScore = (matchId: string, field: keyof MatchScores[string], value: string) => {
+    setScores(prev => {
+      const newScores = { ...prev };
+      if (!newScores[matchId]) {
+        newScores[matchId] = { score1: '', score2: '', twenties1: '', twenties2: '' };
+      }
+      newScores[matchId] = { ...newScores[matchId], [field]: value };
+      
+      // Auto-fill other score
+      if (field === 'score1') {
+        const num = parseInt(value);
+        if (!isNaN(num) && num >= 0 && num <= pointsPerMatch) {
+          newScores[matchId].score2 = (pointsPerMatch - num).toString();
+        }
+      } else if (field === 'score2') {
+        const num = parseInt(value);
+        if (!isNaN(num) && num >= 0 && num <= pointsPerMatch) {
+          newScores[matchId].score1 = (pointsPerMatch - num).toString();
+        }
+      }
+      
+      return newScores;
+    });
+  };
+
+  // Submit single match
+  const handleSubmitSingle = (matchId: string) => {
+    const matchScore = scores[matchId];
+    if (!matchScore) return;
+    
+    const s1 = parseInt(matchScore.score1) || 0;
+    const s2 = parseInt(matchScore.score2) || 0;
+    const t1 = parseInt(matchScore.twenties1) || 0;
+    const t2 = parseInt(matchScore.twenties2) || 0;
+
+    if (s1 + s2 !== pointsPerMatch) {
+      alert(`Scores must add up to ${pointsPerMatch}`);
+      return;
+    }
+
+    submitScore(matchId, s1, s2, t1, t2);
+    setEditingMatches(prev => {
+      const next = new Set(prev);
+      next.delete(matchId);
+      return next;
+    });
+  };
+
+  // Submit all pending matches
+  const handleSubmitAll = () => {
+    const matchesToSubmit = regularMatches.filter(m => 
+      (!m.completed || editingMatches.has(m.id)) && scores[m.id]
+    );
+    
+    // Validate all first
+    for (const match of matchesToSubmit) {
+      const matchScore = scores[match.id];
+      if (!matchScore) continue;
+      
+      const s1 = parseInt(matchScore.score1) || 0;
+      const s2 = parseInt(matchScore.score2) || 0;
+      
+      if (s1 + s2 !== pointsPerMatch) {
+        alert(`${match.tableId ? tournament.tables.find(t => t.id === match.tableId)?.name : `Match ${match.id.slice(-4)}`}: Scores must add up to ${pointsPerMatch}`);
+        return;
+      }
+    }
+    
+    // Submit all
+    for (const match of matchesToSubmit) {
+      const matchScore = scores[match.id];
+      if (!matchScore) continue;
+      
+      const s1 = parseInt(matchScore.score1) || 0;
+      const s2 = parseInt(matchScore.score2) || 0;
+      const t1 = parseInt(matchScore.twenties1) || 0;
+      const t2 = parseInt(matchScore.twenties2) || 0;
+      
+      if (s1 + s2 === pointsPerMatch) {
+        submitScore(match.id, s1, s2, t1, t2);
+      }
+    }
+    
+    setEditingMatches(new Set());
+  };
+
+  // Count how many matches have valid scores entered
+  const readyToSubmitCount = regularMatches.filter(m => {
+    if (m.completed && !editingMatches.has(m.id)) return false;
+    const matchScore = scores[m.id];
+    if (!matchScore) return false;
+    const s1 = parseInt(matchScore.score1);
+    const s2 = parseInt(matchScore.score2);
+    return !isNaN(s1) && !isNaN(s2) && s1 + s2 === pointsPerMatch;
+  }).length;
 
   if (maxRound === 0) {
     return (
@@ -72,7 +197,7 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] p-2 md:p-4">
       {/* Compact Round Header */}
-      <div className="flex items-center justify-between mb-3 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-3 max-w-7xl mx-auto flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewRound(Math.max(1, displayRound - 1))}
@@ -126,6 +251,16 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
             </span>
           )}
           
+          {/* Submit All Button */}
+          {isCurrentRound && readyToSubmitCount > 0 && (
+            <button
+              onClick={handleSubmitAll}
+              className="btn btn-primary text-sm px-3 py-1.5 font-semibold"
+            >
+              Submit All ({readyToSubmitCount})
+            </button>
+          )}
+          
           {/* Next Round / Complete Button */}
           {isCurrentRound && tournament.status !== 'completed' && isHost && (
             <button
@@ -141,19 +276,30 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
         </div>
       </div>
 
-      {/* Matches Grid - More compact, more columns */}
+      {/* Matches Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 max-w-7xl mx-auto">
         {regularMatches.map((match) => (
           <CompactMatchCard 
             key={match.id} 
             match={match} 
-            isCurrentRound={isCurrentRound}
-            submitScore={submitScore}
+            isCurrentRound={isCurrentRound ?? false}
+            scores={scores[match.id] || { score1: '', score2: '', twenties1: '', twenties2: '' }}
+            updateScore={(field, value) => updateScore(match.id, field, value)}
+            onSubmit={() => handleSubmitSingle(match.id)}
+            isEditing={editingMatches.has(match.id)}
+            setIsEditing={(editing) => {
+              setEditingMatches(prev => {
+                const next = new Set(prev);
+                if (editing) next.add(match.id);
+                else next.delete(match.id);
+                return next;
+              });
+            }}
           />
         ))}
       </div>
 
-      {/* Bye Players - Compact inline */}
+      {/* Bye Players */}
       {byeMatches.length > 0 && (
         <div className="max-w-7xl mx-auto mt-3">
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -180,16 +326,15 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
 interface CompactMatchCardProps {
   match: Match;
   isCurrentRound: boolean;
-  submitScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+  scores: { score1: string; score2: string; twenties1: string; twenties2: string };
+  updateScore: (field: 'score1' | 'score2' | 'twenties1' | 'twenties2', value: string) => void;
+  onSubmit: () => void;
+  isEditing: boolean;
+  setIsEditing: (editing: boolean) => void;
 }
 
-function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCardProps) {
+function CompactMatchCard({ match, isCurrentRound, scores, updateScore, onSubmit, isEditing, setIsEditing }: CompactMatchCardProps) {
   const { tournament, getPlayerById } = useTournamentStore();
-  const [score1, setScore1] = useState(match.score1?.toString() ?? '');
-  const [score2, setScore2] = useState(match.score2?.toString() ?? '');
-  const [twenties1, setTwenties1] = useState(match.twenties1 ? match.twenties1.toString() : '');
-  const [twenties2, setTwenties2] = useState(match.twenties2 ? match.twenties2.toString() : '');
-  const [isEditing, setIsEditing] = useState(false);
 
   if (!tournament) return null;
 
@@ -205,38 +350,6 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
   const isTeam2Winner = isComplete && match.score1 !== null && match.score2 !== null && match.score2 > match.score1;
   
   const pointsPerMatch = tournament.settings.pointsPerMatch || 8;
-
-  const handleScore1Change = (value: string) => {
-    setScore1(value);
-    const num = parseInt(value);
-    if (!isNaN(num) && num >= 0 && num <= pointsPerMatch) {
-      setScore2((pointsPerMatch - num).toString());
-    }
-  };
-
-  const handleScore2Change = (value: string) => {
-    setScore2(value);
-    const num = parseInt(value);
-    if (!isNaN(num) && num >= 0 && num <= pointsPerMatch) {
-      setScore1((pointsPerMatch - num).toString());
-    }
-  };
-
-  const handleSubmit = () => {
-    const s1 = parseInt(score1) || 0;
-    const s2 = parseInt(score2) || 0;
-    const t1 = parseInt(twenties1) || 0;
-    const t2 = parseInt(twenties2) || 0;
-
-    if (s1 + s2 !== pointsPerMatch) {
-      alert(`Scores must add up to ${pointsPerMatch}`);
-      return;
-    }
-
-    submitScore(match.id, s1, s2, t1, t2);
-    setIsEditing(false);
-  };
-
   const showEntry = (isCurrentRound && !isComplete) || isEditing;
 
   return (
@@ -302,8 +415,8 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
                 type="number"
                 min={0}
                 max={pointsPerMatch}
-                value={score1}
-                onChange={(e) => handleScore1Change(e.target.value)}
+                value={scores.score1}
+                onChange={(e) => updateScore('score1', e.target.value)}
                 className="w-9 h-7 text-center text-sm font-mono font-bold rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
@@ -312,8 +425,8 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
               <input
                 type="number"
                 min={0}
-                value={twenties1}
-                onChange={(e) => setTwenties1(e.target.value)}
+                value={scores.twenties1}
+                onChange={(e) => updateScore('twenties1', e.target.value)}
                 className="w-9 h-7 text-center text-sm font-mono rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
@@ -355,8 +468,8 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
                 type="number"
                 min={0}
                 max={pointsPerMatch}
-                value={score2}
-                onChange={(e) => handleScore2Change(e.target.value)}
+                value={scores.score2}
+                onChange={(e) => updateScore('score2', e.target.value)}
                 className="w-9 h-7 text-center text-sm font-mono font-bold rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
@@ -365,8 +478,8 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
               <input
                 type="number"
                 min={0}
-                value={twenties2}
-                onChange={(e) => setTwenties2(e.target.value)}
+                value={scores.twenties2}
+                onChange={(e) => updateScore('twenties2', e.target.value)}
                 className="w-9 h-7 text-center text-sm font-mono rounded 
                          bg-[var(--color-bg-primary)] border border-[var(--color-border)]
                          focus:border-[var(--color-accent)] focus:outline-none"
@@ -388,7 +501,7 @@ function CompactMatchCard({ match, isCurrentRound, submitScore }: CompactMatchCa
         {/* Submit Button */}
         {showEntry && (
           <button
-            onClick={handleSubmit}
+            onClick={onSubmit}
             className="w-full btn btn-primary text-sm py-1"
           >
             {isComplete ? 'Update' : 'Submit'}

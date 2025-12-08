@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
+import { exportPageToPng } from '../../utils/exportPng';
 import type { Player } from '../../types';
 
 interface RoundSnapshot {
@@ -205,12 +206,23 @@ export function SwissAnalysis() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-4 md:space-y-8">
-      <div>
-        <h2 className="text-xl md:text-2xl font-display font-bold">Swiss Analysis</h2>
-        <p className="text-sm md:text-base text-[var(--color-text-secondary)] mt-1">
-          See how the Swiss system separates players by skill over {analysis.length} rounds
-        </p>
+    <div id="analysis-export" className="max-w-6xl mx-auto p-4 md:p-6 space-y-4 md:space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl md:text-2xl font-display font-bold">Swiss Analysis</h2>
+          <p className="text-sm md:text-base text-[var(--color-text-secondary)] mt-1">
+            See how the Swiss system separates players by skill over {analysis.length} rounds
+          </p>
+        </div>
+        <button
+          onClick={() => exportPageToPng('analysis-export', `${tournament.name}-analysis`)}
+          className="btn btn-secondary text-sm flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Export PNG
+        </button>
       </div>
 
       {/* Pool Separation */}

@@ -1,4 +1,5 @@
 import { useTournamentStore } from '../../store/tournamentStore';
+import { exportPageToPng } from '../../utils/exportPng';
 
 interface RoundViewProps {
   socket?: {
@@ -45,9 +46,9 @@ export function RoundView({ socket }: RoundViewProps) {
   const rounds = Array.from({ length: maxRound }, (_, i) => i + 1);
 
   return (
-    <div className="p-4">
+    <div id="round-results-export" className="p-4">
       {/* Header with action button */}
-      <div className="flex items-center justify-between mb-6 max-w-full">
+      <div className="flex items-center justify-between mb-6 max-w-full flex-wrap gap-2">
         <div>
           <h2 className="text-3xl font-display font-bold">Score Summary</h2>
           <p className="text-lg text-[var(--color-text-secondary)]">
@@ -57,6 +58,15 @@ export function RoundView({ socket }: RoundViewProps) {
             }
           </p>
         </div>
+        <button
+          onClick={() => exportPageToPng('round-results-export', `${tournament.name}-round-results`)}
+          className="btn btn-secondary text-sm flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Export PNG
+        </button>
         
         {tournament.status !== 'completed' && allCurrentComplete && (
           <button

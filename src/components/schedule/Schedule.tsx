@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
+import { exportPageToPng } from '../../utils/exportPng';
 
 export function Schedule() {
   const { tournament, getPlayerById, getMatchesByRound } = useTournamentStore();
@@ -85,7 +86,7 @@ export function Schedule() {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col p-2 md:p-4">
+    <div id="schedule-export" className="h-[calc(100vh-120px)] flex flex-col p-2 md:p-4">
       {/* Round Header with Navigation */}
       <div className="text-center mb-3 flex-shrink-0">
         <div className="flex items-center justify-center gap-4 mb-2">
@@ -114,6 +115,18 @@ export function Schedule() {
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+          
+          {/* Export button */}
+          <button
+            onClick={() => exportPageToPng('schedule-export', `${tournament.name}-round${displayRound}-schedule`)}
+            className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] 
+                     hover:bg-[var(--color-bg-secondary)] transition-all"
+            title="Export PNG"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
           </button>
         </div>

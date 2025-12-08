@@ -79,6 +79,8 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
   const handleStartTournament = () => {
     if (tournament && tournament.players.length >= 4) {
       startTournament();
+      // Navigate to Schedule after starting
+      useTournamentStore.getState().setViewMode('schedule');
     }
   };
 

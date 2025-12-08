@@ -1,5 +1,6 @@
 import { useTournamentStore } from '../../store/tournamentStore';
 import { TwentiesLeaderboard } from './TwentiesLeaderboard';
+import { exportPageToPng } from '../../utils/exportPng';
 import type { Match } from '../../types';
 
 type MatchResult = 'W' | 'L' | 'T' | 'B'; // Win, Loss, Tie, Bye
@@ -105,7 +106,7 @@ export function Standings() {
   const poolSize = tournament.settings.poolSize || 8; // Default to 8 if not set
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div id="standings-export" className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -116,6 +117,15 @@ export function Standings() {
             After Round {tournament.currentRound} of {tournament.totalRounds}
           </p>
         </div>
+        <button
+          onClick={() => exportPageToPng('standings-export', `${tournament.name}-standings`)}
+          className="btn btn-secondary text-sm flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Export PNG
+        </button>
       </div>
 
       {/* Main Standings Table */}
