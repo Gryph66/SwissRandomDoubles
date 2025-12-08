@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { exportPageToPng } from '../../utils/exportPng';
+import { RankRibbonChart } from './RankRibbonChart';
 import type { Player } from '../../types';
 
 interface RoundSnapshot {
@@ -264,9 +265,18 @@ export function SwissAnalysis() {
         )}
       </section>
 
+      {/* Rank Ribbon Chart */}
+      <section className="card p-4 md:p-6">
+        <h3 className="text-xl font-display font-semibold mb-4">Ranking Flow</h3>
+        <p className="text-sm md:text-base text-[var(--color-text-muted)] mb-4">
+          Watch how player rankings shift through each round. Ribbons are colored by final pool placement.
+        </p>
+        <RankRibbonChart />
+      </section>
+
       {/* Rank Progression Table - hidden on mobile, shown on larger screens */}
       <section className="card p-4 md:p-6 hidden md:block">
-        <h3 className="text-lg font-display font-semibold mb-4">Rank Progression</h3>
+        <h3 className="text-lg font-display font-semibold mb-4">Rank Progression Table</h3>
         <p className="text-sm text-[var(--color-text-muted)] mb-4">
           Track how each player's ranking changed after each round. 
           Partners are shown with their rank at the time of pairing.
