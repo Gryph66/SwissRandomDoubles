@@ -509,6 +509,27 @@ export function editScore(
   return true;
 }
 
+// Manual tournament state update (for hosts restoring from backup or manual entry)
+export function updateTournamentState(code: string, tournamentData: Tournament): boolean {
+  const room = getRoom(code);
+  if (!room) return false;
+  
+  // Preserve the room code and id
+  room.tournament = {
+    ...tournamentData,
+    id: room.tournament.id,
+    shareCode: room.tournament.shareCode,
+    updatedAt: Date.now(),
+  };
+  
+  // Recalculate player stats from the imported matches
+  recalculatePlayerStats(room);
+  
+  touchRoom(code);
+  
+  return true;
+}
+
 export function completeTournament(code: string): boolean {
   const room = getRoom(code);
   if (!room) return false;

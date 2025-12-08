@@ -64,6 +64,7 @@ export interface ClientToServerEvents {
   generate_next_round: () => void;
   complete_tournament: () => void;
   reset_tournament: () => void;
+  manual_update_tournament: (tournament: Tournament) => void;
   
   // Score submission (host or players in match)
   submit_score: (data: { 

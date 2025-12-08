@@ -7,6 +7,7 @@ import { downloadLog, generateLogText } from '../../utils/pairingLog';
 
 interface AdminPanelProps {
   socket?: {
+    socket: ReturnType<typeof import('socket.io-client').io> | null;
     addPlayer: (name: string) => void;
     updatePlayer: (playerId: string, updates: any) => void;
     updateSettings: (settings: any) => void;
@@ -531,7 +532,7 @@ export function AdminPanel({ socket }: AdminPanelProps) {
 
       {/* Manual Round Entry Modal */}
       {showManualEntry && (
-        <ManualRoundEntry onClose={() => setShowManualEntry(false)} />
+        <ManualRoundEntry onClose={() => setShowManualEntry(false)} socket={socket?.socket} />
       )}
     </div>
   );

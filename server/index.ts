@@ -576,6 +576,24 @@ io.on('connection', (socket) => {
   });
   
   // ----------------------------------------
+  // Manual Tournament Update (for hosts only)
+  // ----------------------------------------
+  
+  socket.on('manual_update_tournament', (tournament) => {
+    if (!socket.data.roomCode || !socket.data.isHost) {
+      socket.emit('action_error', { action: 'manual_update_tournament', message: 'Not authorized' });
+      return;
+    }
+    
+    if (RoomManager.updateTournamentState(socket.data.roomCode, tournament)) {
+      broadcastState(socket.data.roomCode);
+      console.log(`[Tournament] Manual update by "${socket.data.playerName}" - ${tournament.matches?.length || 0} matches`);
+    } else {
+      socket.emit('action_error', { action: 'manual_update_tournament', message: 'Failed to update tournament' });
+    }
+  });
+  
+  // ----------------------------------------
   // Disconnect
   // ----------------------------------------
   

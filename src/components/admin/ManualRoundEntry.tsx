@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
-import type { Player, Match } from '../../types';
+import type { Player, Match, Tournament } from '../../types';
 import { nanoid } from 'nanoid';
+import type { Socket } from 'socket.io-client';
 
 interface MatchEntry {
   id: string;
@@ -17,15 +18,17 @@ interface MatchEntry {
 
 interface ManualRoundEntryProps {
   onClose: () => void;
+  socket?: Socket | null;
 }
 
-export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
+export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
   const { tournament, setTournament } = useTournamentStore();
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [matches, setMatches] = useState<MatchEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activePlayers = useMemo(() => 
     tournament?.players.filter(p => p.active) || [], 
@@ -67,13 +70,12 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
         team2Player2: m.team2?.[1] || '',
         score1: m.score1?.toString() || '',
         score2: m.score2?.toString() || '',
-        // Only show 20s if they have a value > 0, otherwise leave empty for easier entry
+        // Only show 20s if they have a value > 0, otherwise leave empty
         twenties1: m.twenties1 ? m.twenties1.toString() : '',
         twenties2: m.twenties2 ? m.twenties2.toString() : '',
       }));
       setMatches(loadedMatches);
     } else {
-      // Create empty match slots
       createEmptyForm();
     }
   };
@@ -94,8 +96,28 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
     setMatches(emptyMatches);
   };
 
+  // Update match with auto-calculation for scores
   const updateMatch = (id: string, field: keyof MatchEntry, value: string) => {
-    setMatches(matches.map(m => m.id === id ? { ...m, [field]: value } : m));
+    setMatches(matches.map(m => {
+      if (m.id !== id) return m;
+      
+      const updates: Partial<MatchEntry> = { [field]: value };
+      
+      // Auto-calculate complementary score (scores must add to 8)
+      if (field === 'score1' && value !== '') {
+        const num = parseInt(value);
+        if (!isNaN(num) && num >= 0 && num <= 8) {
+          updates.score2 = String(8 - num);
+        }
+      } else if (field === 'score2' && value !== '') {
+        const num = parseInt(value);
+        if (!isNaN(num) && num >= 0 && num <= 8) {
+          updates.score1 = String(8 - num);
+        }
+      }
+      
+      return { ...m, ...updates };
+    }));
   };
 
   // Get all players used in the current form
@@ -167,15 +189,20 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
       ? Math.max(...updatedMatches.map(m => m.round))
       : 0;
 
-    setTournament({
+    const updatedTournament = {
       ...tournament,
       matches: updatedMatches,
       currentRound: newCurrentRound,
-      status: newCurrentRound > 0 ? 'active' : 'setup',
+      status: newCurrentRound > 0 ? 'active' as const : 'setup' as const,
       updatedAt: Date.now(),
-    });
+    };
 
-    // Immediately clear the form for fresh entry
+    // Emit to server if in online mode
+    if (socket?.connected) {
+      socket.emit('manual_update_tournament', updatedTournament);
+    }
+    
+    setTournament(updatedTournament);
     createEmptyForm();
     
     setSuccess(`Round ${selectedRound} deleted - form cleared for new entry`);
@@ -223,8 +250,8 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
       team2: [m.team2Player1, m.team2Player2] as [string, string],
       score1: parseInt(m.score1),
       score2: parseInt(m.score2),
-      twenties1: parseInt(m.twenties1) || 0,
-      twenties2: parseInt(m.twenties2) || 0,
+      twenties1: m.twenties1 ? parseInt(m.twenties1) : 0,
+      twenties2: m.twenties2 ? parseInt(m.twenties2) : 0,
       tableId: null,
       completed: true,
       isBye: false,
@@ -254,16 +281,97 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
     const allMatches = [...otherMatches, ...newMatches];
     const maxRound = Math.max(...allMatches.map(m => m.round));
 
-    setTournament({
+    const updatedTournament = {
       ...tournament,
       matches: allMatches,
       currentRound: maxRound,
-      status: 'active',
+      status: 'active' as const,
       updatedAt: Date.now(),
-    });
+    };
+
+    // Emit to server if in online mode
+    if (socket?.connected) {
+      socket.emit('manual_update_tournament', updatedTournament);
+    }
+    
+    setTournament(updatedTournament);
 
     setSuccess(`Round ${selectedRound} saved successfully!`);
     setTimeout(() => setSuccess(null), 2000);
+  };
+
+  // Handle JSON file import
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        
+        // Validate the JSON structure
+        if (!json.players || !json.matches) {
+          throw new Error('Invalid tournament JSON - missing players or matches');
+        }
+
+        // Create a merged tournament object
+        const importedTournament: Tournament = {
+          id: tournament?.id || json.id || nanoid(8),
+          name: json.name || tournament?.name || 'Imported Tournament',
+          players: json.players,
+          matches: json.matches,
+          tables: json.tables || tournament?.tables || [],
+          currentRound: json.currentRound || Math.max(...json.matches.map((m: Match) => m.round), 0),
+          totalRounds: json.totalRounds || tournament?.totalRounds || 6,
+          status: json.status || 'active',
+          settings: json.settings || tournament?.settings || { allowTies: true, pointsForWin: 2, pointsForTie: 1, pointsForLoss: 0 },
+          shareCode: tournament?.shareCode || json.shareCode || '',
+          createdAt: json.createdAt || tournament?.createdAt || Date.now(),
+          updatedAt: Date.now(),
+          pairingLogs: json.pairingLogs || [],
+        };
+
+        // Emit to server if in online mode
+        if (socket?.connected) {
+          socket.emit('manual_update_tournament', importedTournament);
+        }
+        
+        setTournament(importedTournament);
+        setSuccess('Tournament data imported successfully!');
+        
+        // Reload current round if one was selected
+        if (selectedRound !== null) {
+          setTimeout(() => loadRound(selectedRound), 100);
+        }
+        
+        setTimeout(() => setSuccess(null), 3000);
+      } catch (err) {
+        setError(`Failed to import: ${err instanceof Error ? err.message : 'Invalid JSON'}`);
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Export current tournament as JSON
+  const handleExport = () => {
+    if (!tournament) return;
+    
+    const dataStr = JSON.stringify(tournament, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tournament-backup-${tournament.name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   if (!tournament) return null;
@@ -279,6 +387,38 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
           >
             ×
           </button>
+        </div>
+
+        {/* Import/Export Buttons */}
+        <div className="mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">Backup & Restore</h3>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleExport}
+              className="btn btn-secondary text-sm flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export JSON Backup
+            </button>
+            <label className="btn btn-secondary text-sm flex items-center gap-2 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              Import JSON Backup
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileImport}
+                className="hidden"
+              />
+            </label>
+          </div>
+          <p className="text-xs text-[var(--color-text-muted)] mt-2">
+            Export your tournament before making changes. Import to restore from a backup.
+          </p>
         </div>
 
         {/* Round Selector */}
@@ -434,7 +574,7 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
                     </div>
                   </div>
 
-                  {/* Scores */}
+                  {/* Scores - with auto-calculation */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
                       <label className="text-xs text-[var(--color-text-muted)]">Team 1 Score</label>
@@ -444,6 +584,7 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
                         max={8}
                         value={match.score1}
                         onChange={(e) => updateMatch(match.id, 'score1', e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         placeholder="0-8"
                         className="input w-full mt-1"
                       />
@@ -456,9 +597,11 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
                         max={8}
                         value={match.score2}
                         onChange={(e) => updateMatch(match.id, 'score2', e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         placeholder="0-8"
-                        className="input w-full mt-1"
+                        className="input w-full mt-1 bg-[var(--color-bg-secondary)]"
                       />
+                      <span className="text-xs text-[var(--color-text-muted)] italic">auto-calculated</span>
                     </div>
                     <div>
                       <label className="text-xs text-[var(--color-text-muted)]">Team 1 20s</label>
@@ -467,6 +610,7 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
                         min={0}
                         value={match.twenties1}
                         onChange={(e) => updateMatch(match.id, 'twenties1', e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         placeholder="optional"
                         className="input w-full mt-1"
                       />
@@ -478,6 +622,7 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
                         min={0}
                         value={match.twenties2}
                         onChange={(e) => updateMatch(match.id, 'twenties2', e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         placeholder="optional"
                         className="input w-full mt-1"
                       />
