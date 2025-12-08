@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { exportPageToPng } from '../../utils/exportPng';
 import { RankRibbonChart } from './RankRibbonChart';
@@ -27,6 +27,7 @@ interface PlayerRoundData {
 
 export function SwissAnalysis() {
   const { tournament, getPlayerById } = useTournamentStore();
+  const [showProgressionTable, setShowProgressionTable] = useState(false);
 
   const analysis = useMemo(() => {
     if (!tournament || tournament.currentRound === 0) return null;
@@ -274,14 +275,32 @@ export function SwissAnalysis() {
         <RankRibbonChart />
       </section>
 
-      {/* Rank Progression Table - hidden on mobile, shown on larger screens */}
+      {/* Rank Progression Table - Collapsible */}
       <section className="card p-4 md:p-6 hidden md:block">
-        <h3 className="text-lg font-display font-semibold mb-4">Rank Progression Table</h3>
-        <p className="text-sm text-[var(--color-text-muted)] mb-4">
-          Track how each player's ranking changed after each round. 
-          Partners are shown with their rank at the time of pairing.
-        </p>
-        <div className="overflow-x-auto">
+        <button
+          onClick={() => setShowProgressionTable(!showProgressionTable)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <div>
+            <h3 className="text-lg font-display font-semibold">Rank Progression Table</h3>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">
+              Detailed round-by-round ranking data with partner information
+            </p>
+          </div>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            strokeWidth={2} 
+            stroke="currentColor" 
+            className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform duration-200 ${showProgressionTable ? 'rotate-180' : ''}`}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        
+        {showProgressionTable && (
+          <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
@@ -355,7 +374,8 @@ export function SwissAnalysis() {
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        )}
       </section>
 
       {/* Partner Pairing Analysis */}

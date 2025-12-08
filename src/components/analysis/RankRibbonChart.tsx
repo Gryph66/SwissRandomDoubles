@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 
-// Vibrant colors for top 2 pools (16 players if pool size 8)
+// Vibrant colors for top 2 pools (20 unique colors to support pool size up to 10)
 const TOP_POOL_COLORS = [
-  '#10b981', // emerald - Pool A
+  '#10b981', // emerald
   '#22c55e', // green
+  '#84cc16', // lime
   '#14b8a6', // teal
   '#06b6d4', // cyan
   '#0ea5e9', // sky
@@ -12,6 +13,7 @@ const TOP_POOL_COLORS = [
   '#6366f1', // indigo
   '#8b5cf6', // violet
   '#a855f7', // purple
+  '#c026d3', // fuchsia-600
   '#d946ef', // fuchsia
   '#ec4899', // pink
   '#f43f5e', // rose
@@ -19,6 +21,20 @@ const TOP_POOL_COLORS = [
   '#f97316', // orange
   '#f59e0b', // amber
   '#eab308', // yellow
+  '#a3e635', // lime-400
+  '#2dd4bf', // teal-400
+];
+
+// Pool background colors (matching the pool separation section)
+const POOL_BG_COLORS = [
+  '#10b981', // emerald - Pool A
+  '#3b82f6', // blue - Pool B
+  '#f59e0b', // amber - Pool C
+  '#a855f7', // purple - Pool D
+  '#f43f5e', // rose - Pool E
+  '#06b6d4', // cyan - Pool F
+  '#f97316', // orange - Pool G
+  '#6366f1', // indigo - Pool H
 ];
 
 // Muted color for lower pools
@@ -230,6 +246,33 @@ export function RankRibbonChart() {
       >
         {/* Background */}
         <rect x={0} y={0} width={width} height={height} fill="transparent" />
+
+        {/* Pool background bands */}
+        {(() => {
+          const numPools = Math.ceil(numPlayers / chartData.poolSize);
+          return Array.from({ length: numPools }, (_, poolIdx) => {
+            const startRank = poolIdx * chartData.poolSize + 1;
+            const endRank = Math.min((poolIdx + 1) * chartData.poolSize, numPlayers);
+            
+            // Calculate y positions with some padding
+            const yStart = yScale(startRank) - (rowHeight / 2);
+            const yEnd = yScale(endRank) + (rowHeight / 2);
+            const bandHeight = yEnd - yStart;
+            
+            return (
+              <rect
+                key={poolIdx}
+                x={margin.left - 10}
+                y={yStart}
+                width={chartWidth + 20}
+                height={bandHeight}
+                fill={POOL_BG_COLORS[poolIdx % POOL_BG_COLORS.length]}
+                opacity={0.06}
+                rx={4}
+              />
+            );
+          });
+        })()}
 
         {/* Round labels at top */}
         {Array.from({ length: rounds }, (_, i) => i + 1).map((round) => (
