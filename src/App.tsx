@@ -6,6 +6,7 @@ import { RoundView } from './components/round/RoundView';
 import { Standings } from './components/standings/Standings';
 import { MatchHistory } from './components/history/MatchHistory';
 import { SwissAnalysis } from './components/analysis/SwissAnalysis';
+import { Schedule } from './components/schedule/Schedule';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { LandingPage } from './components/landing/LandingPage';
 import { useTournamentStore } from './store/tournamentStore';
@@ -184,6 +185,8 @@ function App() {
     switch (viewMode) {
       case 'setup':
         return <TournamentSetup socket={appMode === 'online' ? socket : undefined} />;
+      case 'schedule':
+        return <Schedule />;
       case 'rounds':
         return <RoundView socket={appMode === 'online' ? socket : undefined} />;
       case 'standings':

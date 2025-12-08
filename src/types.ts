@@ -125,7 +125,7 @@ export interface RoundLog {
 }
 
 // View modes
-export type ViewMode = 'setup' | 'rounds' | 'standings' | 'history' | 'analysis' | 'admin';
+export type ViewMode = 'setup' | 'schedule' | 'rounds' | 'standings' | 'history' | 'analysis' | 'admin';
 
 // Saved tournament summary (lighter weight for list display)
 export interface SavedTournamentSummary {

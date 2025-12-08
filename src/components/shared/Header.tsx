@@ -4,7 +4,8 @@ import type { ViewMode } from '../../types';
 
 const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; large?: boolean; hostOnly?: boolean }[] = [
   { mode: 'setup', label: 'Setup', requiresTournament: false, hostOnly: true },
-  { mode: 'history', label: 'Matches', requiresTournament: true, large: true },
+  { mode: 'schedule', label: 'Schedule', requiresTournament: true, large: true },
+  { mode: 'history', label: 'Matches', requiresTournament: true },
   { mode: 'rounds', label: 'Scores', requiresTournament: true },
   { mode: 'standings', label: 'Standings', requiresTournament: true },
   { mode: 'analysis', label: 'Analysis', requiresTournament: true },
