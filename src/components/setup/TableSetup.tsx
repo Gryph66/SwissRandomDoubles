@@ -32,59 +32,91 @@ export function TableSetup({ socket }: TableSetupProps) {
     }
   };
 
-  const addNumberedTables = (count: number) => {
+  const addNumberedTables = (count: number, prefix: string = 'Table') => {
     for (let i = 1; i <= count; i++) {
-      addTable(`Table ${i}`);
+      addTable(`${prefix} ${i}`);
     }
   };
 
-  const addLetterTables = (count: number) => {
+  const addLetterTables = (count: number, prefix: string = 'Board') => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     for (let i = 0; i < Math.min(count, 26); i++) {
-      addTable(`Board ${letters[i]}`);
+      addTable(`${prefix} ${letters[i]}`);
     }
   };
 
-  const requiredTables = Math.floor(tournament.players.length / 4);
+  const clearAllTables = () => {
+    tournament.tables.forEach(table => {
+      removeTable(table.id);
+    });
+  };
+
+  // Calculate required tables based on active players
+  const activePlayers = tournament.players.filter(p => p.active);
+  const playerCount = activePlayers.length;
+  const requiredTables = Math.ceil(playerCount / 4);
+  const byeCount = playerCount % 4 === 0 ? 0 : 4 - (playerCount % 4);
+
+  // Generate letter for quick-add (A, B, C, D, E based on count)
+  const getEndLetter = (count: number) => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[count - 1] || 'Z';
 
   return (
     <section className="card p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-display font-semibold">Tables / Boards</h2>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            You'll need at least {requiredTables} table{requiredTables !== 1 ? 's' : ''} for {tournament.players.length} players
+            {playerCount} players = {requiredTables} table{requiredTables !== 1 ? 's' : ''} needed
+            {byeCount > 0 && ` (${byeCount} bye${byeCount !== 1 ? 's' : ''})`}
           </p>
         </div>
-        <span className="text-sm text-[var(--color-text-muted)]">
-          {tournament.tables.length} defined
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-[var(--color-text-muted)]">
+            {tournament.tables.length} defined
+          </span>
+          {tournament.tables.length > 0 && (
+            <button
+              onClick={clearAllTables}
+              className="text-xs text-red-400 hover:text-red-300 transition-colors"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Quick Add Buttons */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => addNumberedTables(4)}
-          className="btn btn-secondary text-sm"
-        >
-          Add Tables 1-4
-        </button>
-        <button
-          onClick={() => addNumberedTables(8)}
-          className="btn btn-secondary text-sm"
-        >
-          Add Tables 1-8
-        </button>
-        <button
-          onClick={() => addLetterTables(4)}
-          className="btn btn-secondary text-sm"
-        >
-          Add Boards A-D
-        </button>
-      </div>
+      {/* Smart Quick Add Buttons - based on player count */}
+      {requiredTables > 0 && tournament.tables.length === 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => addNumberedTables(requiredTables, 'Table')}
+            className="btn btn-secondary text-sm"
+          >
+            Add Table 1-{requiredTables}
+          </button>
+          <button
+            onClick={() => addNumberedTables(requiredTables, 'Board')}
+            className="btn btn-secondary text-sm"
+          >
+            Add Board 1-{requiredTables}
+          </button>
+          <button
+            onClick={() => addLetterTables(requiredTables, 'Table')}
+            className="btn btn-secondary text-sm"
+          >
+            Add Table A-{getEndLetter(requiredTables)}
+          </button>
+          <button
+            onClick={() => addLetterTables(requiredTables, 'Board')}
+            className="btn btn-secondary text-sm"
+          >
+            Add Board A-{getEndLetter(requiredTables)}
+          </button>
+        </div>
+      )}
 
       {/* Add Table Form */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-3 mb-4">
         <input
           type="text"
           value={newTableName}
@@ -104,8 +136,8 @@ export function TableSetup({ socket }: TableSetupProps) {
 
       {/* Table List */}
       {tournament.tables.length === 0 ? (
-        <div className="text-center py-8 text-[var(--color-text-muted)]">
-          No tables defined. Use the quick-add buttons or add custom names above.
+        <div className="text-center py-6 text-[var(--color-text-muted)]">
+          No tables defined. Use the quick-add buttons above or add custom names.
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -114,7 +146,7 @@ export function TableSetup({ socket }: TableSetupProps) {
             .map((table) => (
               <div
                 key={table.id}
-                className="flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] rounded-lg group"
+                className="flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] rounded-lg"
               >
                 <input
                   type="text"
@@ -124,11 +156,10 @@ export function TableSetup({ socket }: TableSetupProps) {
                 />
                 <button
                   onClick={() => removeTable(table.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-[var(--color-text-muted)] 
-                           hover:text-red-400 transition-all duration-200 flex-shrink-0"
+                  className="p-1 text-red-400/60 hover:text-red-400 transition-all duration-200 flex-shrink-0 ml-2"
                   title="Remove table"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -139,4 +170,3 @@ export function TableSetup({ socket }: TableSetupProps) {
     </section>
   );
 }
-

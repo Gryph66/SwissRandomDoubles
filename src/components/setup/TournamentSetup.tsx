@@ -472,11 +472,11 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
             </div>
           </section>
 
-          {/* Table Setup */}
-          {showTableSetup && <TableSetup socket={socket} />}
-
           {/* Player Registration */}
           <PlayerRegistration socket={socket} />
+
+          {/* Table Setup - below players so we know how many tables needed */}
+          {showTableSetup && <TableSetup socket={socket} />}
 
           {/* Start Tournament - only shown in setup mode */}
           {tournament.status === 'setup' && (

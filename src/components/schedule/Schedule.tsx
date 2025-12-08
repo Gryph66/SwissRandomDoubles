@@ -60,13 +60,14 @@ export function Schedule() {
     return player?.name || 'Unknown';
   };
 
-  // Get table/match label - use table name if assigned, otherwise match number
-  const getMatchLabel = (match: typeof currentMatches[0], index: number): string => {
+  // Get table/match label - use table name if assigned, otherwise match ID (last 4 chars)
+  // This matches the logic in MatchHistory for consistency
+  const getMatchLabel = (match: typeof currentMatches[0]): string => {
     if (match.tableId) {
       const table = tournament.tables.find(t => t.id === match.tableId);
       if (table) return table.name;
     }
-    return `Match ${index + 1}`;
+    return `Match ${match.id.slice(-4).toUpperCase()}`;
   };
 
   const handlePrevRound = () => {
@@ -150,7 +151,7 @@ export function Schedule() {
           }}
         >
           {/* Regular Matches */}
-          {currentMatches.map((match, index) => (
+          {currentMatches.map((match) => (
             <div
               key={match.id}
               className={`
@@ -162,7 +163,7 @@ export function Schedule() {
               {/* Match Label - Larger */}
               <div className="absolute top-2 left-0 right-0 text-center">
                 <span className="text-sm md:text-base font-bold tracking-wider text-[var(--color-accent)] uppercase">
-                  {getMatchLabel(match, index)}
+                  {getMatchLabel(match)}
                 </span>
               </div>
 
@@ -244,7 +245,7 @@ export function Schedule() {
 
       {/* Mobile: Scrollable stacked list */}
       <div className="md:hidden flex-1 overflow-y-auto space-y-2 pb-4">
-        {currentMatches.map((match, index) => (
+        {currentMatches.map((match) => (
           <div
             key={match.id}
             className={`
@@ -254,7 +255,7 @@ export function Schedule() {
           >
             {/* Match Label */}
             <div className="text-sm font-bold tracking-wider text-[var(--color-accent)] uppercase mb-1 text-center">
-              {getMatchLabel(match, index)}
+              {getMatchLabel(match)}
             </div>
 
             {/* Teams */}
