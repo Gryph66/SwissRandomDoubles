@@ -4,6 +4,20 @@ import { execSync } from 'child_process'
 
 // Get git info for version tracking
 function getGitInfo() {
+  // Check for Railway environment variables first (Railway provides these during build)
+  const railwayCommit = process.env.RAILWAY_GIT_COMMIT_SHA
+  const railwayBranch = process.env.RAILWAY_GIT_BRANCH
+  
+  if (railwayCommit) {
+    // We're on Railway - use their env vars
+    return { 
+      commitHash: railwayCommit.substring(0, 7), 
+      commitDate: new Date().toISOString().split('T')[0],
+      commitCount: process.env.RAILWAY_DEPLOYMENT_ID || 'railway'
+    }
+  }
+  
+  // Try local git
   try {
     const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
     const commitDate = execSync('git log -1 --format=%cd --date=short').toString().trim()

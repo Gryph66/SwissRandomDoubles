@@ -155,22 +155,24 @@ export function Schedule() {
             <div
               key={match.id}
               className={`
-                relative flex flex-col justify-center items-center
-                bg-[var(--color-bg-secondary)] rounded-lg
-                border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]/40'}
+                flex flex-col overflow-hidden rounded-xl
+                border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]'}
               `}
             >
-              {/* Match Label - Larger */}
-              <div className="absolute top-2 left-0 right-0 text-center">
-                <span className="text-sm md:text-base font-bold tracking-wider text-[var(--color-accent)] uppercase">
+              {/* Match Header Banner - like Score Entry */}
+              <div className={`
+                py-2 px-3 flex-shrink-0
+                ${match.completed ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}
+              `}>
+                <span className="text-lg md:text-xl font-bold italic uppercase tracking-wide text-[var(--color-bg-primary)]">
                   {getMatchLabel(match)}
                 </span>
               </div>
 
-              {/* Teams - Centered, Large */}
-              <div className="flex flex-col justify-center items-center px-2 w-full">
+              {/* Teams - Centered */}
+              <div className="flex-1 flex flex-col justify-center items-center px-2 py-2 bg-[var(--color-bg-secondary)]">
                 {/* Team 1 */}
-                <div className="text-center leading-none">
+                <div className="text-center leading-tight">
                   <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {getPlayerName(match.team1[0])}
                   </span>
@@ -186,7 +188,7 @@ export function Schedule() {
                 </div>
 
                 {/* Team 2 */}
-                <div className="text-center leading-none">
+                <div className="text-center leading-tight">
                   <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {match.team2 && getPlayerName(match.team2[0])}
                   </span>
@@ -195,46 +197,38 @@ export function Schedule() {
                     {match.team2 && getPlayerName(match.team2[1])}
                   </span>
                 </div>
-              </div>
 
-              {/* Score if completed */}
-              {match.completed && match.score1 !== null && (
-                <div className="absolute bottom-1 left-0 right-0 text-center">
-                  <span className="text-[clamp(0.7rem,1.5vw,1rem)] font-bold text-[var(--color-success)]">
-                    {match.score1} - {match.score2}
-                  </span>
-                </div>
-              )}
+                {/* Score if completed */}
+                {match.completed && match.score1 !== null && (
+                  <div className="mt-1">
+                    <span className="text-[clamp(0.8rem,1.5vw,1rem)] font-bold text-[var(--color-success)]">
+                      {match.score1} - {match.score2}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
 
-          {/* Bye Boxes - Purple styling */}
+          {/* Bye Boxes - Purple styling with banner */}
           {byeMatches.map((match, index) => (
             <div
               key={match.id}
-              className="
-                relative flex flex-col justify-center items-center
-                bg-purple-900/30 rounded-lg
-                border-2 border-purple-500/50
-              "
+              className="flex flex-col overflow-hidden rounded-xl border-2 border-purple-500"
             >
-              {/* BYE Label - Larger */}
-              <div className="absolute top-2 left-0 right-0 text-center">
-                <span className="text-sm md:text-base font-bold tracking-wider text-purple-400 uppercase">
+              {/* BYE Header Banner */}
+              <div className="py-2 px-3 flex-shrink-0 bg-purple-600">
+                <span className="text-lg md:text-xl font-bold italic uppercase tracking-wide text-white">
                   Bye {byeMatches.length > 1 ? index + 1 : ''}
                 </span>
               </div>
 
-              {/* Player Name - Centered, Large */}
-              <div className="text-center px-2">
-                <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-purple-300">
+              {/* Player Name - Centered */}
+              <div className="flex-1 flex flex-col justify-center items-center px-2 py-2 bg-purple-900/30">
+                <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-purple-200">
                   {getPlayerName(match.team1[0])}
                 </span>
-              </div>
-
-              {/* Bye info */}
-              <div className="absolute bottom-1 left-0 right-0 text-center">
-                <span className="text-[clamp(0.6rem,1.2vw,0.8rem)] text-purple-400/70">
+                <span className="text-[clamp(0.6rem,1.2vw,0.8rem)] text-purple-400/70 mt-1">
                   4-4 tie
                 </span>
               </div>
@@ -249,17 +243,22 @@ export function Schedule() {
           <div
             key={match.id}
             className={`
-              p-3 rounded-lg bg-[var(--color-bg-secondary)]
-              border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]/40'}
+              overflow-hidden rounded-xl
+              border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]'}
             `}
           >
-            {/* Match Label */}
-            <div className="text-sm font-bold tracking-wider text-[var(--color-accent)] uppercase mb-1 text-center">
-              {getMatchLabel(match)}
+            {/* Match Header Banner */}
+            <div className={`
+              py-2 px-3
+              ${match.completed ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}
+            `}>
+              <span className="text-lg font-bold italic uppercase tracking-wide text-[var(--color-bg-primary)]">
+                {getMatchLabel(match)}
+              </span>
             </div>
 
             {/* Teams */}
-            <div className="text-center">
+            <div className="p-3 bg-[var(--color-bg-secondary)] text-center">
               <div className="text-base font-bold text-[var(--color-text-primary)]">
                 {getPlayerName(match.team1[0])} <span className="text-[var(--color-text-muted)]">&</span> {getPlayerName(match.team1[1])}
               </div>
@@ -280,13 +279,15 @@ export function Schedule() {
         {byeMatches.map((match, index) => (
           <div
             key={match.id}
-            className="p-3 rounded-lg bg-purple-900/30 border-2 border-purple-500/50"
+            className="overflow-hidden rounded-xl border-2 border-purple-500"
           >
-            <div className="text-sm font-bold tracking-wider text-purple-400 uppercase mb-1 text-center">
-              Bye {byeMatches.length > 1 ? index + 1 : ''}
+            <div className="py-2 px-3 bg-purple-600">
+              <span className="text-lg font-bold italic uppercase tracking-wide text-white">
+                Bye {byeMatches.length > 1 ? index + 1 : ''}
+              </span>
             </div>
-            <div className="text-center">
-              <span className="text-base font-bold text-purple-300">
+            <div className="p-3 bg-purple-900/30 text-center">
+              <span className="text-base font-bold text-purple-200">
                 {getPlayerName(match.team1[0])}
               </span>
               <span className="text-xs text-purple-400/70 ml-2">(4-4 tie)</span>
