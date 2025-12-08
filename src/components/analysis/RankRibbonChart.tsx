@@ -267,7 +267,7 @@ export function RankRibbonChart() {
                 width={chartWidth + 20}
                 height={bandHeight}
                 fill={POOL_BG_COLORS[poolIdx % POOL_BG_COLORS.length]}
-                opacity={0.06}
+                opacity={0.12}
                 rx={4}
               />
             );

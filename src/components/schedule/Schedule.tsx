@@ -2,8 +2,26 @@ import { useMemo, useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { exportPageToPng } from '../../utils/exportPng';
 
-export function Schedule() {
-  const { tournament, getPlayerById, getMatchesByRound } = useTournamentStore();
+interface ScheduleProps {
+  socket?: {
+    generateNextRound: () => void;
+    completeTournament: () => void;
+  };
+}
+
+export function Schedule({ socket }: ScheduleProps) {
+  const { 
+    tournament, 
+    getPlayerById, 
+    getMatchesByRound,
+    generateNextRound: localGenerateNextRound,
+    completeTournament: localCompleteTournament,
+    setViewMode,
+    isHost,
+  } = useTournamentStore();
+  
+  const generateNextRound = socket ? socket.generateNextRound : localGenerateNextRound;
+  const completeTournament = socket ? socket.completeTournament : localCompleteTournament;
   const [viewRound, setViewRound] = useState<number | null>(null);
   
   // Use viewRound if set, otherwise current round
@@ -36,6 +54,22 @@ export function Schedule() {
   }
 
   const maxRound = tournament.currentRound;
+  
+  // Check if all matches in current round are complete
+  const allCurrentMatches = getMatchesByRound(tournament.currentRound);
+  const allMatchesComplete = allCurrentMatches.every((m) => m.completed);
+  const isLastRound = tournament.currentRound >= tournament.totalRounds;
+  const isCurrentRound = displayRound === tournament.currentRound && tournament.status !== 'completed';
+
+  const handleGenerateNextRound = () => {
+    if (isLastRound) {
+      completeTournament();
+      setViewMode('standings');
+    } else {
+      generateNextRound();
+      setViewRound(null);
+    }
+  };
 
   // Total items = matches + bye boxes
   const totalItems = currentMatches.length + byeMatches.length;
@@ -129,6 +163,16 @@ export function Schedule() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
           </button>
+          
+          {/* Next Round / Complete Button - Host Only */}
+          {isCurrentRound && tournament.status !== 'completed' && isHost && allMatchesComplete && (
+            <button
+              onClick={handleGenerateNextRound}
+              className="btn btn-primary text-sm px-4 py-2 font-semibold ml-2"
+            >
+              {isLastRound ? 'Complete Tournament' : `Start Round ${tournament.currentRound + 1}`}
+            </button>
+          )}
         </div>
         
         {/* Instruction text */}

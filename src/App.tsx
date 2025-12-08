@@ -204,7 +204,7 @@ function App() {
       case 'setup':
         return <TournamentSetup socket={appMode === 'online' ? socket : undefined} />;
       case 'schedule':
-        return <Schedule />;
+        return <Schedule socket={appMode === 'online' ? socket : undefined} />;
       case 'rounds':
         return <RoundView socket={appMode === 'online' ? socket : undefined} />;
       case 'standings':
