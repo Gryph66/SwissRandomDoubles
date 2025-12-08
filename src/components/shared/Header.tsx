@@ -5,8 +5,8 @@ import type { ViewMode } from '../../types';
 const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; large?: boolean; hostOnly?: boolean }[] = [
   { mode: 'setup', label: 'Setup', requiresTournament: false, hostOnly: true },
   { mode: 'schedule', label: 'Schedule', requiresTournament: true, large: true },
-  { mode: 'history', label: 'Matches', requiresTournament: true },
-  { mode: 'rounds', label: 'Scores', requiresTournament: true },
+  { mode: 'history', label: 'Score Entry', requiresTournament: true },
+  { mode: 'rounds', label: 'Round Results', requiresTournament: true },
   { mode: 'standings', label: 'Standings', requiresTournament: true },
   { mode: 'analysis', label: 'Analysis', requiresTournament: true },
   { mode: 'admin', label: 'Admin', requiresTournament: true, hostOnly: true },
