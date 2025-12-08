@@ -13,9 +13,11 @@ interface AdminPanelProps {
     updateSettings: (settings: any) => void;
     resetTournament: () => void;
   };
+  showQRCode?: boolean;
+  onToggleQRCode?: () => void;
 }
 
-export function AdminPanel({ socket }: AdminPanelProps) {
+export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelProps) {
   const { 
     tournament, 
     resetTournament: localResetTournament, 
@@ -163,6 +165,33 @@ export function AdminPanel({ socket }: AdminPanelProps) {
           <span className="text-sm text-[var(--color-text-muted)]">
             ({Math.ceil(tournament.players.length / (tournament.settings.poolSize || 8))} pools for {tournament.players.length} players)
           </span>
+        </div>
+      </section>
+
+      {/* Display Settings */}
+      <section className="card p-6">
+        <h3 className="text-lg font-display font-semibold mb-4">Display Settings</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">Floating QR Code</span>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Show QR code in the bottom corner for players to join
+              </p>
+            </div>
+            <button
+              onClick={onToggleQRCode}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                showQRCode ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  showQRCode ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </section>
 

@@ -176,7 +176,11 @@ function App() {
       case 'analysis':
         return <SwissAnalysis />;
       case 'admin':
-        return <AdminPanel socket={appMode === 'online' ? socket : undefined} />;
+        return <AdminPanel 
+          socket={appMode === 'online' ? socket : undefined} 
+          showQRCode={showQRCode}
+          onToggleQRCode={() => setShowQRCode(!showQRCode)}
+        />;
       default:
         return <TournamentSetup socket={appMode === 'online' ? socket : undefined} />;
     }
