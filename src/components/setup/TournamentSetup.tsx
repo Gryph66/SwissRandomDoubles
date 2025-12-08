@@ -51,6 +51,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [addRoundsCount, setAddRoundsCount] = useState(1);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const savedTournaments = getSavedTournamentSummaries();
@@ -160,6 +161,34 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
     setImportMessage({ 
       type: 'success', 
       text: `Added ${addRoundsCount} round${addRoundsCount > 1 ? 's' : ''}. Tournament now has ${newTotalRounds} rounds.${tournament.status === 'completed' ? ' Tournament reactivated!' : ''}`
+    });
+    
+    setTimeout(() => setImportMessage(null), 3000);
+  };
+
+  // Handle completing tournament early
+  const handleCompleteEarly = () => {
+    if (!tournament) return;
+    
+    // Set total rounds to current round and mark as completed
+    const updatedTournament = {
+      ...tournament,
+      totalRounds: tournament.currentRound,
+      status: 'completed' as const,
+      updatedAt: Date.now(),
+    };
+
+    // Emit to server if in online mode
+    if (socket?.socket?.connected) {
+      socket.socket.emit('manual_update_tournament', updatedTournament);
+    }
+    
+    setTournament(updatedTournament);
+    setRoundsInput(tournament.currentRound.toString());
+    setShowCompleteConfirm(false);
+    setImportMessage({ 
+      type: 'success', 
+      text: `Tournament completed after ${tournament.currentRound} rounds.`
     });
     
     setTimeout(() => setImportMessage(null), 3000);
@@ -365,6 +394,45 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
               <p className="text-xs text-[var(--color-text-muted)] mt-3">
                 New total: {tournament.totalRounds + addRoundsCount} rounds
               </p>
+            </section>
+          )}
+
+          {/* Complete Tournament Early - shown when active and has remaining rounds */}
+          {tournament.status === 'active' && tournament.currentRound < tournament.totalRounds && tournament.currentRound > 0 && (
+            <section className="card p-6 border-[var(--color-accent)]/30">
+              <h2 className="text-xl font-display font-semibold mb-4">End Tournament Early</h2>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                Complete the tournament now after {tournament.currentRound} round{tournament.currentRound > 1 ? 's' : ''} 
+                instead of playing all {tournament.totalRounds} rounds.
+              </p>
+              <div className="flex items-center gap-4">
+                {showCompleteConfirm ? (
+                  <>
+                    <span className="text-sm text-[var(--color-text-muted)]">
+                      Are you sure? This will end the tournament at Round {tournament.currentRound}.
+                    </span>
+                    <button
+                      onClick={handleCompleteEarly}
+                      className="btn bg-[var(--color-accent)] text-[var(--color-bg-primary)] hover:bg-[var(--color-accent)]/80"
+                    >
+                      Yes, Complete Now
+                    </button>
+                    <button
+                      onClick={() => setShowCompleteConfirm(false)}
+                      className="btn btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setShowCompleteConfirm(true)}
+                    className="btn btn-secondary"
+                  >
+                    Complete Tournament After Round {tournament.currentRound}
+                  </button>
+                )}
+              </div>
             </section>
           )}
 
