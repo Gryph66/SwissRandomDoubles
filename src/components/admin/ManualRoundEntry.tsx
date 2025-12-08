@@ -67,25 +67,31 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
         team2Player2: m.team2?.[1] || '',
         score1: m.score1?.toString() || '',
         score2: m.score2?.toString() || '',
-        twenties1: m.twenties1?.toString() || '',
-        twenties2: m.twenties2?.toString() || '',
+        // Only show 20s if they have a value > 0, otherwise leave empty for easier entry
+        twenties1: m.twenties1 ? m.twenties1.toString() : '',
+        twenties2: m.twenties2 ? m.twenties2.toString() : '',
       }));
       setMatches(loadedMatches);
     } else {
       // Create empty match slots
-      const emptyMatches: MatchEntry[] = Array(matchCount).fill(null).map(() => ({
-        id: nanoid(8),
-        team1Player1: '',
-        team1Player2: '',
-        team2Player1: '',
-        team2Player2: '',
-        score1: '',
-        score2: '',
-        twenties1: '',
-        twenties2: '',
-      }));
-      setMatches(emptyMatches);
+      createEmptyForm();
     }
+  };
+  
+  // Create empty form with correct number of match slots
+  const createEmptyForm = () => {
+    const emptyMatches: MatchEntry[] = Array(matchCount).fill(null).map(() => ({
+      id: nanoid(8),
+      team1Player1: '',
+      team1Player2: '',
+      team2Player1: '',
+      team2Player2: '',
+      score1: '',
+      score2: '',
+      twenties1: '',
+      twenties2: '',
+    }));
+    setMatches(emptyMatches);
   };
 
   const updateMatch = (id: string, field: keyof MatchEntry, value: string) => {
@@ -169,14 +175,13 @@ export function ManualRoundEntry({ onClose }: ManualRoundEntryProps) {
       updatedAt: Date.now(),
     });
 
-    setSuccess(`Round ${selectedRound} deleted successfully`);
+    // Immediately clear the form for fresh entry
+    createEmptyForm();
+    
+    setSuccess(`Round ${selectedRound} deleted - form cleared for new entry`);
     setShowDeleteConfirm(false);
     
-    // Reload the round (will show empty form)
-    setTimeout(() => {
-      loadRound(selectedRound);
-      setSuccess(null);
-    }, 1500);
+    setTimeout(() => setSuccess(null), 2000);
   };
 
   // Save the round

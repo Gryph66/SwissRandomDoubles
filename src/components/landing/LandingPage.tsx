@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
+// Get build info
+const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
+const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'local';
+const gitDate = typeof __GIT_DATE__ !== 'undefined' ? __GIT_DATE__ : '';
+
 interface LandingPageProps {
   isConnected: boolean;
   isConnecting: boolean;
@@ -194,6 +199,33 @@ export function LandingPage({
             <div className="mt-12 text-center text-sm text-[var(--color-text-muted)]">
               <p>Each room runs independently with its own tournament state.</p>
               <p>Share the room code or QR code with players to sync their devices.</p>
+            </div>
+            
+            {/* Connection & Version Info */}
+            <div className="mt-8 flex items-center justify-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                {isConnected ? (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-green-400">Connected</span>
+                  </>
+                ) : isConnecting ? (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                    <span className="text-yellow-400">Connecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <span className="text-red-400">Disconnected</span>
+                  </>
+                )}
+              </div>
+              <span className="text-[var(--color-text-muted)]">|</span>
+              <span className="text-[var(--color-text-muted)] font-mono">
+                v{version} ({gitCommit})
+                {gitDate && <span className="ml-1 opacity-75">{gitDate}</span>}
+              </span>
             </div>
           </>
         )}
