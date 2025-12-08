@@ -429,7 +429,9 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
               const hasData = roundHasData(round);
               const isSelected = selectedRound === round;
               const matchesInRound = getExistingMatches(round);
-              const completedCount = matchesInRound.filter(m => m.completed).length;
+              // Count only regular matches (not byes)
+              const regularMatchCount = matchesInRound.filter(m => !m.isBye && m.completed).length;
+              const byeMatchCount = matchesInRound.filter(m => m.isBye && m.completed).length;
               
               return (
                 <button
@@ -446,7 +448,8 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
                   <div className="text-sm font-medium">Round {round}</div>
                   {hasData && (
                     <div className="text-xs opacity-75">
-                      {completedCount} matches
+                      {regularMatchCount} match{regularMatchCount !== 1 ? 'es' : ''}
+                      {byeMatchCount > 0 && ` + ${byeMatchCount} bye${byeMatchCount !== 1 ? 's' : ''}`}
                     </div>
                   )}
                 </button>
