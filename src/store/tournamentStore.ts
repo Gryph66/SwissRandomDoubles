@@ -754,8 +754,138 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
       },
 
       generateBrackets: () => {
-        // Stub - will implement bracket generation logic in Phase 2
-        console.log('generateBrackets - stub implementation');
+        set((state) => {
+          if (!state.tournament || !state.tournament.finalsConfig) return state;
+
+          const bracketMatches: BracketMatch[] = [];
+
+          state.tournament.finalsConfig.poolConfigs.forEach((config) => {
+            if (config.bracketType === 'none') return;
+
+            const poolPlayers = state.tournament!.players.filter(p => config.playerIds.includes(p.id));
+            // Sort by Swiss rank (using standings logic implicitly or just sort by current performance)
+            // But config.playerIds usually comes sorted from FinalsConfig.
+            // Let's re-sort to be safe: wins > pointsFor > pointsAgainst > twenties
+            poolPlayers.sort((a, b) => {
+              const aScore = a.wins * 2 + a.ties;
+              const bScore = b.wins * 2 + b.ties;
+              if (bScore !== aScore) return bScore - aScore;
+              if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+              return b.twenties - a.twenties;
+            });
+
+            // 1. Form Teams (High-Low Pairing)
+            // T1: P[0] & P[N-1]
+            // T2: P[1] & P[N-2]
+            // ...
+            const teams: [string, string][] = [];
+            const count = poolPlayers.length;
+            const numTeams = count / 2;
+
+            for (let i = 0; i < numTeams; i++) {
+              teams.push([poolPlayers[i].id, poolPlayers[count - 1 - i].id]);
+            }
+
+            // Helper to create match
+            const createMatch = (
+              round: any,
+              matchNum: number,
+              t1: [string, string] | null,
+              t2: [string, string] | null,
+              nextId: string | null = null
+            ): BracketMatch => ({
+              id: nanoid(),
+              poolId: config.poolId,
+              round,
+              matchNumber: matchNum,
+              team1: t1,
+              team2: t2,
+              score1: null,
+              score2: null,
+              twenties1: 0,
+              twenties2: 0,
+              completed: false,
+              winnerId: null,
+              nextMatchId: nextId,
+              sourceMatch1Id: null,
+              sourceMatch2Id: null,
+            });
+
+            // 2. Build Bracket Structure
+            if (config.bracketType === 'final') {
+              // Final Only (4 players -> 2 teams)
+              // Team 1 vs Team 2
+              bracketMatches.push(createMatch('final', 1, teams[0], teams[1]));
+
+            } else if (config.bracketType === 'semifinals') {
+              // Semifinals (8 players -> 4 teams)
+              // Semis: 1v4, 2v3
+              const finalMatch = createMatch('final', 3, null, null);
+
+              const semi1 = createMatch('semifinal', 1, teams[0], teams[3], finalMatch.id); // 1 vs 4
+              const semi2 = createMatch('semifinal', 2, teams[1], teams[2], finalMatch.id); // 2 vs 3
+
+              finalMatch.sourceMatch1Id = semi1.id;
+              finalMatch.sourceMatch2Id = semi2.id;
+
+              bracketMatches.push(semi1, semi2, finalMatch);
+
+              if (config.includeThirdPlace) {
+                const thirdPlace = createMatch('third_place', 4, null, null);
+                thirdPlace.sourceMatch1Id = semi1.id; // Loser of Semi 1
+                thirdPlace.sourceMatch2Id = semi2.id; // Loser of Semi 2
+                bracketMatches.push(thirdPlace);
+              }
+
+            } else if (config.bracketType === 'quarterfinals') {
+              // Quarterfinals (16 players -> 8 teams)
+              // QF: 1v8, 4v5, 2v7, 3v6 (Standard bracket order for visual flow: 1v8, 4v5 top half; 2v7, 3v6 bottom half)
+              // QF1: 1 vs 8
+              // QF2: 4 vs 5
+              // QF3: 2 vs 7
+              // QF4: 3 vs 6
+
+              const finalMatch = createMatch('final', 7, null, null);
+
+              const semi1 = createMatch('semifinal', 5, null, null, finalMatch.id);
+              const semi2 = createMatch('semifinal', 6, null, null, finalMatch.id);
+
+              finalMatch.sourceMatch1Id = semi1.id;
+              finalMatch.sourceMatch2Id = semi2.id;
+
+              // Top Half (Feeds Semi 1)
+              const qf1 = createMatch('quarterfinal', 1, teams[0], teams[7], semi1.id); // 1 vs 8
+              const qf2 = createMatch('quarterfinal', 2, teams[3], teams[4], semi1.id); // 4 vs 5
+              semi1.sourceMatch1Id = qf1.id;
+              semi1.sourceMatch2Id = qf2.id;
+
+              // Bottom Half (Feeds Semi 2)
+              const qf3 = createMatch('quarterfinal', 3, teams[1], teams[6], semi2.id); // 2 vs 7
+              const qf4 = createMatch('quarterfinal', 4, teams[2], teams[5], semi2.id); // 3 vs 6
+              semi2.sourceMatch1Id = qf3.id;
+              semi2.sourceMatch2Id = qf4.id;
+
+              bracketMatches.push(qf1, qf2, qf3, qf4, semi1, semi2, finalMatch);
+
+              if (config.includeThirdPlace) {
+                const thirdPlace = createMatch('third_place', 8, null, null);
+                thirdPlace.sourceMatch1Id = semi1.id;
+                thirdPlace.sourceMatch2Id = semi2.id;
+                bracketMatches.push(thirdPlace);
+              }
+            }
+          });
+
+          return {
+            tournament: {
+              ...state.tournament,
+              bracketMatches,
+              status: 'finals_active',
+              updatedAt: Date.now(),
+            },
+            viewMode: 'bracket', // Switch to bracket view (stub view for now)
+          };
+        });
       },
 
       submitBracketScore: (matchId, score1, score2, twenties1, twenties2) => {
