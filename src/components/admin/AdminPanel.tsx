@@ -108,8 +108,8 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
           <div>
             <span className="text-[var(--color-text-muted)]">Status:</span>
             <span className={`ml-2 capitalize ${tournament.status === 'active' ? 'text-[var(--color-success)]' :
-                tournament.status === 'completed' ? 'text-[var(--color-accent)]' :
-                  'text-[var(--color-text-primary)]'
+              tournament.status === 'completed' ? 'text-[var(--color-accent)]' :
+                'text-[var(--color-text-primary)]'
               }`}>
               {tournament.status}
             </span>
@@ -390,8 +390,8 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
               <div
                 key={saved.id}
                 className={`p-4 rounded-lg border ${saved.id === tournament.id
-                    ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30'
-                    : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'
+                  ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30'
+                  : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'
                   }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -406,10 +406,10 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
                         </span>
                       )}
                       <span className={`text-xs px-2 py-0.5 rounded capitalize ${saved.status === 'completed'
-                          ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
-                          : saved.status === 'active'
-                            ? 'bg-blue-500/20 text-blue-400'
-                            : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
+                        ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
+                        : saved.status === 'active'
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
                         }`}>
                         {saved.status}
                       </span>
@@ -493,13 +493,23 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
               : 'Finals Mode is enabled. Complete Swiss rounds to configure brackets.'
             }
           </p>
-          <button
-            onClick={() => useTournamentStore.getState().setViewMode('finals_config')}
-            disabled={tournament.status !== 'finals_setup'}
-            className={`btn ${tournament.status === 'finals_setup' ? 'btn-primary' : 'btn-secondary opacity-50 cursor-not-allowed'}`}
-          >
-            Configure Finals Brackets
-          </button>
+          <div className="flex gap-3">
+            {tournament.status === 'active' && (
+              <button
+                onClick={() => useTournamentStore.getState().completeTournament()}
+                className="btn btn-primary"
+              >
+                Complete Swiss Rounds
+              </button>
+            )}
+            <button
+              onClick={() => useTournamentStore.getState().setViewMode('finals_config')}
+              disabled={tournament.status !== 'finals_setup'}
+              className={`btn ${tournament.status === 'finals_setup' ? 'btn-primary' : 'btn-secondary opacity-50 cursor-not-allowed'}`}
+            >
+              Configure Finals Brackets
+            </button>
+          </div>
         </section>
       )}
 
