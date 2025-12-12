@@ -17,9 +17,9 @@ interface AdminPanelProps {
 }
 
 export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelProps) {
-  const { 
-    tournament, 
-    resetTournament: localResetTournament, 
+  const {
+    tournament,
+    resetTournament: localResetTournament,
     addPlayer: localAddPlayer,
     updateSettings: localUpdateSettings,
     saveTournament,
@@ -27,11 +27,11 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
     deleteSavedTournament,
     getSavedTournamentSummaries
   } = useTournamentStore();
-  
+
   const addPlayer = socket ? socket.addPlayer : localAddPlayer;
   const updateSettings = socket ? socket.updateSettings : localUpdateSettings;
   const resetTournament = socket ? socket.resetTournament : localResetTournament;
-  
+
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [showQR, setShowQR] = useState(false);
@@ -89,7 +89,7 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
     setShowResetConfirm(false);
   };
 
-  const shareUrl = typeof window !== 'undefined' 
+  const shareUrl = typeof window !== 'undefined'
     ? `${window.location.origin}?code=${tournament.shareCode}`
     : '';
 
@@ -107,11 +107,10 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
           </div>
           <div>
             <span className="text-[var(--color-text-muted)]">Status:</span>
-            <span className={`ml-2 capitalize ${
-              tournament.status === 'active' ? 'text-[var(--color-success)]' :
-              tournament.status === 'completed' ? 'text-[var(--color-accent)]' :
-              'text-[var(--color-text-primary)]'
-            }`}>
+            <span className={`ml-2 capitalize ${tournament.status === 'active' ? 'text-[var(--color-success)]' :
+                tournament.status === 'completed' ? 'text-[var(--color-accent)]' :
+                  'text-[var(--color-text-primary)]'
+              }`}>
               {tournament.status}
             </span>
           </div>
@@ -146,7 +145,7 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
       <section className="card p-6">
         <h3 className="text-lg font-display font-semibold mb-4">After Tournament Pool Settings</h3>
         <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-          Configure the pool size for post-tournament groupings. Players will be divided into pools (A, B, C, etc.) 
+          Configure the pool size for post-tournament groupings. Players will be divided into pools (A, B, C, etc.)
           based on their final standings. This is used on the Standings and Analysis pages.
         </p>
         <div className="flex items-center gap-4">
@@ -178,14 +177,12 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
             </div>
             <button
               onClick={onToggleQRCode}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                showQRCode ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-tertiary)]'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showQRCode ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-tertiary)]'
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  showQRCode ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showQRCode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
           </div>
@@ -203,7 +200,7 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
             {showQR ? 'Hide QR Code' : 'Show QR Code'}
           </button>
         </div>
-        
+
         <p className="text-sm text-[var(--color-text-secondary)] mb-4">
           Players can view the tournament on their devices by visiting this URL or scanning the QR code.
         </p>
@@ -342,7 +339,7 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
             </button>
           </div>
         </div>
-        
+
         {showPairingLog && (
           <div className="mt-4">
             {!tournament.pairingLogs || tournament.pairingLogs.length === 0 ? (
@@ -392,11 +389,10 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
             {savedTournaments.map((saved) => (
               <div
                 key={saved.id}
-                className={`p-4 rounded-lg border ${
-                  saved.id === tournament.id 
-                    ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30' 
+                className={`p-4 rounded-lg border ${saved.id === tournament.id
+                    ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30'
                     : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -409,13 +405,12 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
                           Current
                         </span>
                       )}
-                      <span className={`text-xs px-2 py-0.5 rounded capitalize ${
-                        saved.status === 'completed' 
+                      <span className={`text-xs px-2 py-0.5 rounded capitalize ${saved.status === 'completed'
                           ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
                           : saved.status === 'active'
-                          ? 'bg-blue-500/20 text-blue-400'
-                          : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
-                      }`}>
+                            ? 'bg-blue-500/20 text-blue-400'
+                            : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
+                        }`}>
                         {saved.status}
                       </span>
                     </div>
@@ -488,10 +483,30 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
         )}
       </section>
 
+      {/* Finals Configuration - Quick Access */}
+      {tournament.settings.finalsEnabled && (tournament.status === 'active' || tournament.status === 'finals_setup') && (
+        <section className="card p-6 border-[var(--color-accent)]/30">
+          <h3 className="text-lg font-display font-semibold mb-4">Finals/Bracket Mode</h3>
+          <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+            {tournament.status === 'finals_setup'
+              ? 'Swiss rounds complete! Configure your playoff brackets.'
+              : 'Finals Mode is enabled. Complete Swiss rounds to configure brackets.'
+            }
+          </p>
+          <button
+            onClick={() => useTournamentStore.getState().setViewMode('finals_config')}
+            disabled={tournament.status !== 'finals_setup'}
+            className={`btn ${tournament.status === 'finals_setup' ? 'btn-primary' : 'btn-secondary opacity-50 cursor-not-allowed'}`}
+          >
+            Configure Finals Brackets
+          </button>
+        </section>
+      )}
+
       {/* Danger Zone */}
       <section className="card p-6 border-red-500/30">
         <h3 className="text-lg font-display font-semibold text-red-400 mb-4">Danger Zone</h3>
-        
+
         {!showResetConfirm ? (
           <button
             onClick={() => setShowResetConfirm(true)}
