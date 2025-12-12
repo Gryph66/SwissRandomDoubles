@@ -38,9 +38,48 @@ export interface TournamentSettings {
   playerScoreEntry: boolean;
   pointsPerMatch: number; // Default 8 for Crokinole
   poolSize: number; // Default 8 - for post-tournament pool grouping
+  finalsEnabled: boolean; // Enable Finals/Bracket mode
 }
 
-export type TournamentStatus = 'setup' | 'active' | 'completed';
+export type TournamentStatus = 'setup' | 'active' | 'finals_setup' | 'finals_active' | 'completed';
+
+// Finals/Bracket mode types
+export type BracketType = 'none' | 'final' | 'semifinals' | 'quarterfinals';
+
+export type BracketRound = 'quarterfinal' | 'semifinal' | 'final' | 'third_place';
+
+export interface BracketMatch {
+  id: string;
+  poolId: string;              // Which pool this bracket belongs to
+  round: BracketRound;
+  matchNumber: number;         // Position in bracket (1, 2, 3, 4...)
+  team1: [string, string] | null;  // Player IDs, null if TBD
+  team2: [string, string] | null;
+  score1: number | null;
+  score2: number | null;
+  twenties1: number;
+  twenties2: number;
+  completed: boolean;
+  winnerId: string | null;     // Team key (sorted player IDs joined with '-')
+  nextMatchId: string | null;  // Where winner advances
+  sourceMatch1Id: string | null; // Where team1 comes from
+  sourceMatch2Id: string | null; // Where team2 comes from
+}
+
+export interface PoolBracketConfig {
+  poolId: string;
+  poolName: string;            // "Pool A", "Pool B", etc.
+  bracketType: BracketType;
+  playerIds: string[];         // Players in this pool (from Swiss)
+  includeThirdPlace: boolean;  // Whether to include 3rd place match for this pool
+  seedingPairs?: [number, number][]; // Custom seeding, e.g. [[1,4], [2,3]]
+}
+
+export interface FinalsConfig {
+  enabled: boolean;
+  poolConfigs: PoolBracketConfig[];
+  configured: boolean;         // Has director configured brackets?
+}
 
 export interface Tournament {
   id: string;
@@ -56,6 +95,8 @@ export interface Tournament {
   createdAt: number;
   updatedAt: number;
   pairingLogs?: RoundLog[]; // Optional for backwards compatibility
+  finalsConfig?: FinalsConfig; // Finals bracket configuration
+  bracketMatches: BracketMatch[]; // Bracket playoff matches
 }
 
 // Helper types for pairing algorithm
@@ -125,7 +166,17 @@ export interface RoundLog {
 }
 
 // View modes
-export type ViewMode = 'setup' | 'schedule' | 'rounds' | 'standings' | 'history' | 'analysis' | 'admin';
+export type ViewMode = 'setup' | 'schedule' | 'rounds' | 'standings' | 'history' | 'analysis' | 'admin' | 'bracket' | 'finals';
+
+// Final standings (combining Swiss and bracket results)
+export interface FinalStanding {
+  playerId: string;
+  playerName: string;
+  finalPosition: number;       // 1, 2, 3, 4, etc.
+  poolName: string;
+  bracketResult: string;       // "Champion", "Runner-up", "Semifinalist", "Quarterfinalist", "Swiss Only"
+  swissRank: number;
+}
 
 // Saved tournament summary (lighter weight for list display)
 export interface SavedTournamentSummary {
@@ -148,42 +199,42 @@ export interface TournamentState {
   isHost: boolean;
   connectedPlayerId: string | null;
   onlineMode: boolean;
-  
+
   // Actions
   createTournament: (name: string, totalRounds: number) => void;
   updateTournamentName: (name: string) => void;
   updateTotalRounds: (rounds: number) => void;
   updateSettings: (settings: Partial<TournamentSettings>) => void;
-  
+
   addPlayer: (name: string) => void;
   removePlayer: (playerId: string) => void;
   updatePlayer: (playerId: string, updates: Partial<Player>) => void;
-  
+
   addTable: (name: string) => void;
   removeTable: (tableId: string) => void;
   updateTable: (tableId: string, name: string) => void;
   reorderTables: (tables: Table[]) => void;
-  
+
   startTournament: () => void;
   generateNextRound: () => void;
   submitScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
   editScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
-  
+
   completeTournament: () => void;
   resetTournament: () => void;
-  
+
   // Tournament history
   saveTournament: () => void;
   loadTournament: (tournamentId: string) => void;
   deleteSavedTournament: (tournamentId: string) => void;
   getSavedTournamentSummaries: () => SavedTournamentSummary[];
-  
+
   setViewMode: (mode: ViewMode) => void;
   setIsHost: (isHost: boolean) => void;
   setTournament: (tournament: Tournament | null) => void;
   setConnectedPlayerId: (playerId: string | null) => void;
   setOnlineMode: (online: boolean) => void;
-  
+
   // Utility
   getPlayerById: (playerId: string) => Player | undefined;
   getMatchesByRound: (round: number) => Match[];
@@ -191,5 +242,13 @@ export interface TournamentState {
   getStandings: () => PlayerStanding[];
   getPartnerHistory: () => PartnerHistory;
   getMatchHistory: () => MatchHistory;
+
+  // Finals/Bracket mode
+  configureFinalsMode: (poolConfigs: PoolBracketConfig[]) => void;
+  generateBrackets: () => void;
+  submitBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+  editBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+  getFinalStandings: () => FinalStanding[];
+  getBracketMatchesByPool: (poolId: string) => BracketMatch[];
 }
 
