@@ -480,7 +480,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                   type="checkbox"
                   checked={tournament.settings.finalsEnabled}
                   onChange={(e) => updateSettings({ finalsEnabled: e.target.checked })}
-                  disabled={tournament.status !== 'setup'}
+                  disabled={tournament.status === 'finals_setup' || tournament.status === 'finals_active' || tournament.finalsConfig?.configured}
                   className="w-5 h-5 rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)] 
                            text-[var(--color-accent)] focus:ring-[var(--color-accent)] focus:ring-offset-0
                            disabled:opacity-50 disabled:cursor-not-allowed"
