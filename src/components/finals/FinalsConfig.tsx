@@ -103,8 +103,8 @@ export function FinalsConfig() {
     const getRequiredPlayerCount = (bracketType: BracketType): number => {
         switch (bracketType) {
             case 'final': return 4;
-            case 'semifinals': return 4;
-            case 'quarterfinals': return 8;
+            case 'semifinals': return 8;
+            case 'quarterfinals': return 16;
             default: return 0;
         }
     };
@@ -170,8 +170,8 @@ export function FinalsConfig() {
                                 >
                                     <option value="none">No Bracket</option>
                                     {playerCount >= 4 && <option value="final">Final Only (Top 4)</option>}
-                                    {playerCount >= 4 && <option value="semifinals">Semifinals + Final</option>}
-                                    {playerCount >= 8 && <option value="quarterfinals">Quarterfinals + Semis + Final</option>}
+                                    {playerCount >= 8 && <option value="semifinals">Semifinals + Final (Top 8)</option>}
+                                    {playerCount >= 16 && <option value="quarterfinals">Quarterfinals + Semis + Final (Top 16)</option>}
                                 </select>
                             </div>
                         </div>
