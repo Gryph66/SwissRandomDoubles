@@ -433,14 +433,18 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           }
         });
 
+        // If Finals Mode is enabled, go to finals_setup, otherwise complete
+        const newStatus = state.tournament.settings.finalsEnabled ? 'finals_setup' : 'completed';
+        const newViewMode = state.tournament.settings.finalsEnabled ? 'finals_config' : 'standings';
+
         set({
           tournament: {
             ...state.tournament,
             players: updatedPlayers,
-            status: 'completed',
+            status: newStatus,
             updatedAt: Date.now(),
           },
-          viewMode: 'standings',
+          viewMode: newViewMode,
         });
       },
 

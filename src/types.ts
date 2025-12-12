@@ -166,7 +166,7 @@ export interface RoundLog {
 }
 
 // View modes
-export type ViewMode = 'setup' | 'schedule' | 'rounds' | 'standings' | 'history' | 'analysis' | 'admin' | 'bracket' | 'finals';
+export type ViewMode = 'setup' | 'schedule' | 'rounds' | 'standings' | 'history' | 'analysis' | 'admin' | 'bracket' | 'finals' | 'finals_config';
 
 // Final standings (combining Swiss and bracket results)
 export interface FinalStanding {

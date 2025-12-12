@@ -8,6 +8,7 @@ import { MatchHistory } from './components/history/MatchHistory';
 import { SwissAnalysis } from './components/analysis/SwissAnalysis';
 import { Schedule } from './components/schedule/Schedule';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { FinalsConfig } from './components/finals/FinalsConfig';
 import { LandingPage } from './components/landing/LandingPage';
 import { useTournamentStore } from './store/tournamentStore';
 import { useSocket } from './hooks/useSocket';
@@ -16,9 +17,9 @@ import type { Tournament } from './types';
 type AppMode = 'landing' | 'local' | 'online';
 
 function App() {
-  const { 
-    viewMode, 
-    tournament, 
+  const {
+    viewMode,
+    tournament,
     setTournament,
     setIsHost,
     setConnectedPlayerId,
@@ -26,12 +27,12 @@ function App() {
     setViewMode,
     isHost,
   } = useTournamentStore();
-  
+
   const [appMode, setAppMode] = useState<AppMode>('landing');
   const [joinError, setJoinError] = useState<string | null>(null);
   const [connectedCount, setConnectedCount] = useState(0);
   const [showQRCode, setShowQRCode] = useState(true);
-  
+
   // Socket callbacks
   const handleTournamentCreated = useCallback((code: string, newTournament: Tournament) => {
     console.log('[App] Tournament created:', code);
@@ -40,7 +41,7 @@ function App() {
     setOnlineMode(true);
     setAppMode('online');
   }, [setTournament, setIsHost, setOnlineMode]);
-  
+
   const handleTournamentJoined = useCallback((newTournament: Tournament, playerId: string | null, isHostFlag: boolean) => {
     console.log('[App] Tournament joined, playerId:', playerId, 'status:', newTournament.status);
     setTournament(newTournament);
@@ -49,7 +50,7 @@ function App() {
     setOnlineMode(true);
     setJoinError(null);
     setAppMode('online');
-    
+
     // Navigate to appropriate page based on tournament status
     if (newTournament.status === 'active') {
       setViewMode('history'); // Go to Matches page
@@ -58,48 +59,48 @@ function App() {
     }
     // If status is 'setup', stay on setup (default)
   }, [setTournament, setIsHost, setConnectedPlayerId, setOnlineMode, setViewMode]);
-  
+
   const handleJoinError = useCallback((message: string) => {
     console.error('[App] Join error:', message);
     setJoinError(message);
   }, []);
-  
+
   const handleStateUpdate = useCallback((updatedTournament: Tournament, count: number) => {
     // Check if tournament just started or new round generated - navigate to Matches
     const prevTournament = useTournamentStore.getState().tournament;
     const justStarted = prevTournament?.status === 'setup' && updatedTournament.status === 'active';
-    const newRoundGenerated = prevTournament && 
+    const newRoundGenerated = prevTournament &&
       updatedTournament.currentRound > prevTournament.currentRound;
-    
+
     setTournament(updatedTournament);
     setConnectedCount(count);
-    
+
     // Navigate to Matches page when tournament starts or new round begins
     if (justStarted || newRoundGenerated) {
       setViewMode('history');
     }
-    
+
     // Navigate to Standings when tournament completes
     if (prevTournament?.status === 'active' && updatedTournament.status === 'completed') {
       setViewMode('standings');
     }
   }, [setTournament, setViewMode]);
-  
+
   const handlePlayerConnected = useCallback((playerName: string, count: number) => {
     console.log('[App] Player connected:', playerName);
     setConnectedCount(count);
   }, []);
-  
+
   const handlePlayerDisconnected = useCallback((playerName: string, count: number) => {
     console.log('[App] Player disconnected:', playerName);
     setConnectedCount(count);
   }, []);
-  
+
   const handleRoomWarning = useCallback((message: string, _minutesRemaining: number) => {
     // Could show a toast notification here
     console.warn('[App] Room warning:', message);
   }, []);
-  
+
   const handleRoomClosed = useCallback((message: string, _reason: string) => {
     console.warn('[App] Room closed:', message);
     setAppMode('landing');
@@ -107,12 +108,12 @@ function App() {
     setIsHost(false);
     setOnlineMode(false);
   }, [setTournament, setIsHost, setOnlineMode]);
-  
+
   const handleActionError = useCallback((action: string, message: string) => {
     console.error(`[App] Action error (${action}):`, message);
     // Could show a toast notification here
   }, []);
-  
+
   // Initialize socket
   const socket = useSocket({
     onTournamentCreated: handleTournamentCreated,
@@ -125,25 +126,25 @@ function App() {
     onRoomClosed: handleRoomClosed,
     onActionError: handleActionError,
   });
-  
+
   // Handle local mode
   const handleLocalMode = useCallback(() => {
     setAppMode('local');
     setIsHost(true);
     setOnlineMode(false);
   }, [setIsHost, setOnlineMode]);
-  
+
   // Handle create tournament
   const handleCreateTournament = useCallback((tournamentName: string, totalRounds: number, hostName: string) => {
     socket.createTournament(tournamentName, totalRounds, hostName);
   }, [socket]);
-  
+
   // Handle join tournament
   const handleJoinTournament = useCallback((code: string, playerName: string) => {
     setJoinError(null);
     socket.joinTournament(code, playerName);
   }, [socket]);
-  
+
   // Handle loading a tournament from JSON file (goes to local/offline mode)
   const handleLoadTournament = useCallback((loadedTournament: Tournament) => {
     setTournament(loadedTournament);
@@ -213,9 +214,11 @@ function App() {
         return <MatchHistory socket={appMode === 'online' ? socket : undefined} />;
       case 'analysis':
         return <SwissAnalysis />;
+      case 'finals_config':
+        return <FinalsConfig />;
       case 'admin':
-        return <AdminPanel 
-          socket={appMode === 'online' ? socket : undefined} 
+        return <AdminPanel
+          socket={appMode === 'online' ? socket : undefined}
           showQRCode={showQRCode}
           onToggleQRCode={() => setShowQRCode(!showQRCode)}
         />;
@@ -226,7 +229,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)]">
-      <Header 
+      <Header
         connectedCount={appMode === 'online' ? connectedCount : undefined}
         isOnline={appMode === 'online'}
         isConnected={socket.isConnected}
@@ -237,9 +240,9 @@ function App() {
       <main className="pb-12">
         {renderContent()}
       </main>
-      <FloatingQRCode 
-        isOnline={appMode === 'online'} 
-        isHost={isHost} 
+      <FloatingQRCode
+        isOnline={appMode === 'online'}
+        isHost={isHost}
         isVisible={showQRCode}
         onToggle={() => setShowQRCode(!showQRCode)}
       />
