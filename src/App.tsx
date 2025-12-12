@@ -9,6 +9,7 @@ import { SwissAnalysis } from './components/analysis/SwissAnalysis';
 import { Schedule } from './components/schedule/Schedule';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { FinalsConfig } from './components/finals/FinalsConfig';
+import { BracketView } from './components/bracket/BracketView';
 import { LandingPage } from './components/landing/LandingPage';
 import { useTournamentStore } from './store/tournamentStore';
 import { useSocket } from './hooks/useSocket';
@@ -216,6 +217,8 @@ function App() {
         return <SwissAnalysis />;
       case 'finals_config':
         return <FinalsConfig />;
+      case 'bracket':
+        return <BracketView />;
       case 'admin':
         return <AdminPanel
           socket={appMode === 'online' ? socket : undefined}
