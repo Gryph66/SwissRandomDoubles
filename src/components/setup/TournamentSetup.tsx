@@ -23,10 +23,10 @@ interface TournamentSetupProps {
 }
 
 export function TournamentSetup({ socket }: TournamentSetupProps) {
-  const { 
-    tournament, 
-    createTournament, 
-    updateTournamentName: localUpdateName, 
+  const {
+    tournament,
+    createTournament,
+    updateTournamentName: localUpdateName,
     updateTotalRounds: localUpdateRounds,
     updateSettings: localUpdateSettings,
     startTournament: localStartTournament,
@@ -45,7 +45,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
   const [name, setName] = useState(tournament?.name || '');
   const [roundsInput, setRoundsInput] = useState((tournament?.totalRounds || 4).toString());
   const [showTableSetup, setShowTableSetup] = useState(tournament?.settings.tableAssignment || false);
-  
+
   // Parse rounds as number, defaulting to 4
   const rounds = parseInt(roundsInput) || 4;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target?.result as string);
-        
+
         // Validate the JSON structure
         if (!json.players || !Array.isArray(json.players)) {
           throw new Error('Invalid tournament JSON - missing players array');
@@ -109,30 +109,35 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
           currentRound: json.currentRound || (json.matches?.length > 0 ? Math.max(...json.matches.map((m: Match) => m.round)) : 0),
           totalRounds: json.totalRounds || 6,
           status: json.status || (json.matches?.length > 0 ? 'active' : 'setup'),
-          settings: json.settings || { allowTies: true, pointsForWin: 2, pointsForTie: 1, pointsForLoss: 0 },
+          settings: {
+            ...json.settings,
+            finalsEnabled: json.settings?.finalsEnabled || false,
+          },
           shareCode: json.shareCode || '',
           createdAt: json.createdAt || Date.now(),
           updatedAt: Date.now(),
           pairingLogs: json.pairingLogs || [],
+          finalsConfig: json.finalsConfig,
+          bracketMatches: json.bracketMatches || [],
         };
 
         // Emit to server if in online mode
         if (socket?.socket?.connected) {
           socket.socket.emit('manual_update_tournament', importedTournament);
         }
-        
+
         setTournament(importedTournament);
         setName(importedTournament.name);
         setRoundsInput(importedTournament.totalRounds.toString());
         setImportMessage({ type: 'success', text: `Imported "${importedTournament.name}" with ${importedTournament.players.length} players and ${importedTournament.matches.length} matches` });
-        
+
         setTimeout(() => setImportMessage(null), 5000);
       } catch (err) {
         setImportMessage({ type: 'error', text: `Failed to import: ${err instanceof Error ? err.message : 'Invalid JSON'}` });
       }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -142,9 +147,9 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
   // Handle adding more rounds
   const handleAddRounds = () => {
     if (!tournament) return;
-    
+
     const newTotalRounds = tournament.totalRounds + addRoundsCount;
-    
+
     // If tournament is completed, reactivate it
     const updatedTournament = {
       ...tournament,
@@ -157,21 +162,21 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
     if (socket?.socket?.connected) {
       socket.socket.emit('manual_update_tournament', updatedTournament);
     }
-    
+
     setTournament(updatedTournament);
     setRoundsInput(newTotalRounds.toString());
-    setImportMessage({ 
-      type: 'success', 
+    setImportMessage({
+      type: 'success',
       text: `Added ${addRoundsCount} round${addRoundsCount > 1 ? 's' : ''}. Tournament now has ${newTotalRounds} rounds.${tournament.status === 'completed' ? ' Tournament reactivated!' : ''}`
     });
-    
+
     setTimeout(() => setImportMessage(null), 3000);
   };
 
   // Handle completing tournament early
   const handleCompleteEarly = () => {
     if (!tournament) return;
-    
+
     // Set total rounds to current round and mark as completed
     const updatedTournament = {
       ...tournament,
@@ -184,15 +189,15 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
     if (socket?.socket?.connected) {
       socket.socket.emit('manual_update_tournament', updatedTournament);
     }
-    
+
     setTournament(updatedTournament);
     setRoundsInput(tournament.currentRound.toString());
     setShowCompleteConfirm(false);
-    setImportMessage({ 
-      type: 'success', 
+    setImportMessage({
+      type: 'success',
       text: `Tournament completed after ${tournament.currentRound} rounds.`
     });
-    
+
     setTimeout(() => setImportMessage(null), 3000);
   };
 
@@ -209,11 +214,10 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
             {savedTournaments.map((saved) => (
               <div
                 key={saved.id}
-                className={`p-3 rounded-lg border flex items-center justify-between ${
-                  saved.id === tournament?.id 
-                    ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30' 
-                    : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
-                }`}
+                className={`p-3 rounded-lg border flex items-center justify-between ${saved.id === tournament?.id
+                  ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30'
+                  : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
+                  }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -223,13 +227,12 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                         Current
                       </span>
                     )}
-                    <span className={`text-xs px-2 py-0.5 rounded capitalize ${
-                      saved.status === 'completed' 
-                        ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
-                        : saved.status === 'active'
+                    <span className={`text-xs px-2 py-0.5 rounded capitalize ${saved.status === 'completed'
+                      ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
+                      : saved.status === 'active'
                         ? 'bg-blue-500/20 text-blue-400'
                         : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
-                    }`}>
+                      }`}>
                       {saved.status}
                     </span>
                   </div>
@@ -283,7 +286,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
         <h2 className="text-xl font-display font-semibold mb-6">
           {tournament ? 'Tournament Setup' : 'Create New Tournament'}
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="label">Tournament Name</label>
@@ -404,7 +407,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
             <section className="card p-6 border-[var(--color-accent)]/30">
               <h2 className="text-xl font-display font-semibold mb-4">End Tournament Early</h2>
               <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                Complete the tournament now after {tournament.currentRound} round{tournament.currentRound > 1 ? 's' : ''} 
+                Complete the tournament now after {tournament.currentRound} round{tournament.currentRound > 1 ? 's' : ''}
                 instead of playing all {tournament.totalRounds} rounds.
               </p>
               <div className="flex items-center gap-4">
@@ -441,7 +444,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
           {/* Settings */}
           <section className="card p-6">
             <h2 className="text-xl font-display font-semibold mb-6">Settings</h2>
-            
+
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -471,6 +474,46 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                   Allow players to submit scores from their devices
                 </span>
               </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={tournament.settings.finalsEnabled}
+                  onChange={(e) => updateSettings({ finalsEnabled: e.target.checked })}
+                  disabled={tournament.status !== 'setup'}
+                  className="w-5 h-5 rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)] 
+                           text-[var(--color-accent)] focus:ring-[var(--color-accent)] focus:ring-offset-0
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <div className="flex-1">
+                  <span className="text-[var(--color-text-primary)]">
+                    Enable Finals/Bracket Mode
+                  </span>
+                  {tournament.settings.finalsEnabled && (
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      After Swiss rounds complete, you'll configure playoff brackets for each pool
+                    </p>
+                  )}
+                </div>
+              </label>
+
+              <div className="pt-2">
+                <label className="label text-sm">Pool Size (for analysis & finals)</label>
+                <input
+                  type="number"
+                  min={4}
+                  max={16}
+                  value={tournament.settings.poolSize}
+                  onChange={(e) => {
+                    const value = Math.max(4, Math.min(16, parseInt(e.target.value) || 8));
+                    updateSettings({ poolSize: value });
+                  }}
+                  className="input w-24"
+                />
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  Players will be grouped into pools of this size based on Swiss standings
+                </p>
+              </div>
             </div>
           </section>
 
@@ -516,11 +559,10 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                     Round {tournament.currentRound} of {tournament.totalRounds} • {tournament.players.filter(p => p.active).length} active players
                   </p>
                 </div>
-                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                  tournament.status === 'completed' 
-                    ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
-                    : 'bg-blue-500/20 text-blue-400'
-                }`}>
+                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${tournament.status === 'completed'
+                  ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]'
+                  : 'bg-blue-500/20 text-blue-400'
+                  }`}>
                   {tournament.status === 'completed' ? 'Completed' : 'Active'}
                 </span>
               </div>
