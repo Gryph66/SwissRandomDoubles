@@ -1,0 +1,1211 @@
+{
+  "id": "miwiljzijjpuxwo0g",
+  "name": "Village December Crokinole",
+  "players": [
+    {
+      "id": "miwilw6tsrcwtybra",
+      "name": "Brent",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6tkdvedwxn0",
+      "name": "Catherine",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6xjmgt14nxa",
+      "name": "Chris",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6zdfeo9huob",
+      "name": "Dale",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6zdjhbpfh8c",
+      "name": "Dan",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6z6031vgvfu",
+      "name": "Jaeden",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6zhymn8k3c9",
+      "name": "Jerry",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6zhs91wocrl",
+      "name": "Jill",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6zlxcjj7b22",
+      "name": "Justin",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6z8a0ylwok6",
+      "name": "Kate",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw6zt8ftv8ezr",
+      "name": "Kim",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw701fyhjqaiz",
+      "name": "Matthew",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw701csu3cruv",
+      "name": "Monica",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw709n71rfa0s",
+      "name": "Richard",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw70upy13ybsd",
+      "name": "Ryl",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw71o4sa64uh5",
+      "name": "Sam",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw71afrxq92u2",
+      "name": "Sharen",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw71x9l9yo5ls",
+      "name": "Shawn",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw71km8azan0m",
+      "name": "Sue",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw728bqf6lzir",
+      "name": "Susan",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw729o42151ku",
+      "name": "Trish",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "miwilw72ac7vbp9pa",
+      "name": "Zaida",
+      "wins": 0,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 0,
+      "pointsAgainst": 0,
+      "twenties": 0,
+      "byeCount": 0,
+      "active": true
+    }
+  ],
+  "matches": [
+    {
+      "id": "SgWwE_ps",
+      "round": 5,
+      "team1": [
+        "miwilw6tkdvedwxn0",
+        "miwilw709n71rfa0s"
+      ],
+      "team2": [
+        "miwilw728bqf6lzir",
+        "miwilw72ac7vbp9pa"
+      ],
+      "score1": 5,
+      "score2": 3,
+      "twenties1": 5,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "fzYcDHgB",
+      "round": 5,
+      "team1": [
+        "miwilw6z6031vgvfu",
+        "miwilw729o42151ku"
+      ],
+      "team2": [
+        "miwilw6zt8ftv8ezr",
+        "miwilw6zdjhbpfh8c"
+      ],
+      "score1": 2,
+      "score2": 6,
+      "twenties1": 3,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "N59urVN4",
+      "round": 5,
+      "team1": [
+        "miwilw70upy13ybsd",
+        "miwilw71afrxq92u2"
+      ],
+      "team2": [
+        "miwilw71x9l9yo5ls",
+        "miwilw71km8azan0m"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 9,
+      "twenties2": 7,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "VKRgS27n",
+      "round": 5,
+      "team1": [
+        "miwilw6zdfeo9huob",
+        "miwilw6zhymn8k3c9"
+      ],
+      "team2": [
+        "miwilw6xjmgt14nxa",
+        "miwilw6z8a0ylwok6"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "vn3shOX9",
+      "round": 5,
+      "team1": [
+        "miwilw701csu3cruv",
+        "miwilw701fyhjqaiz"
+      ],
+      "team2": [
+        "miwilw71o4sa64uh5",
+        "miwilw6tsrcwtybra"
+      ],
+      "score1": 2,
+      "score2": 6,
+      "twenties1": 2,
+      "twenties2": 11,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "MxOVqvzi",
+      "round": 5,
+      "team1": [
+        "miwilw6zhs91wocrl"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "0V-mMj7f",
+      "round": 5,
+      "team1": [
+        "miwilw6zlxcjj7b22"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "LVj1qsLK",
+      "round": 4,
+      "team1": [
+        "miwilw701csu3cruv",
+        "miwilw71o4sa64uh5"
+      ],
+      "team2": [
+        "miwilw6zdjhbpfh8c",
+        "miwilw6zhs91wocrl"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 9,
+      "twenties2": 2,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "mnqGBiKR",
+      "round": 4,
+      "team1": [
+        "miwilw70upy13ybsd",
+        "miwilw6z8a0ylwok6"
+      ],
+      "team2": [
+        "miwilw6z6031vgvfu",
+        "miwilw72ac7vbp9pa"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 4,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "sNYe-FiH",
+      "round": 4,
+      "team1": [
+        "miwilw6zt8ftv8ezr",
+        "miwilw6tsrcwtybra"
+      ],
+      "team2": [
+        "miwilw701fyhjqaiz",
+        "miwilw6zlxcjj7b22"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 2,
+      "twenties2": 1,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "0sbhnKZr",
+      "round": 4,
+      "team1": [
+        "miwilw728bqf6lzir",
+        "miwilw709n71rfa0s"
+      ],
+      "team2": [
+        "miwilw6zhymn8k3c9",
+        "miwilw71afrxq92u2"
+      ],
+      "score1": 2,
+      "score2": 6,
+      "twenties1": 7,
+      "twenties2": 7,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "zLUURLEj",
+      "round": 4,
+      "team1": [
+        "miwilw6xjmgt14nxa",
+        "miwilw6tkdvedwxn0"
+      ],
+      "team2": [
+        "miwilw729o42151ku",
+        "miwilw6zdfeo9huob"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 1,
+      "twenties2": 2,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "Qz5_MAlA",
+      "round": 4,
+      "team1": [
+        "miwilw71x9l9yo5ls"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "2tGpicfK",
+      "round": 4,
+      "team1": [
+        "miwilw71km8azan0m"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "Sl5f1Ory",
+      "round": 3,
+      "team1": [
+        "miwilw701fyhjqaiz",
+        "miwilw701csu3cruv"
+      ],
+      "team2": [
+        "miwilw728bqf6lzir",
+        "miwilw72ac7vbp9pa"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 4,
+      "twenties2": 2,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "8jtO9ltU",
+      "round": 3,
+      "team1": [
+        "miwilw709n71rfa0s",
+        "miwilw70upy13ybsd"
+      ],
+      "team2": [
+        "miwilw6xjmgt14nxa",
+        "miwilw6zt8ftv8ezr"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 9,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "A7a1_CMA",
+      "round": 3,
+      "team1": [
+        "miwilw6z6031vgvfu",
+        "miwilw6tkdvedwxn0"
+      ],
+      "team2": [
+        "miwilw71x9l9yo5ls",
+        "miwilw6z8a0ylwok6"
+      ],
+      "score1": 0,
+      "score2": 8,
+      "twenties1": 5,
+      "twenties2": 9,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "xEjsag1e",
+      "round": 3,
+      "team1": [
+        "miwilw6zhymn8k3c9",
+        "miwilw6zdfeo9huob"
+      ],
+      "team2": [
+        "miwilw6zhs91wocrl",
+        "miwilw6zlxcjj7b22"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 8,
+      "twenties2": 2,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "bKhtl-UW",
+      "round": 3,
+      "team1": [
+        "miwilw6tsrcwtybra",
+        "miwilw71km8azan0m"
+      ],
+      "team2": [
+        "miwilw71afrxq92u2",
+        "miwilw71o4sa64uh5"
+      ],
+      "score1": 2,
+      "score2": 6,
+      "twenties1": 7,
+      "twenties2": 6,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "iQnk0CBx",
+      "round": 3,
+      "team1": [
+        "miwilw6zdjhbpfh8c"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "--15OICy",
+      "round": 3,
+      "team1": [
+        "miwilw729o42151ku"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "3Jysqxnf",
+      "round": 2,
+      "team1": [
+        "miwilw70upy13ybsd",
+        "miwilw6z6031vgvfu"
+      ],
+      "team2": [
+        "miwilw6tkdvedwxn0",
+        "miwilw709n71rfa0s"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 4,
+      "twenties2": 2,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "RYMbABha",
+      "round": 2,
+      "team1": [
+        "miwilw6tsrcwtybra",
+        "miwilw71afrxq92u2"
+      ],
+      "team2": [
+        "miwilw6zhs91wocrl",
+        "miwilw6zhymn8k3c9"
+      ],
+      "score1": 5,
+      "score2": 3,
+      "twenties1": 4,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "qeCBaLjw",
+      "round": 2,
+      "team1": [
+        "miwilw701csu3cruv",
+        "miwilw72ac7vbp9pa"
+      ],
+      "team2": [
+        "miwilw729o42151ku",
+        "miwilw6zdjhbpfh8c"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 2,
+      "twenties2": 2,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "C4iQklC5",
+      "round": 2,
+      "team1": [
+        "miwilw6zt8ftv8ezr",
+        "miwilw71km8azan0m"
+      ],
+      "team2": [
+        "miwilw71o4sa64uh5",
+        "miwilw6xjmgt14nxa"
+      ],
+      "score1": 2,
+      "score2": 6,
+      "twenties1": 5,
+      "twenties2": 6,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "3iIGQ0qV",
+      "round": 2,
+      "team1": [
+        "miwilw6zdfeo9huob",
+        "miwilw6zlxcjj7b22"
+      ],
+      "team2": [
+        "miwilw728bqf6lzir",
+        "miwilw701fyhjqaiz"
+      ],
+      "score1": 2,
+      "score2": 6,
+      "twenties1": 5,
+      "twenties2": 6,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "ym7GQEje",
+      "round": 2,
+      "team1": [
+        "miwilw6z8a0ylwok6"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "o74OvCMo",
+      "round": 2,
+      "team1": [
+        "miwilw71x9l9yo5ls"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "b8rSg927",
+      "round": 1,
+      "team1": [
+        "miwilw6zhs91wocrl",
+        "miwilw6zt8ftv8ezr"
+      ],
+      "team2": [
+        "miwilw6xjmgt14nxa",
+        "miwilw71o4sa64uh5"
+      ],
+      "score1": 0,
+      "score2": 8,
+      "twenties1": 3,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "vWRdhd_x",
+      "round": 1,
+      "team1": [
+        "miwilw701csu3cruv",
+        "miwilw701fyhjqaiz"
+      ],
+      "team2": [
+        "miwilw709n71rfa0s",
+        "miwilw6z8a0ylwok6"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 8,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "h9a87Y4Y",
+      "round": 1,
+      "team1": [
+        "miwilw6zdfeo9huob",
+        "miwilw728bqf6lzir"
+      ],
+      "team2": [
+        "miwilw72ac7vbp9pa",
+        "miwilw729o42151ku"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 1,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "2kPJbouf",
+      "round": 1,
+      "team1": [
+        "miwilw6tsrcwtybra",
+        "miwilw71km8azan0m"
+      ],
+      "team2": [
+        "miwilw71afrxq92u2",
+        "miwilw6zdjhbpfh8c"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 6,
+      "twenties2": 5,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "238deRuD",
+      "round": 1,
+      "team1": [
+        "miwilw6tkdvedwxn0",
+        "miwilw71x9l9yo5ls"
+      ],
+      "team2": [
+        "miwilw70upy13ybsd",
+        "miwilw6z6031vgvfu"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 11,
+      "twenties2": 11,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "iX9eWmrI",
+      "round": 1,
+      "team1": [
+        "miwilw6zhymn8k3c9"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 3,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    },
+    {
+      "id": "M5XLfS9Y",
+      "round": 1,
+      "team1": [
+        "miwilw6zlxcjj7b22"
+      ],
+      "team2": null,
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 3,
+      "twenties2": 0,
+      "tableId": null,
+      "completed": true,
+      "isBye": true
+    }
+  ],
+  "tables": [],
+  "currentRound": 5,
+  "totalRounds": 5,
+  "status": "active",
+  "settings": {
+    "tableAssignment": false,
+    "playerScoreEntry": true,
+    "pointsPerMatch": 8,
+    "poolSize": 8
+  },
+  "shareCode": "X9MU5B",
+  "createdAt": 1765159848557,
+  "updatedAt": 1765162089464,
+  "pairingLogs": [
+    {
+      "round": 1,
+      "generatedAt": "2025-12-08T02:11:06.993Z",
+      "playerCount": 22,
+      "byesNeeded": 2,
+      "entries": [
+        {
+          "timestamp": "2025-12-08T02:11:06.991Z",
+          "round": 1,
+          "phase": "team_formation",
+          "decision": "Starting Round 1 pairing generation",
+          "details": [
+            "Active players: 22",
+            "Byes needed: 2",
+            "Using RANDOM pairing (Round 1)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-08T02:11:06.991Z",
+          "round": 1,
+          "phase": "bye_selection",
+          "decision": "Selected Shawn for bye (Random - Round 1)",
+          "details": [
+            "Randomly selected from 22 players"
+          ]
+        },
+        {
+          "timestamp": "2025-12-08T02:11:06.991Z",
+          "round": 1,
+          "phase": "bye_selection",
+          "decision": "Selected Catherine for bye (Random - Round 1)",
+          "details": [
+            "Randomly selected from 21 players"
+          ]
+        }
+      ],
+      "standingsSnapshot": [
+        {
+          "rank": 1,
+          "name": "Brent",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 2,
+          "name": "Catherine",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 3,
+          "name": "Chris",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 4,
+          "name": "Dale",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 5,
+          "name": "Dan",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 6,
+          "name": "Jaeden",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 7,
+          "name": "Jerry",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 8,
+          "name": "Jill",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 9,
+          "name": "Justin",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 10,
+          "name": "Kate",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 11,
+          "name": "Kim",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 12,
+          "name": "Matthew",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 13,
+          "name": "Monica",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 14,
+          "name": "Richard",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 15,
+          "name": "Ryl",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 16,
+          "name": "Sam",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 17,
+          "name": "Sharen",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 18,
+          "name": "Shawn",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 19,
+          "name": "Sue",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 20,
+          "name": "Susan",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 21,
+          "name": "Trish",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 22,
+          "name": "Zaida",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        }
+      ],
+      "finalPairings": [
+        {
+          "team1": [
+            "Kim",
+            "Chris"
+          ],
+          "team2": [
+            "Susan",
+            "Jerry"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        },
+        {
+          "team1": [
+            "Ryl",
+            "Justin"
+          ],
+          "team2": [
+            "Richard",
+            "Zaida"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        },
+        {
+          "team1": [
+            "Jill",
+            "Brent"
+          ],
+          "team2": [
+            "Jaeden",
+            "Monica"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        },
+        {
+          "team1": [
+            "Dan",
+            "Kate"
+          ],
+          "team2": [
+            "Trish",
+            "Sam"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        },
+        {
+          "team1": [
+            "Sue",
+            "Sharen"
+          ],
+          "team2": [
+            "Dale",
+            "Matthew"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        }
+      ]
+    }
+  ]
+}
