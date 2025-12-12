@@ -1,17 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nanoid } from 'nanoid';
-import type { 
-  Tournament, 
-  TournamentState, 
-  Player, 
-  Table, 
+import type {
+  Tournament,
+  TournamentState,
+  Player,
+  Table,
   TournamentSettings,
   ViewMode,
   PlayerStanding,
   PartnerHistory,
   MatchHistory,
-  SavedTournamentSummary
+  SavedTournamentSummary,
+  PoolBracketConfig,
+  BracketMatch,
+  FinalStanding,
 } from '../types';
 import { generateRoundPairings } from '../utils/pairingAlgorithm';
 
@@ -51,10 +54,12 @@ const createEmptyTournament = (name: string, totalRounds: number): Tournament =>
     playerScoreEntry: false,
     pointsPerMatch: 8,
     poolSize: 8,
+    finalsEnabled: false,
   },
   shareCode: nanoid(6).toUpperCase(),
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  bracketMatches: [],
 });
 
 export const useTournamentStore = create<ExtendedTournamentState>()(
@@ -88,7 +93,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
 
       updateTournamentName: (name: string) => {
         set((state) => ({
-          tournament: state.tournament 
+          tournament: state.tournament
             ? { ...state.tournament, name, updatedAt: Date.now() }
             : null,
         }));
@@ -106,10 +111,10 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         set((state) => ({
           tournament: state.tournament
             ? {
-                ...state.tournament,
-                settings: { ...state.tournament.settings, ...settings },
-                updatedAt: Date.now(),
-              }
+              ...state.tournament,
+              settings: { ...state.tournament.settings, ...settings },
+              updatedAt: Date.now(),
+            }
             : null,
         }));
       },
@@ -120,7 +125,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
 
         set((state) => {
           if (!state.tournament) return state;
-          
+
           // Check for duplicate names
           const nameExists = state.tournament.players.some(
             (p) => p.name.toLowerCase() === trimmedName.toLowerCase()
@@ -140,7 +145,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
       removePlayer: (playerId: string) => {
         set((state) => {
           if (!state.tournament || state.tournament.status !== 'setup') return state;
-          
+
           return {
             tournament: {
               ...state.tournament,
@@ -279,7 +284,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
 
         // Update player stats from completed matches
         const updatedPlayers = [...state.tournament.players];
-        
+
         currentRoundMatches.forEach((match) => {
           if (match.isBye) {
             // Bye player gets average points and a win
@@ -301,7 +306,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
                 player.pointsFor += match.score1!;
                 player.pointsAgainst += match.score2!;
                 player.twenties += match.twenties1;
-                
+
                 if (match.score1! > match.score2!) {
                   player.wins += 1;
                 } else if (match.score1! < match.score2!) {
@@ -319,7 +324,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
                 player.pointsFor += match.score2!;
                 player.pointsAgainst += match.score1!;
                 player.twenties += match.twenties2;
-                
+
                 if (match.score2! > match.score1!) {
                   player.wins += 1;
                 } else if (match.score2! < match.score1!) {
@@ -384,9 +389,9 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         const lastRoundMatches = state.tournament.matches.filter(
           (m) => m.round === state.tournament!.currentRound
         );
-        
+
         const updatedPlayers = [...state.tournament.players];
-        
+
         lastRoundMatches.forEach((match) => {
           if (match.isBye) {
             const byePlayerId = match.team1[0];
@@ -406,7 +411,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
                 player.pointsFor += match.score1!;
                 player.pointsAgainst += match.score2!;
                 player.twenties += match.twenties1;
-                
+
                 if (match.score1! > match.score2!) player.wins += 1;
                 else if (match.score1! < match.score2!) player.losses += 1;
                 else player.ties += 1;
@@ -419,7 +424,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
                 player.pointsFor += match.score2!;
                 player.pointsAgainst += match.score1!;
                 player.twenties += match.twenties2;
-                
+
                 if (match.score2! > match.score1!) player.wins += 1;
                 else if (match.score2! < match.score1!) player.losses += 1;
                 else player.ties += 1;
@@ -442,7 +447,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
       resetTournament: () => {
         const state = get();
         if (!state.tournament) return;
-        
+
         // Reset tournament to setup state but keep players, tables, settings
         const resetPlayers = state.tournament.players.map(p => ({
           ...p,
@@ -454,7 +459,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           twenties: 0,
           byeCount: 0,
         }));
-        
+
         set({
           tournament: {
             ...state.tournament,
@@ -500,7 +505,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
 
         const players = state.tournament.players.filter((p) => p.active);
         const matches = state.tournament.matches;
-        
+
         // Calculate stats from MATCH DATA (not stored player stats) for accuracy
         const calculatePlayerStats = (playerId: string) => {
           let wins = 0, losses = 0, ties = 0;
@@ -547,11 +552,11 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         // Calculate standings with real-time stats from matches
         const standings: PlayerStanding[] = players.map((player) => {
           const stats = calculatePlayerStats(player.id);
-          
+
           // Challonge-style score: Win=2, Tie=1, Loss=0
           // Bye is always a tie (1 point) with 4-4 score
           const score = (stats.wins * 2) + (stats.ties * 1);
-          
+
           return {
             player: {
               ...player,
@@ -598,7 +603,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
       getPartnerHistory: () => {
         const state = get();
         const history: PartnerHistory = {};
-        
+
         if (!state.tournament) return history;
 
         state.tournament.matches.forEach((match) => {
@@ -624,17 +629,17 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
       getMatchHistory: () => {
         const state = get();
         const history: MatchHistory = {};
-        
+
         if (!state.tournament) return history;
 
         state.tournament.matches.forEach((match) => {
           if (!match.isBye && match.team2) {
             const team1Key = [...match.team1].sort().join('-');
             const team2Key = [...match.team2].sort().join('-');
-            
+
             if (!history[team1Key]) history[team1Key] = new Set();
             if (!history[team2Key]) history[team2Key] = new Set();
-            
+
             history[team1Key].add(team2Key);
             history[team2Key].add(team1Key);
           }
@@ -649,7 +654,7 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         if (!state.tournament) return;
 
         const tournamentToSave = { ...state.tournament, updatedAt: Date.now() };
-        
+
         set((state) => {
           // Check if this tournament already exists in saved list
           const existingIndex = state.savedTournaments.findIndex(
@@ -723,6 +728,64 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
             winner,
           };
         });
+      },
+
+      // Finals/Bracket mode actions (stub implementations - will be fully implemented in Phase 2)
+      configureFinalsMode: (poolConfigs) => {
+        set((state) => {
+          if (!state.tournament) return state;
+
+          return {
+            tournament: {
+              ...state.tournament,
+              finalsConfig: {
+                enabled: true,
+                poolConfigs,
+                configured: true,
+              },
+              updatedAt: Date.now(),
+            },
+          };
+        });
+      },
+
+      generateBrackets: () => {
+        // Stub - will implement bracket generation logic in Phase 2
+        console.log('generateBrackets - stub implementation');
+      },
+
+      submitBracketScore: (matchId, score1, score2, twenties1, twenties2) => {
+        set((state) => {
+          if (!state.tournament) return state;
+
+          return {
+            tournament: {
+              ...state.tournament,
+              bracketMatches: state.tournament.bracketMatches.map((m) =>
+                m.id === matchId
+                  ? { ...m, score1, score2, twenties1, twenties2, completed: true }
+                  : m
+              ),
+              updatedAt: Date.now(),
+            },
+          };
+        });
+      },
+
+      editBracketScore: (matchId, score1, score2, twenties1, twenties2) => {
+        // Same as submitBracketScore for now
+        get().submitBracketScore(matchId, score1, score2, twenties1, twenties2);
+      },
+
+      getFinalStandings: () => {
+        // Stub - will implement final standings calculation in Phase 2
+        return [];
+      },
+
+      getBracketMatchesByPool: (poolId) => {
+        const state = get();
+        if (!state.tournament) return [];
+        return state.tournament.bracketMatches.filter((m) => m.poolId === poolId);
       },
     }),
     {
