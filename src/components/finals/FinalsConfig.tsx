@@ -8,9 +8,17 @@ interface Pool {
     players: { id: string; name: string; rank: number }[];
 }
 
+interface PoolConfig {
+    bracketType: BracketType;
+    includeThirdPlace: boolean;
+    selectedPlayerIds?: string[]; // Manual player selection
+    customPairings?: [number, number][]; // Custom seeding pairs
+    showCustomize: boolean;
+}
+
 export function FinalsConfig() {
     const { tournament, configureFinalsMode, generateBrackets } = useTournamentStore();
-    const [poolConfigs, setPoolConfigs] = useState<Map<string, { bracketType: BracketType; includeThirdPlace: boolean }>>(new Map());
+    const [poolConfigs, setPoolConfigs] = useState<Map<string, PoolConfig>>(new Map());
 
     if (!tournament || !tournament.settings.finalsEnabled) {
         return null;
@@ -45,6 +53,7 @@ export function FinalsConfig() {
             setPoolConfigs(prev => new Map(prev).set(pool.id, {
                 bracketType: pool.players.length >= 8 ? 'quarterfinals' : pool.players.length >= 4 ? 'semifinals' : 'none',
                 includeThirdPlace: false,
+                showCustomize: false,
             }));
         }
     });
@@ -52,8 +61,8 @@ export function FinalsConfig() {
     const handleBracketTypeChange = (poolId: string, bracketType: BracketType) => {
         setPoolConfigs(prev => {
             const newMap = new Map(prev);
-            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false };
-            newMap.set(poolId, { ...current, bracketType });
+            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            newMap.set(poolId, { ...current, bracketType, selectedPlayerIds: undefined, customPairings: undefined });
             return newMap;
         });
     };
@@ -61,21 +70,60 @@ export function FinalsConfig() {
     const handleThirdPlaceChange = (poolId: string, includeThirdPlace: boolean) => {
         setPoolConfigs(prev => {
             const newMap = new Map(prev);
-            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false };
+            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
             newMap.set(poolId, { ...current, includeThirdPlace });
             return newMap;
         });
     };
 
+    const toggleCustomize = (poolId: string) => {
+        setPoolConfigs(prev => {
+            const newMap = new Map(prev);
+            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            newMap.set(poolId, { ...current, showCustomize: !current.showCustomize });
+            return newMap;
+        });
+    };
+
+    const togglePlayerSelection = (poolId: string, playerId: string, pool: Pool) => {
+        setPoolConfigs(prev => {
+            const newMap = new Map(prev);
+            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            const currentSelected = current.selectedPlayerIds || pool.players.slice(0, getRequiredPlayerCount(current.bracketType)).map(p => p.id);
+
+            const newSelected = currentSelected.includes(playerId)
+                ? currentSelected.filter(id => id !== playerId)
+                : [...currentSelected, playerId];
+
+            newMap.set(poolId, { ...current, selectedPlayerIds: newSelected });
+            return newMap;
+        });
+    };
+
+    const getRequiredPlayerCount = (bracketType: BracketType): number => {
+        switch (bracketType) {
+            case 'final': return 4;
+            case 'semifinals': return 4;
+            case 'quarterfinals': return 8;
+            default: return 0;
+        }
+    };
+
     const handleGenerateBrackets = () => {
         const configs: PoolBracketConfig[] = pools.map(pool => {
-            const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false };
+            const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            const requiredCount = getRequiredPlayerCount(config.bracketType);
+            const playerIds = config.selectedPlayerIds && config.selectedPlayerIds.length === requiredCount
+                ? config.selectedPlayerIds
+                : pool.players.slice(0, requiredCount).map(p => p.id);
+
             return {
                 poolId: pool.id,
                 poolName: pool.name,
                 bracketType: config.bracketType,
-                playerIds: pool.players.map(p => p.id),
+                playerIds,
                 includeThirdPlace: config.includeThirdPlace,
+                seedingPairs: config.customPairings,
             };
         });
 
@@ -98,8 +146,10 @@ export function FinalsConfig() {
             </div>
 
             {pools.map(pool => {
-                const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false };
+                const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
                 const playerCount = pool.players.length;
+                const requiredCount = getRequiredPlayerCount(config.bracketType);
+                const selectedIds = config.selectedPlayerIds || pool.players.slice(0, requiredCount).map(p => p.id);
 
                 return (
                     <div key={pool.id} className="card p-6">
@@ -126,22 +176,63 @@ export function FinalsConfig() {
                             </div>
                         </div>
 
-                        {/* Player List */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                            {pool.players.map((player) => (
-                                <div
-                                    key={player.id}
-                                    className="flex items-center gap-2 p-2 rounded bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]"
-                                >
-                                    <span className="text-xs font-medium text-[var(--color-text-muted)] w-6">#{player.rank}</span>
-                                    <span className="text-sm truncate">{player.name}</span>
+                        {/* Player List with Selection */}
+                        {config.bracketType !== 'none' && (
+                            <>
+                                <div className="mb-3 flex items-center justify-between">
+                                    <p className="text-sm text-[var(--color-text-muted)]">
+                                        {config.showCustomize ? `Select ${requiredCount} players for bracket:` : 'Players in bracket:'}
+                                    </p>
+                                    <button
+                                        onClick={() => toggleCustomize(pool.id)}
+                                        className="text-xs text-[var(--color-accent)] hover:underline"
+                                    >
+                                        {config.showCustomize ? 'Use Default' : 'Customize Selection'}
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                                    {pool.players.map((player) => {
+                                        const isSelected = selectedIds.includes(player.id);
+                                        const isInDefaultRange = pool.players.slice(0, requiredCount).some(p => p.id === player.id);
+
+                                        return (
+                                            <div
+                                                key={player.id}
+                                                onClick={() => config.showCustomize && togglePlayerSelection(pool.id, player.id, pool)}
+                                                className={`flex items-center gap-2 p-2 rounded border transition-all ${config.showCustomize ? 'cursor-pointer' : ''
+                                                    } ${isSelected
+                                                        ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]'
+                                                        : isInDefaultRange && !config.showCustomize
+                                                            ? 'bg-[var(--color-bg-tertiary)] border-[var(--color-accent)]/30'
+                                                            : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-50'
+                                                    }`}
+                                            >
+                                                {config.showCustomize && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        readOnly
+                                                        className="w-4 h-4 rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)] 
+                                     text-[var(--color-accent)] focus:ring-[var(--color-accent)] focus:ring-offset-0"
+                                                    />
+                                                )}
+                                                <span className="text-xs font-medium text-[var(--color-text-muted)] w-6">#{player.rank}</span>
+                                                <span className="text-sm truncate">{player.name}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {config.showCustomize && selectedIds.length !== requiredCount && (
+                                    <p className="text-xs text-red-400 mb-2">
+                                        Please select exactly {requiredCount} players ({selectedIds.length} selected)
+                                    </p>
+                                )}
+                            </>
+                        )}
 
                         {/* 3rd Place Match Option */}
                         {(config.bracketType === 'semifinals' || config.bracketType === 'quarterfinals') && (
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex items-center gap-2 cursor-pointer mb-3">
                                 <input
                                     type="checkbox"
                                     checked={config.includeThirdPlace}
