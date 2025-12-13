@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
+import type { BracketRound } from '../../types';
 
 // Vibrant colors for top 2 pools (20 unique colors to support pool size up to 10)
 const TOP_POOL_COLORS = [
@@ -72,7 +73,7 @@ export function RankRibbonChart() {
       playerStats.set(p.id, { wins: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, twenties: 0 });
     });
 
-    // Process each round
+    // Process each Swiss round
     for (let round = 1; round <= tournament.currentRound; round++) {
       const roundMatches = tournament.matches.filter(m => m.round === round);
 
@@ -136,6 +137,66 @@ export function RankRibbonChart() {
       });
     }
 
+    // Track which bracket rounds to show (labels for x-axis)
+    const bracketRoundLabels: string[] = [];
+    let totalRounds = tournament.currentRound;
+
+    // Process Finals bracket matches if they exist
+    if (tournament.finalsConfig?.enabled && tournament.bracketMatches && tournament.bracketMatches.length > 0) {
+      const bracketMatches = tournament.bracketMatches;
+
+      // Group matches by round
+      const roundOrder: BracketRound[] = ['quarterfinal', 'semifinal', 'third_place', 'final'];
+      const roundLabels: Record<BracketRound, string> = {
+        'quarterfinal': 'QF',
+        'semifinal': 'SF',
+        'third_place': '3rd',
+        'final': 'F'
+      };
+
+      // Process each bracket round in order
+      for (const bracketRound of roundOrder) {
+        const roundMatches = bracketMatches.filter(m => m.round === bracketRound);
+        if (roundMatches.length === 0) continue;
+
+        // Only add this round if ALL matches in it are complete
+        const allComplete = roundMatches.every(m => m.completed);
+        if (!allComplete) continue;
+
+        // Add this round to the chart
+        bracketRoundLabels.push(roundLabels[bracketRound]);
+        totalRounds++;
+
+        // Use getFinalStandings to get the correct ranking after this round
+        // We need to simulate the state at this point by temporarily filtering bracket matches
+        const { getFinalStandings } = useTournamentStore.getState();
+        const finalStandings = getFinalStandings();
+
+        if (finalStandings.length > 0) {
+          // Create a ranking map from final standings
+          const rankMap = new Map(finalStandings.map(fs => [fs.playerId, fs.finalPosition]));
+
+          // Assign ranks based on final standings
+          tournament.players.filter(p => p.active).forEach(player => {
+            const rank = rankMap.get(player.id);
+            if (rank) {
+              const ranks = playerRanks.get(player.id);
+              if (ranks) {
+                // Only add this rank if it's different from the last one (player's position changed)
+                const lastRank = ranks.length > 0 ? ranks[ranks.length - 1] : null;
+                if (lastRank === null || lastRank !== rank) {
+                  ranks.push(rank);
+                } else {
+                  // Position didn't change, still add the same rank to maintain x-axis alignment
+                  ranks.push(rank);
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+
     // Build final data
     const data: PlayerRankData[] = [];
     tournament.players.filter(p => p.active).forEach(player => {
@@ -158,7 +219,9 @@ export function RankRibbonChart() {
 
     return {
       players: data,
-      rounds: tournament.currentRound,
+      rounds: totalRounds,
+      swissRounds: tournament.currentRound,
+      bracketRoundLabels,
       poolSize,
       topPoolsCutoff,
     };
@@ -172,12 +235,14 @@ export function RankRibbonChart() {
     );
   }
 
-  const { players, rounds, topPoolsCutoff } = chartData;
+  const { players, rounds, swissRounds, bracketRoundLabels, topPoolsCutoff } = chartData;
   const numPlayers = players.length;
 
-  // Chart dimensions
+  // Chart dimensions - dynamic width based on number of rounds
   const margin = { top: 40, right: 120, bottom: 20, left: 120 };
-  const width = 800;
+  // Allocate 120-144px per round for better spacing (20% more than previous)
+  const pixelsPerRound = rounds <= 6 ? 144 : 120;
+  const width = Math.max(800, margin.left + margin.right + (rounds * pixelsPerRound));
   const rowHeight = Math.max(20, Math.min(32, 600 / numPlayers));
   const height = margin.top + margin.bottom + (numPlayers * rowHeight);
   const chartWidth = width - margin.left - margin.right;
@@ -275,17 +340,24 @@ export function RankRibbonChart() {
         })()}
 
         {/* Round labels at top */}
-        {Array.from({ length: rounds }, (_, i) => i + 1).map((round) => (
-          <text
-            key={round}
-            x={xScale(round)}
-            y={margin.top - 15}
-            textAnchor="middle"
-            className="fill-[var(--color-text-muted)] text-xs font-medium"
-          >
-            R{round}
-          </text>
-        ))}
+        {Array.from({ length: rounds }, (_, i) => i + 1).map((round) => {
+          const isSwissRound = round <= swissRounds;
+          const label = isSwissRound 
+            ? `R${round}` 
+            : bracketRoundLabels[round - swissRounds - 1] || `R${round}`;
+          
+          return (
+            <text
+              key={round}
+              x={xScale(round)}
+              y={margin.top - 15}
+              textAnchor="middle"
+              className="fill-[var(--color-text-muted)] text-xs font-medium"
+            >
+              {label}
+            </text>
+          );
+        })}
 
         {/* Vertical grid lines for rounds */}
         {Array.from({ length: rounds }, (_, i) => i + 1).map((round) => (

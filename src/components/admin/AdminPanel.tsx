@@ -40,6 +40,12 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showPairingLog, setShowPairingLog] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  
+  // Archive state
+  const [archiveStatus, setArchiveStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [archiveUrl, setArchiveUrl] = useState<string>('');
+  const [archiveError, setArchiveError] = useState<string>('');
+  const [expiresAt, setExpiresAt] = useState<number>(0);
 
   const savedTournaments = getSavedTournamentSummaries();
 
@@ -93,6 +99,41 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
     ? `${window.location.origin}?code=${tournament.shareCode}`
     : '';
 
+  const handleArchive = async () => {
+    setArchiveStatus('loading');
+    setArchiveError('');
+    
+    try {
+      const response = await fetch('/api/archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tournament,
+          code: tournament.shareCode
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setArchiveStatus('success');
+        setArchiveUrl(data.url);
+        setExpiresAt(data.expiresAt);
+      } else {
+        setArchiveStatus('error');
+        setArchiveError(data.message || 'Failed to archive tournament');
+      }
+    } catch (error) {
+      setArchiveStatus('error');
+      setArchiveError('Network error. Please try again.');
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // Could add a toast notification here
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       <h2 className="text-2xl font-display font-bold">Admin Panel</h2>
@@ -141,6 +182,30 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
         </div>
       </section>
 
+      {/* Complete Tournament (for finals_active status) */}
+      {tournament.status === 'finals_active' && (
+        <section className="card p-6">
+          <h3 className="text-lg font-bold mb-2">🏁 Complete Tournament</h3>
+          <p className="text-sm text-[var(--color-text-muted)] mb-4">
+            All Finals matches are complete. Click below to mark the tournament as completed.
+          </p>
+          <button
+            onClick={() => {
+              const { setTournament, setViewMode } = useTournamentStore.getState();
+              setTournament({
+                ...tournament,
+                status: 'completed',
+                updatedAt: Date.now(),
+              });
+              setViewMode('admin'); // Stay on admin to see archive button
+            }}
+            className="btn btn-primary"
+          >
+            Mark Tournament as Completed
+          </button>
+        </section>
+      )}
+
       {/* Pool Settings */}
       <section className="card p-6">
         <h3 className="text-lg font-display font-semibold mb-4">After Tournament Pool Settings</h3>
@@ -154,8 +219,20 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
             type="number"
             min="2"
             max="32"
-            value={tournament.settings.poolSize || 8}
-            onChange={(e) => updateSettings({ poolSize: Math.max(2, Math.min(32, parseInt(e.target.value) || 8)) })}
+            defaultValue={tournament.settings.poolSize || 8}
+            onBlur={(e) => {
+              const value = parseInt(e.target.value);
+              if (!isNaN(value)) {
+                updateSettings({ poolSize: Math.max(2, Math.min(32, value)) });
+              } else {
+                e.target.value = String(tournament.settings.poolSize || 8);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
             className="input w-24 text-center"
           />
           <span className="text-sm text-[var(--color-text-muted)]">
@@ -313,6 +390,78 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
           Saving stores the tournament in your browser for later review. Export creates a downloadable file.
         </p>
       </section>
+
+      {/* Archive & Share (only for completed tournaments) */}
+      {tournament.status === 'completed' && (
+        <section className="card p-6">
+          <h3 className="text-lg font-bold mb-2">📦 Archive & Share</h3>
+          <p className="text-sm text-[var(--color-text-muted)] mb-4">
+            Archive this tournament to share read-only results with others.
+            Archives expire after 90 days.
+          </p>
+          
+          {archiveStatus === 'idle' && (
+            <button
+              onClick={handleArchive}
+              className="btn btn-primary"
+            >
+              📦 Archive & Get Shareable Link
+            </button>
+          )}
+          
+          {archiveStatus === 'loading' && (
+            <div className="text-[var(--color-text-muted)]">
+              Archiving tournament...
+            </div>
+          )}
+          
+          {archiveStatus === 'success' && archiveUrl && (
+            <div className="bg-green-500/10 border border-green-500 rounded p-4">
+              <p className="text-sm font-semibold mb-3">✅ Tournament Archived!</p>
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="text"
+                  value={archiveUrl}
+                  readOnly
+                  className="flex-1 px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded text-sm font-mono"
+                />
+                <button
+                  onClick={() => copyToClipboard(archiveUrl)}
+                  className="btn btn-secondary text-sm whitespace-nowrap"
+                >
+                  📋 Copy
+                </button>
+              </div>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Expires: {new Date(expiresAt).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </p>
+              <button
+                onClick={() => setArchiveStatus('idle')}
+                className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mt-2"
+              >
+                Archive again to extend expiration
+              </button>
+            </div>
+          )}
+          
+          {archiveStatus === 'error' && (
+            <div className="bg-red-500/10 border border-red-500 rounded p-4">
+              <p className="text-sm font-semibold mb-2">❌ Archive Failed</p>
+              <p className="text-sm text-[var(--color-text-muted)] mb-3">{archiveError}</p>
+              <button
+                onClick={() => setArchiveStatus('idle')}
+                className="btn btn-secondary text-sm"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Pairing Log */}
       <section className="card p-6">

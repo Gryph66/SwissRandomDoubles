@@ -165,7 +165,7 @@ export function Schedule({ socket }: ScheduleProps) {
           </button>
           
           {/* Next Round / Complete Button - Host Only */}
-          {isCurrentRound && tournament.status !== 'completed' && isHost && allMatchesComplete && (
+          {isCurrentRound && tournament.status === 'active' && isHost && allMatchesComplete && (
             <button
               onClick={handleGenerateNextRound}
               className="btn btn-primary text-sm px-4 py-2 font-semibold ml-2"

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Header } from './components/shared/Header';
 import { FloatingQRCode } from './components/shared/FloatingQRCode';
 import { TournamentSetup } from './components/setup/TournamentSetup';
@@ -11,6 +12,7 @@ import { AdminPanel } from './components/admin/AdminPanel';
 import { FinalsConfig } from './components/finals/FinalsConfig';
 import { BracketView } from './components/bracket/BracketView';
 import { LandingPage } from './components/landing/LandingPage';
+import { ViewTournament } from './pages/ViewTournament';
 import { useTournamentStore } from './store/tournamentStore';
 import { useSocket } from './hooks/useSocket';
 import type { Tournament } from './types';
@@ -179,23 +181,6 @@ function App() {
     }
   }, [socket, setIsHost, setOnlineMode, setViewMode]);
 
-  // Show landing page if not in a mode yet
-  if (appMode === 'landing') {
-    return (
-      <LandingPage
-        isConnected={socket.isConnected}
-        isConnecting={socket.isConnecting}
-        error={socket.error}
-        onCreateTournament={handleCreateTournament}
-        onJoinTournament={handleJoinTournament}
-        onLocalMode={handleLocalMode}
-        onLoadTournament={handleLoadTournament}
-        onLoadTournamentOnline={handleLoadTournamentOnline}
-        joinError={joinError}
-      />
-    );
-  }
-
   const renderContent = () => {
     // If no tournament exists, always show setup
     if (!tournament && viewMode !== 'setup') {
@@ -230,26 +215,55 @@ function App() {
     }
   };
 
+  const MainApp = () => {
+    // Show landing page if not in a mode yet
+    if (appMode === 'landing') {
+      return (
+        <LandingPage
+          isConnected={socket.isConnected}
+          isConnecting={socket.isConnecting}
+          error={socket.error}
+          onCreateTournament={handleCreateTournament}
+          onJoinTournament={handleJoinTournament}
+          onLocalMode={handleLocalMode}
+          onLoadTournament={handleLoadTournament}
+          onLoadTournamentOnline={handleLoadTournamentOnline}
+          joinError={joinError}
+        />
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)]">
+        <Header
+          connectedCount={appMode === 'online' ? connectedCount : undefined}
+          isOnline={appMode === 'online'}
+          isConnected={socket.isConnected}
+          isHost={isHost}
+          showQRCode={showQRCode}
+          onToggleQRCode={() => setShowQRCode(!showQRCode)}
+        />
+        <main className="pb-12">
+          {renderContent()}
+        </main>
+        <FloatingQRCode
+          isOnline={appMode === 'online'}
+          isHost={isHost}
+          isVisible={showQRCode}
+          onToggle={() => setShowQRCode(!showQRCode)}
+        />
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)]">
-      <Header
-        connectedCount={appMode === 'online' ? connectedCount : undefined}
-        isOnline={appMode === 'online'}
-        isConnected={socket.isConnected}
-        isHost={isHost}
-        showQRCode={showQRCode}
-        onToggleQRCode={() => setShowQRCode(!showQRCode)}
-      />
-      <main className="pb-12">
-        {renderContent()}
-      </main>
-      <FloatingQRCode
-        isOnline={appMode === 'online'}
-        isHost={isHost}
-        isVisible={showQRCode}
-        onToggle={() => setShowQRCode(!showQRCode)}
-      />
-    </div>
+    <Routes>
+      {/* Public archive viewer route */}
+      <Route path="/view/:code" element={<ViewTournament />} />
+      
+      {/* Main app route */}
+      <Route path="*" element={<MainApp />} />
+    </Routes>
   );
 }
 

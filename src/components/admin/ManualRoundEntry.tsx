@@ -30,8 +30,8 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const activePlayers = useMemo(() => 
-    tournament?.players.filter(p => p.active) || [], 
+  const activePlayers = useMemo(() =>
+    tournament?.players.filter(p => p.active) || [],
     [tournament?.players]
   );
 
@@ -58,7 +58,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     setShowDeleteConfirm(false);
 
     const existingMatches = getExistingMatches(round);
-    
+
     if (existingMatches.length > 0) {
       // Load existing matches (non-bye matches only)
       const regularMatches = existingMatches.filter(m => !m.isBye);
@@ -79,7 +79,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
       createEmptyForm();
     }
   };
-  
+
   // Create empty form with correct number of match slots
   const createEmptyForm = () => {
     const emptyMatches: MatchEntry[] = Array(matchCount).fill(null).map(() => ({
@@ -100,9 +100,9 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
   const updateMatch = (id: string, field: keyof MatchEntry, value: string) => {
     setMatches(matches.map(m => {
       if (m.id !== id) return m;
-      
+
       const updates: Partial<MatchEntry> = { [field]: value };
-      
+
       // Auto-calculate complementary score (scores must add to 8)
       if (field === 'score1' && value !== '') {
         const num = parseInt(value);
@@ -115,7 +115,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
           updates.score1 = String(8 - num);
         }
       }
-      
+
       return { ...m, ...updates };
     }));
   };
@@ -152,7 +152,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     if (currentField !== 'team2Player1' && match.team2Player1) usedInThisMatch.add(match.team2Player1);
     if (currentField !== 'team2Player2' && match.team2Player2) usedInThisMatch.add(match.team2Player2);
 
-    return activePlayers.filter(p => 
+    return activePlayers.filter(p =>
       !usedElsewhere.has(p.id) && !usedInThisMatch.has(p.id)
     );
   };
@@ -172,8 +172,8 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     if (!tournament) return 0;
     const completedMatches = tournament.matches.filter(m => m.completed && !m.isBye);
     if (completedMatches.length === 0) return 0;
-    
-    const totalTwenties = completedMatches.reduce((sum, m) => 
+
+    const totalTwenties = completedMatches.reduce((sum, m) =>
       sum + (m.twenties1 || 0) + (m.twenties2 || 0), 0
     );
     const totalPlayerMatches = completedMatches.length * 4;
@@ -185,7 +185,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     if (!tournament || selectedRound === null) return;
 
     const updatedMatches = tournament.matches.filter(m => m.round !== selectedRound);
-    const newCurrentRound = updatedMatches.length > 0 
+    const newCurrentRound = updatedMatches.length > 0
       ? Math.max(...updatedMatches.map(m => m.round))
       : 0;
 
@@ -201,13 +201,13 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     if (socket?.connected) {
       socket.emit('manual_update_tournament', updatedTournament);
     }
-    
+
     setTournament(updatedTournament);
     createEmptyForm();
-    
+
     setSuccess(`Round ${selectedRound} deleted - form cleared for new entry`);
     setShowDeleteConfirm(false);
-    
+
     setTimeout(() => setSuccess(null), 2000);
   };
 
@@ -260,7 +260,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     // Create bye matches for remaining players
     const byePlayers = getByePlayers();
     const avgTwenties = getAverageTwenties();
-    
+
     byePlayers.forEach(player => {
       newMatches.push({
         id: nanoid(8),
@@ -293,7 +293,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     if (socket?.connected) {
       socket.emit('manual_update_tournament', updatedTournament);
     }
-    
+
     setTournament(updatedTournament);
 
     setSuccess(`Round ${selectedRound} saved successfully!`);
@@ -309,7 +309,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target?.result as string);
-        
+
         // Validate the JSON structure
         if (!json.players || !json.matches) {
           throw new Error('Invalid tournament JSON - missing players or matches');
@@ -330,28 +330,34 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
           createdAt: json.createdAt || tournament?.createdAt || Date.now(),
           updatedAt: Date.now(),
           pairingLogs: json.pairingLogs || [],
+          finalsConfig: json.finalsConfig || {
+            enabled: false,
+            poolConfigs: [],
+            configured: false,
+          },
+          bracketMatches: json.bracketMatches || [],
         };
 
         // Emit to server if in online mode
         if (socket?.connected) {
           socket.emit('manual_update_tournament', importedTournament);
         }
-        
+
         setTournament(importedTournament);
         setSuccess('Tournament data imported successfully!');
-        
+
         // Reload current round if one was selected
         if (selectedRound !== null) {
           setTimeout(() => loadRound(selectedRound), 100);
         }
-        
+
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
         setError(`Failed to import: ${err instanceof Error ? err.message : 'Invalid JSON'}`);
       }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -361,7 +367,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
   // Export current tournament as JSON
   const handleExport = () => {
     if (!tournament) return;
-    
+
     const dataStr = JSON.stringify(tournament, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -432,18 +438,17 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
               // Count only regular matches (not byes)
               const regularMatchCount = matchesInRound.filter(m => !m.isBye && m.completed).length;
               const byeMatchCount = matchesInRound.filter(m => m.isBye && m.completed).length;
-              
+
               return (
                 <button
                   key={round}
                   onClick={() => loadRound(round)}
-                  className={`px-4 py-2 rounded-lg border transition-all ${
-                    isSelected
+                  className={`px-4 py-2 rounded-lg border transition-all ${isSelected
                       ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-[var(--color-bg-primary)]'
                       : hasData
-                      ? 'bg-green-500/20 border-green-500/30 text-green-400 hover:bg-green-500/30'
-                      : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]'
-                  }`}
+                        ? 'bg-green-500/20 border-green-500/30 text-green-400 hover:bg-green-500/30'
+                        : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]'
+                    }`}
                 >
                   <div className="text-sm font-medium">Round {round}</div>
                   {hasData && (
@@ -512,7 +517,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
               {matches.map((match, idx) => (
                 <div key={match.id} className="card p-4 bg-[var(--color-bg-tertiary)]">
                   <h4 className="font-medium mb-3">Match {idx + 1}</h4>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                     {/* Team 1 */}
                     <div className="space-y-2">
@@ -525,7 +530,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
                         >
                           <option value="">Player 1...</option>
                           {[...getAvailablePlayers(match.id, 'team1Player1'),
-                            ...(match.team1Player1 ? [activePlayers.find(p => p.id === match.team1Player1)!].filter(Boolean) : [])
+                          ...(match.team1Player1 ? [activePlayers.find(p => p.id === match.team1Player1)!].filter(Boolean) : [])
                           ].map(p => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}
@@ -537,7 +542,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
                         >
                           <option value="">Player 2...</option>
                           {[...getAvailablePlayers(match.id, 'team1Player2'),
-                            ...(match.team1Player2 ? [activePlayers.find(p => p.id === match.team1Player2)!].filter(Boolean) : [])
+                          ...(match.team1Player2 ? [activePlayers.find(p => p.id === match.team1Player2)!].filter(Boolean) : [])
                           ].map(p => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}
@@ -556,7 +561,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
                         >
                           <option value="">Player 1...</option>
                           {[...getAvailablePlayers(match.id, 'team2Player1'),
-                            ...(match.team2Player1 ? [activePlayers.find(p => p.id === match.team2Player1)!].filter(Boolean) : [])
+                          ...(match.team2Player1 ? [activePlayers.find(p => p.id === match.team2Player1)!].filter(Boolean) : [])
                           ].map(p => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}
@@ -568,7 +573,7 @@ export function ManualRoundEntry({ onClose, socket }: ManualRoundEntryProps) {
                         >
                           <option value="">Player 2...</option>
                           {[...getAvailablePlayers(match.id, 'team2Player2'),
-                            ...(match.team2Player2 ? [activePlayers.find(p => p.id === match.team2Player2)!].filter(Boolean) : [])
+                          ...(match.team2Player2 ? [activePlayers.find(p => p.id === match.team2Player2)!].filter(Boolean) : [])
                           ].map(p => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}

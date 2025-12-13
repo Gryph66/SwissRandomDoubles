@@ -15,6 +15,9 @@ import type {
 } from './types.js';
 import { ROOM_CONFIG } from './types.js';
 import * as RoomManager from './roomManager.js';
+import archiveRoutes from './routes/archive.js';
+import tournamentRoutes from './routes/tournament.js';
+import { startCleanupSchedule } from './utils/cleanup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -147,6 +150,13 @@ app.get('/api/rooms', (_req, res) => {
     rooms: roomsData,
   });
 });
+
+// JSON body parser for archive routes
+app.use(express.json({ limit: '1mb' }));
+
+// Archive API routes
+app.use('/api', archiveRoutes);
+app.use('/api', tournamentRoutes);
 
 // ============================================
 // Static file serving (AFTER API routes)
@@ -716,6 +726,9 @@ function cleanupInactiveRooms() {
 
 // Run cleanup every 5 minutes
 setInterval(cleanupInactiveRooms, ROOM_CONFIG.CLEANUP_INTERVAL);
+
+// Start tournament archive cleanup schedule
+startCleanupSchedule();
 
 // ============================================
 // Start Server

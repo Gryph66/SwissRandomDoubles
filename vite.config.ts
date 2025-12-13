@@ -42,5 +42,11 @@ export default defineConfig({
   server: {
     port: 5177,
     // Use --host flag when running: npm run dev -- --host
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
 })

@@ -117,7 +117,11 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
           createdAt: json.createdAt || Date.now(),
           updatedAt: Date.now(),
           pairingLogs: json.pairingLogs || [],
-          finalsConfig: json.finalsConfig,
+          finalsConfig: json.finalsConfig || {
+            enabled: false,
+            poolConfigs: [],
+            configured: false,
+          },
           bracketMatches: json.bracketMatches || [],
         };
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import type { BracketType, PoolBracketConfig } from '../../types';
 
@@ -12,12 +12,13 @@ interface PoolConfig {
     bracketType: BracketType;
     includeThirdPlace: boolean;
     selectedPlayerIds?: string[]; // Manual player selection
-    customPairings?: [number, number][]; // Custom seeding pairs
     showCustomize: boolean;
+    pairingMode: 'auto' | 'manual';
+    manualTeams?: [string, string][]; // Custom teams defined by player IDs
 }
 
 export function FinalsConfig() {
-    const { tournament, configureFinalsMode, generateBrackets } = useTournamentStore();
+    const { tournament, generateFinals } = useTournamentStore();
     const [poolConfigs, setPoolConfigs] = useState<Map<string, PoolConfig>>(new Map());
 
     if (!tournament || !tournament.settings.finalsEnabled) {
@@ -47,22 +48,60 @@ export function FinalsConfig() {
         });
     }
 
-    // Initialize pool configs if not set
-    pools.forEach(pool => {
-        if (!poolConfigs.has(pool.id)) {
-            setPoolConfigs(prev => new Map(prev).set(pool.id, {
-                bracketType: pool.players.length >= 8 ? 'quarterfinals' : pool.players.length >= 4 ? 'semifinals' : 'none',
-                includeThirdPlace: false,
-                showCustomize: false,
-            }));
+    const getRequiredPlayerCount = (bracketType: BracketType): number => {
+        switch (bracketType) {
+            case 'final': return 4;
+            case 'semifinals': return 8;
+            case 'quarterfinals': return 16;
+            default: return 0;
         }
-    });
+    };
+
+    // Initialize pool configs from existing settings or defaults
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    useEffect(() => {
+        if (isInitialized) return;
+
+        setPoolConfigs(prev => {
+            const newMap = new Map(prev);
+
+            pools.forEach(pool => {
+                // Try to find existing config
+                const existing = tournament?.finalsConfig?.poolConfigs.find(c => c.poolId === pool.id);
+
+                if (existing) {
+                    newMap.set(pool.id, {
+                        bracketType: existing.bracketType,
+                        includeThirdPlace: existing.includeThirdPlace,
+                        selectedPlayerIds: existing.playerIds,
+                        showCustomize: !!existing.manualTeams || existing.playerIds.length !== getRequiredPlayerCount(existing.bracketType),
+                        pairingMode: existing.manualTeams ? 'manual' : 'auto',
+                        manualTeams: existing.manualTeams
+                    });
+                } else if (!newMap.has(pool.id)) {
+                    // Default
+                    newMap.set(pool.id, {
+                        bracketType: pool.players.length >= 16 ? 'quarterfinals' : pool.players.length >= 8 ? 'semifinals' : 'none',
+                        includeThirdPlace: false,
+                        showCustomize: false,
+                        pairingMode: 'auto',
+                        manualTeams: []
+                    });
+                }
+            });
+
+            return newMap;
+        });
+
+        setIsInitialized(true);
+    }, [tournament, pools, isInitialized]);
 
     const handleBracketTypeChange = (poolId: string, bracketType: BracketType) => {
         setPoolConfigs(prev => {
             const newMap = new Map(prev);
-            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
-            newMap.set(poolId, { ...current, bracketType, selectedPlayerIds: undefined, customPairings: undefined });
+            const current = newMap.get(poolId)!;
+            newMap.set(poolId, { ...current, bracketType });
             return newMap;
         });
     };
@@ -70,7 +109,7 @@ export function FinalsConfig() {
     const handleThirdPlaceChange = (poolId: string, includeThirdPlace: boolean) => {
         setPoolConfigs(prev => {
             const newMap = new Map(prev);
-            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            const current = newMap.get(poolId)!;
             newMap.set(poolId, { ...current, includeThirdPlace });
             return newMap;
         });
@@ -79,7 +118,7 @@ export function FinalsConfig() {
     const toggleCustomize = (poolId: string) => {
         setPoolConfigs(prev => {
             const newMap = new Map(prev);
-            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            const current = newMap.get(poolId)!;
             newMap.set(poolId, { ...current, showCustomize: !current.showCustomize });
             return newMap;
         });
@@ -88,8 +127,9 @@ export function FinalsConfig() {
     const togglePlayerSelection = (poolId: string, playerId: string, pool: Pool) => {
         setPoolConfigs(prev => {
             const newMap = new Map(prev);
-            const current = newMap.get(poolId) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
-            const currentSelected = current.selectedPlayerIds || pool.players.slice(0, getRequiredPlayerCount(current.bracketType)).map(p => p.id);
+            const current = newMap.get(poolId)!;
+            const requiredCount = getRequiredPlayerCount(current.bracketType);
+            const currentSelected = current.selectedPlayerIds || pool.players.slice(0, requiredCount).map(p => p.id);
 
             const newSelected = currentSelected.includes(playerId)
                 ? currentSelected.filter(id => id !== playerId)
@@ -100,18 +140,46 @@ export function FinalsConfig() {
         });
     };
 
-    const getRequiredPlayerCount = (bracketType: BracketType): number => {
-        switch (bracketType) {
-            case 'final': return 4;
-            case 'semifinals': return 8;
-            case 'quarterfinals': return 16;
-            default: return 0;
-        }
+    const handlePairingModeChange = (poolId: string, mode: 'auto' | 'manual') => {
+        setPoolConfigs(prev => {
+            const newMap = new Map(prev);
+            const current = newMap.get(poolId)!;
+            // logic to init manualTeams if needed?
+            let manualTeams = current.manualTeams || [];
+            if (mode === 'manual' && manualTeams.length === 0) {
+                const requiredCount = getRequiredPlayerCount(current.bracketType);
+                const numTeams = requiredCount / 2;
+                manualTeams = Array(numTeams).fill(['', '']);
+            }
+
+            newMap.set(poolId, { ...current, pairingMode: mode, manualTeams });
+            return newMap;
+        });
+    };
+
+    const updateManualTeam = (poolId: string, teamIndex: number, playerIndex: number, playerId: string) => {
+        setPoolConfigs(prev => {
+            const newMap = new Map(prev);
+            const current = newMap.get(poolId)!;
+            const newTeams = [...(current.manualTeams || [])];
+
+            // Ensure team tuple exists
+            if (!newTeams[teamIndex]) newTeams[teamIndex] = ['', ''];
+
+            // Create specific update
+            const oldTeam = newTeams[teamIndex];
+            const updatedTeam: [string, string] = [oldTeam[0], oldTeam[1]];
+            updatedTeam[playerIndex] = playerId;
+
+            newTeams[teamIndex] = updatedTeam;
+            newMap.set(poolId, { ...current, manualTeams: newTeams });
+            return newMap;
+        });
     };
 
     const handleGenerateBrackets = () => {
         const configs: PoolBracketConfig[] = pools.map(pool => {
-            const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+            const config = poolConfigs.get(pool.id)!;
             const requiredCount = getRequiredPlayerCount(config.bracketType);
             const playerIds = config.selectedPlayerIds && config.selectedPlayerIds.length === requiredCount
                 ? config.selectedPlayerIds
@@ -123,12 +191,11 @@ export function FinalsConfig() {
                 bracketType: config.bracketType,
                 playerIds,
                 includeThirdPlace: config.includeThirdPlace,
-                seedingPairs: config.customPairings,
+                manualTeams: config.pairingMode === 'manual' ? config.manualTeams : undefined,
             };
         });
 
-        configureFinalsMode(configs);
-        generateBrackets();
+        generateFinals(configs);
     };
 
     const canGenerate = pools.some(pool => {
@@ -139,14 +206,38 @@ export function FinalsConfig() {
     return (
         <div className="max-w-6xl mx-auto p-6 space-y-6">
             <div className="card p-6">
-                <h1 className="text-2xl font-display font-bold mb-2">Configure Finals Brackets</h1>
+                <div className="flex items-center justify-between mb-2">
+                    <h1 className="text-2xl font-display font-bold">Configure Finals Brackets</h1>
+                    <button
+                        onClick={() => {
+                            if (window.confirm('Are you sure? This will reset all current pool configurations and manual teams to defaults based on current standings.')) {
+                                setPoolConfigs(new Map());
+                                setIsInitialized(false);
+                            }
+                        }}
+                        className="text-xs text-[var(--color-error)] hover:underline"
+                    >
+                        Reset / Recalculate Pools
+                    </button>
+                </div>
                 <p className="text-[var(--color-text-secondary)]">
                     Swiss rounds are complete! Configure playoff brackets for each pool below.
                 </p>
+                {tournament?.bracketMatches && tournament.bracketMatches.length > 0 && (
+                    <div className="mt-4 p-4 rounded bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+                        <span className="text-xl">⚠️</span>
+                        <div>
+                            <p className="font-bold text-red-400">Warning: Brackets are already active</p>
+                            <p className="text-sm text-red-300/80">
+                                Generating brackets again will <strong>permanently delete</strong> all existing matches and scores.
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {pools.map(pool => {
-                const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false };
+                const config = poolConfigs.get(pool.id) || { bracketType: 'none', includeThirdPlace: false, showCustomize: false, pairingMode: 'auto' } as PoolConfig;
                 const playerCount = pool.players.length;
                 const requiredCount = getRequiredPlayerCount(config.bracketType);
                 const selectedIds = config.selectedPlayerIds || pool.players.slice(0, requiredCount).map(p => p.id);
@@ -176,89 +267,117 @@ export function FinalsConfig() {
                             </div>
                         </div>
 
-                        {/* Player List with Selection */}
+                        {/* Configuration Area */}
                         {config.bracketType !== 'none' && (
                             <>
-                                <div className="mb-3 flex items-center justify-between">
-                                    <p className="text-sm text-[var(--color-text-muted)]">
-                                        {config.showCustomize ? `Select ${requiredCount} players for bracket:` : 'Players in bracket:'}
-                                    </p>
+                                <div className="mb-4 flex items-center justify-between border-b border-[var(--color-border)] pb-2">
+                                    <div className="flex gap-4">
+                                        {config.showCustomize && (
+                                            <div className="flex gap-2 text-sm bg-[var(--color-bg-tertiary)] p-1 rounded">
+                                                <button
+                                                    onClick={() => handlePairingModeChange(pool.id, 'auto')}
+                                                    className={`px-3 py-1 rounded transition-colors ${config.pairingMode === 'auto' ? 'bg-[var(--color-accent)] text-white' : 'hover:bg-white/10'}`}
+                                                >
+                                                    Auto (High-Low)
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePairingModeChange(pool.id, 'manual')}
+                                                    className={`px-3 py-1 rounded transition-colors ${config.pairingMode === 'manual' ? 'bg-[var(--color-accent)] text-white' : 'hover:bg-white/10'}`}
+                                                >
+                                                    Manual Pairing
+                                                </button>
+                                            </div>
+                                        )}
+                                        {!config.showCustomize && (
+                                            <p className="text-sm text-[var(--color-text-muted)] self-center">
+                                                Default: High-Low Seeding (1v4, 2v3)
+                                            </p>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={() => toggleCustomize(pool.id)}
                                         className="text-xs text-[var(--color-accent)] hover:underline"
                                     >
-                                        {config.showCustomize ? 'Use Default' : 'Customize Selection'}
+                                        {config.showCustomize ? 'Hide Customization' : 'Customize Selection'}
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                                    {pool.players.map((player) => {
-                                        const isSelected = selectedIds.includes(player.id);
-                                        const isInDefaultRange = pool.players.slice(0, requiredCount).some(p => p.id === player.id);
 
-                                        return (
-                                            <div
-                                                key={player.id}
-                                                onClick={() => config.showCustomize && togglePlayerSelection(pool.id, player.id, pool)}
-                                                className={`flex items-center gap-2 p-2 rounded border transition-all ${config.showCustomize ? 'cursor-pointer' : ''
-                                                    } ${isSelected
-                                                        ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]'
-                                                        : isInDefaultRange && !config.showCustomize
-                                                            ? 'bg-[var(--color-bg-tertiary)] border-[var(--color-accent)]/30'
-                                                            : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-50'
-                                                    }`}
-                                            >
-                                                {config.showCustomize && (
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        readOnly
-                                                        className="w-4 h-4 rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)] 
-                                     text-[var(--color-accent)] focus:ring-[var(--color-accent)] focus:ring-offset-0"
-                                                    />
-                                                )}
-                                                <span className="text-xs font-medium text-[var(--color-text-muted)] w-6">#{player.rank}</span>
-                                                <span className="text-sm truncate">{player.name}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                {config.showCustomize && selectedIds.length !== requiredCount && (
-                                    <p className="text-xs text-red-400 mb-2">
-                                        Please select exactly {requiredCount} players ({selectedIds.length} selected)
-                                    </p>
+                                {/* AUTO MODE: Select Players */}
+                                {(!config.showCustomize || config.pairingMode === 'auto') && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                                        {pool.players.map((player) => {
+                                            const isSelected = selectedIds.includes(player.id);
+                                            const isInDefaultRange = pool.players.slice(0, requiredCount).some(p => p.id === player.id);
+
+                                            return (
+                                                <div
+                                                    key={player.id}
+                                                    onClick={() => config.showCustomize && togglePlayerSelection(pool.id, player.id, pool)}
+                                                    className={`flex items-center gap-2 p-2 rounded border transition-all ${config.showCustomize ? 'cursor-pointer' : ''
+                                                        } ${isSelected
+                                                            ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]'
+                                                            : isInDefaultRange && !config.showCustomize
+                                                                ? 'bg-[var(--color-bg-tertiary)] border-[var(--color-accent)]/30'
+                                                                : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-50'
+                                                        }`}
+                                                >
+                                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isSelected ? 'bg-[var(--color-accent)] text-white' : 'bg-gray-700'
+                                                        }`}>
+                                                        {player.rank}
+                                                    </div>
+                                                    <div className="truncate text-sm font-medium">{player.name}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 )}
+
+                                {/* MANUAL MODE: Configure Teams */}
+                                {config.showCustomize && config.pairingMode === 'manual' && (
+                                    <div className="space-y-3 mb-6 bg-[var(--color-bg-tertiary)] p-4 rounded border border-[var(--color-border)]">
+                                        <p className="text-sm text-[var(--color-text-muted)] mb-2">
+                                            Define {requiredCount / 2} teams. This overrides standard ranking logic.
+                                        </p>
+                                        {config.manualTeams?.map((team, idx) => (
+                                            <div key={idx} className="flex gap-4 items-center">
+                                                <span className="w-16 text-sm font-mono text-[var(--color-text-muted)]">Seed {idx + 1}</span>
+                                                <select
+                                                    value={team[0]}
+                                                    onChange={(e) => updateManualTeam(pool.id, idx, 0, e.target.value)}
+                                                    className="input text-sm flex-1"
+                                                >
+                                                    <option value="">Select Player...</option>
+                                                    {pool.players.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.rank}. {p.name}</option>
+                                                    ))}
+                                                </select>
+                                                <span className="text-[var(--color-text-muted)]">&</span>
+                                                <select
+                                                    value={team[1]}
+                                                    onChange={(e) => updateManualTeam(pool.id, idx, 1, e.target.value)}
+                                                    className="input text-sm flex-1"
+                                                >
+                                                    <option value="">Select Player...</option>
+                                                    {pool.players.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.rank}. {p.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-2 mb-2">
+                                    <input
+                                        type="checkbox"
+                                        id={`third-${pool.id}`}
+                                        checked={config.includeThirdPlace}
+                                        onChange={(e) => handleThirdPlaceChange(pool.id, e.target.checked)}
+                                        className="rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)]"
+                                    />
+                                    <label htmlFor={`third-${pool.id}`} className="text-sm">Include 3rd Place Match</label>
+                                </div>
                             </>
-                        )}
-
-                        {/* 3rd Place Match Option */}
-                        {(config.bracketType === 'semifinals' || config.bracketType === 'quarterfinals') && (
-                            <label className="flex items-center gap-2 cursor-pointer mb-3">
-                                <input
-                                    type="checkbox"
-                                    checked={config.includeThirdPlace}
-                                    onChange={(e) => handleThirdPlaceChange(pool.id, e.target.checked)}
-                                    className="w-4 h-4 rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)] 
-                           text-[var(--color-accent)] focus:ring-[var(--color-accent)] focus:ring-offset-0"
-                                />
-                                <span className="text-sm text-[var(--color-text-secondary)]">
-                                    Include 3rd place match
-                                </span>
-                            </label>
-                        )}
-
-                        {/* Bracket Preview */}
-                        {config.bracketType !== 'none' && (
-                            <div className="mt-4 p-3 rounded bg-[var(--color-bg-secondary)] border border-[var(--color-accent)]/20">
-                                <p className="text-xs font-medium text-[var(--color-accent)] mb-2">Bracket Preview:</p>
-                                <p className="text-sm text-[var(--color-text-secondary)]">
-                                    {config.bracketType === 'final' && '1 match: Top 4 players compete (1v2 vs 3v4)'}
-                                    {config.bracketType === 'semifinals' && `${config.includeThirdPlace ? '3' : '2'} matches: 2 semifinals → 1 final${config.includeThirdPlace ? ' + 3rd place' : ''}`}
-                                    {config.bracketType === 'quarterfinals' && `${config.includeThirdPlace ? '7' : '6'} matches: 4 quarters → 2 semis → 1 final${config.includeThirdPlace ? ' + 3rd place' : ''}`}
-                                </p>
-                                <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                                    Default seeding: Traditional (1v4, 2v3 for semis)
-                                </p>
-                            </div>
                         )}
                     </div>
                 );

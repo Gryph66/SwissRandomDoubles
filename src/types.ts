@@ -72,7 +72,8 @@ export interface PoolBracketConfig {
   bracketType: BracketType;
   playerIds: string[];         // Players in this pool (from Swiss)
   includeThirdPlace: boolean;  // Whether to include 3rd place match for this pool
-  seedingPairs?: [number, number][]; // Custom seeding, e.g. [[1,4], [2,3]]
+  seedingPairs?: [number, number][]; // Custom seeding by rank (deprecated in favor of manualTeams)
+  manualTeams?: [string, string][]; // Custom teams defined by player IDs
 }
 
 export interface FinalsConfig {
@@ -246,6 +247,7 @@ export interface TournamentState {
   // Finals/Bracket mode
   configureFinalsMode: (poolConfigs: PoolBracketConfig[]) => void;
   generateBrackets: () => void;
+  generateFinals: (poolConfigs: PoolBracketConfig[]) => void; // Combined action
   submitBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
   editBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
   getFinalStandings: () => FinalStanding[];

@@ -34,31 +34,31 @@ export function LandingPage({
   // Check URL for code parameter (from QR code scan)
   const urlParams = new URLSearchParams(window.location.search);
   const codeFromUrl = urlParams.get('code')?.toUpperCase() || '';
-  
+
   // If code is in URL, go directly to join mode
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>(codeFromUrl ? 'join' : 'choose');
-  
+
   // Create form state
   const [tournamentName, setTournamentName] = useState('');
   const [hostName, setHostName] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Join form state - pre-fill code from URL if present
   const [joinCode, setJoinCode] = useState(codeFromUrl);
   const [playerName, setPlayerName] = useState('');
-  
+
   // Clear URL param after reading (cleaner URLs)
   useEffect(() => {
     if (codeFromUrl) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [codeFromUrl]);
-  
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!tournamentName.trim() || !hostName.trim()) return;
-    
+
     // Default to 6 rounds - can be changed in Admin settings
     onCreateTournament(
       tournamentName.trim(),
@@ -66,30 +66,30 @@ export function LandingPage({
       hostName.trim()
     );
   };
-  
+
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim() || !playerName.trim()) return;
-    
+
     onJoinTournament(joinCode.trim().toUpperCase(), playerName.trim());
   };
-  
+
   // Handle loading tournament from JSON file
   const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setLoadError(null);
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target?.result as string);
-        
+
         // Validate basic structure
         if (!json.players || !Array.isArray(json.players)) {
           throw new Error('Invalid tournament file - missing players');
         }
-        
+
         // Create tournament object
         const tournament: Tournament = {
           id: json.id || crypto.randomUUID(),
@@ -105,8 +105,14 @@ export function LandingPage({
           createdAt: json.createdAt || Date.now(),
           updatedAt: Date.now(),
           pairingLogs: json.pairingLogs || [],
+          finalsConfig: json.finalsConfig || {
+            enabled: false,
+            poolConfigs: [],
+            configured: false,
+          },
+          bracketMatches: json.bracketMatches || [],
         };
-        
+
         // If connected and online handler available, create a room
         // Otherwise fall back to offline mode
         if (isConnected && onLoadTournamentOnline) {
@@ -119,30 +125,30 @@ export function LandingPage({
       }
     };
     reader.readAsText(file);
-    
+
     // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-  
+
   // BUG FIX: Disable buttons when not connected OR when there's an error
   const isDisabledForConnection = !isConnected || !!error;
-  
+
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
       <div className="w-full max-w-4xl">
         {/* Logo/Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold tracking-wider text-[var(--color-text-primary)] mb-3"
-              style={{ textShadow: '0 0 40px rgba(212, 175, 125, 0.3)' }}>
+            style={{ textShadow: '0 0 40px rgba(212, 175, 125, 0.3)' }}>
             SWISS RANDOM DOUBLES
           </h1>
           <p className="text-lg text-[var(--color-text-muted)] tracking-wide">
             Crokinole Tournament Manager
           </p>
         </div>
-        
+
         {/* Connection Status */}
         {isConnecting && (
           <div className="mb-8 p-4 bg-[var(--color-bg-secondary)] rounded-lg text-center max-w-md mx-auto">
@@ -151,7 +157,7 @@ export function LandingPage({
             </div>
           </div>
         )}
-        
+
         {error && (
           <div className="mb-8 p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-center max-w-md mx-auto">
             <p className="text-red-400 text-sm">{error}</p>
@@ -163,13 +169,13 @@ export function LandingPage({
             </button>
           </div>
         )}
-        
+
         {/* Main Content - Side by Side Cards */}
         {mode === 'choose' && (
           <>
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               {/* New Tournament Card */}
-              <div 
+              <div
                 className={`
                   relative p-8 rounded-2xl border border-[var(--color-border)] 
                   bg-[var(--color-bg-secondary)]/50 backdrop-blur
@@ -188,14 +194,14 @@ export function LandingPage({
                     </svg>
                   </div>
                 </div>
-                
+
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-3">
                   New Tournament
                 </h2>
                 <p className="text-[var(--color-text-muted)] text-center mb-6">
                   Create a new room for your tournament<br />with a unique code
                 </p>
-                
+
                 <div className="text-center">
                   <span className="inline-block px-6 py-2 text-sm font-semibold tracking-wider text-[var(--color-accent)] 
                                  border border-[var(--color-accent)]/30 rounded-lg">
@@ -203,9 +209,9 @@ export function LandingPage({
                   </span>
                 </div>
               </div>
-              
+
               {/* Join Tournament Card */}
-              <div 
+              <div
                 className={`
                   relative p-8 rounded-2xl border border-[var(--color-border)] 
                   bg-[var(--color-bg-secondary)]/50 backdrop-blur
@@ -223,14 +229,14 @@ export function LandingPage({
                     </svg>
                   </div>
                 </div>
-                
+
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)] text-center mb-3">
                   Join Room
                 </h2>
                 <p className="text-[var(--color-text-muted)] text-center mb-6">
                   Enter a room code to join an existing<br />tournament
                 </p>
-                
+
                 <div className="text-center">
                   <span className="inline-block px-6 py-2 text-sm font-semibold tracking-wider text-[var(--color-text-secondary)] 
                                  border border-[var(--color-border)] rounded-lg">
@@ -239,7 +245,7 @@ export function LandingPage({
                 </div>
               </div>
             </div>
-            
+
             {/* Load Tournament */}
             <div className="flex justify-center mb-6">
               <label className="
@@ -263,13 +269,13 @@ export function LandingPage({
                 />
               </label>
             </div>
-            
+
             {loadError && (
               <div className="text-center mb-6">
                 <span className="text-red-400 text-sm">{loadError}</span>
               </div>
             )}
-            
+
             {/* Offline Mode */}
             <div className="text-center">
               <button
@@ -283,13 +289,13 @@ export function LandingPage({
                 </span>
               </button>
             </div>
-            
+
             {/* Footer */}
             <div className="mt-12 text-center text-sm text-[var(--color-text-muted)]">
               <p>Each room runs independently with its own tournament state.</p>
               <p>Share the room code or QR code with players to sync their devices.</p>
             </div>
-            
+
             {/* Connection & Version Info */}
             <div className="mt-8 flex items-center justify-center gap-4 text-xs">
               <div className="flex items-center gap-2">
@@ -318,7 +324,7 @@ export function LandingPage({
             </div>
           </>
         )}
-        
+
         {mode === 'create' && (
           <div className="max-w-md mx-auto">
             <form onSubmit={handleCreate} className="p-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50">
@@ -332,11 +338,11 @@ export function LandingPage({
                 </svg>
                 Back
               </button>
-              
+
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6">
                 Create Tournament
               </h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
@@ -353,7 +359,7 @@ export function LandingPage({
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Tournament Name
@@ -370,7 +376,7 @@ export function LandingPage({
                   />
                 </div>
               </div>
-              
+
               <button
                 type="submit"
                 disabled={isDisabledForConnection || !tournamentName.trim() || !hostName.trim()}
@@ -383,7 +389,7 @@ export function LandingPage({
             </form>
           </div>
         )}
-        
+
         {mode === 'join' && (
           <div className="max-w-md mx-auto">
             <form onSubmit={handleJoin} className="p-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50">
@@ -397,17 +403,17 @@ export function LandingPage({
                 </svg>
                 Back
               </button>
-              
+
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6">
                 Join Tournament
               </h2>
-              
+
               {joinError && (
                 <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg mb-4">
                   <p className="text-red-400 text-sm">{joinError}</p>
                 </div>
               )}
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
@@ -426,7 +432,7 @@ export function LandingPage({
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Your Name
@@ -446,7 +452,7 @@ export function LandingPage({
                   </p>
                 </div>
               </div>
-              
+
               <button
                 type="submit"
                 disabled={isDisabledForConnection || !joinCode.trim() || !playerName.trim()}

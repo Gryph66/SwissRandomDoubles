@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import type { ViewMode } from '../../types';
 
-const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; large?: boolean; hostOnly?: boolean }[] = [
+const navItems: { mode: ViewMode; label: string; requiresTournament: boolean; large?: boolean; hostOnly?: boolean; activeModes?: ViewMode[] }[] = [
   { mode: 'setup', label: 'Setup', requiresTournament: false, hostOnly: true },
   { mode: 'schedule', label: 'Schedule', requiresTournament: true, large: true },
   { mode: 'history', label: 'Score Entry', requiresTournament: true },
   { mode: 'rounds', label: 'Round Results', requiresTournament: true },
   { mode: 'standings', label: 'Standings', requiresTournament: true },
+  { mode: 'bracket', label: 'Playoffs', requiresTournament: true, activeModes: ['finals_config', 'bracket'] },
   { mode: 'analysis', label: 'Analysis', requiresTournament: true },
   { mode: 'admin', label: 'Admin', requiresTournament: true, hostOnly: true },
 ];
@@ -82,7 +83,7 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
           <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const isDisabled = item.requiresTournament && !tournament;
-              const isActive = viewMode === item.mode;
+              const isActive = viewMode === item.mode || item.activeModes?.includes(viewMode);
               // Hide host-only items from non-hosts
               const showItem = !item.hostOnly || isHost;
 
@@ -112,7 +113,7 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
           <div className="flex items-center gap-4">
             {/* Connection indicator */}
             {isOnline && (
-              <div 
+              <div
                 className="flex items-center gap-2 cursor-pointer relative"
                 onClick={() => setShowVersionInfo(!showVersionInfo)}
                 title="Click for version info"
@@ -137,7 +138,7 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
                     </span>
                   </>
                 )}
-                
+
                 {/* Version info popup */}
                 {showVersionInfo && (
                   <div className="absolute top-full right-0 mt-2 p-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 whitespace-nowrap">
@@ -169,7 +170,7 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
                 )}
               </div>
             )}
-            
+
             {tournament && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-[var(--color-text-muted)]">Code:</span>
@@ -178,7 +179,7 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
                 </code>
               </div>
             )}
-            
+
             {/* QR Code Toggle - only for host in online mode */}
             {isOnline && isHost && tournament?.shareCode && onToggleQRCode && (
               <button
@@ -188,7 +189,7 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
                 {showQRCode ? 'Hide QR' : 'Show QR'}
               </button>
             )}
-            
+
             {/* Fullscreen Button */}
             <button
               onClick={toggleFullscreen}

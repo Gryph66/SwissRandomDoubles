@@ -257,12 +257,12 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
               onClick={handleSubmitAll}
               className="btn btn-primary text-sm px-3 py-1.5 font-semibold"
             >
-              Submit All ({readyToSubmitCount})
+  Submit All ({readyToSubmitCount})
             </button>
           )}
           
           {/* Next Round / Complete Button */}
-          {isCurrentRound && tournament.status !== 'completed' && isHost && (
+          {isCurrentRound && tournament.status === 'active' && isHost && (
             <button
               onClick={handleNextRound}
               disabled={!allMatchesComplete}

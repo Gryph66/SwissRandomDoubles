@@ -68,7 +68,7 @@ export function RoundView({ socket }: RoundViewProps) {
           Export PNG
         </button>
         
-        {tournament.status !== 'completed' && allCurrentComplete && (
+        {tournament.status === 'active' && allCurrentComplete && (
           <button
             onClick={handleNextRound}
             className="btn btn-primary text-lg px-6 py-3"

@@ -1,32 +1,33 @@
+import { useState } from 'react';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { TwentiesLeaderboard } from './TwentiesLeaderboard';
 import { exportPageToPng } from '../../utils/exportPng';
-import type { Match } from '../../types';
+import type { Match, BracketMatch } from '../../types';
 
 type MatchResult = 'W' | 'L' | 'T' | 'B'; // Win, Loss, Tie, Bye
 
-function getPlayerMatchHistory(playerId: string, matches: Match[]): MatchResult[] {
+function getPlayerMatchHistory(playerId: string, matches: Match[], bracketMatches?: BracketMatch[]): MatchResult[] {
   const history: MatchResult[] = [];
-  
+
   // Sort matches by round
   const sortedMatches = [...matches].sort((a, b) => a.round - b.round);
-  
+
   for (const match of sortedMatches) {
     // Check if player was in this match
     const inTeam1 = match.team1.includes(playerId);
     const inTeam2 = match.team2?.includes(playerId);
-    
+
     if (!inTeam1 && !inTeam2) continue;
-    
+
     // Handle bye
     if (match.isBye) {
       history.push('B');
       continue;
     }
-    
+
     // Only include completed matches
     if (!match.completed || match.score1 === null || match.score2 === null) continue;
-    
+
     if (inTeam1) {
       if (match.score1 > match.score2) history.push('W');
       else if (match.score1 < match.score2) history.push('L');
@@ -37,7 +38,32 @@ function getPlayerMatchHistory(playerId: string, matches: Match[]): MatchResult[
       else history.push('T');
     }
   }
-  
+
+  // Append Bracket Matches if provided
+  if (bracketMatches) {
+    const relevant = bracketMatches.filter(m =>
+      (m.team1?.includes(playerId) || m.team2?.includes(playerId)) && m.completed && m.score1 !== null && m.score2 !== null
+    );
+
+    const roundOrder: Record<string, number> = { 'quarterfinal': 1, 'semifinal': 2, 'third_place': 3, 'final': 4 };
+    relevant.sort((a, b) => (roundOrder[a.round] || 0) - (roundOrder[b.round] || 0));
+
+    for (const m of relevant) {
+      let result: MatchResult | null = null;
+      const isTeam1 = m.team1?.includes(playerId);
+      const isTeam2 = m.team2?.includes(playerId);
+
+      if (isTeam1) {
+        if (m.score1! > m.score2!) result = 'W';
+        else result = 'L';
+      } else if (isTeam2) {
+        if (m.score2! > m.score1!) result = 'W';
+        else result = 'L';
+      }
+      if (result) history.push(result);
+    }
+  }
+
   return history;
 }
 
@@ -45,7 +71,7 @@ function MatchHistoryBadges({ history }: { history: MatchResult[] }) {
   if (history.length === 0) {
     return <span className="text-[var(--color-text-muted)]">-</span>;
   }
-  
+
   return (
     <div className="flex gap-1 justify-start">
       {history.map((result, idx) => (
@@ -91,7 +117,8 @@ function getPoolLabel(poolIndex: number): string {
 }
 
 export function Standings() {
-  const { tournament, getStandings } = useTournamentStore();
+  const { tournament, getStandings, getFinalStandings } = useTournamentStore();
+  const [showFinals, setShowFinals] = useState(true);
 
   if (!tournament) {
     return (
@@ -101,9 +128,65 @@ export function Standings() {
     );
   }
 
-  const standings = getStandings();
+  const isFinalsActive = tournament.settings.finalsEnabled && (tournament.status === 'finals_active' || tournament.status === 'completed');
+
+  let standings = getStandings();
   const isComplete = tournament.status === 'completed';
-  const poolSize = tournament.settings.poolSize || 8; // Default to 8 if not set
+  const poolSize = tournament.settings.poolSize || 8;
+
+  // Apply Final Rankings if View Mode is "Final Results"
+  if (isFinalsActive && showFinals) {
+    const finalResults = getFinalStandings();
+    const rankMap = new Map(finalResults.map(f => [f.playerId, f.finalPosition]));
+
+    standings.sort((a, b) => {
+      const rA = rankMap.get(a.player.id) ?? 999;
+      const rB = rankMap.get(b.player.id) ?? 999;
+      return rA - rB;
+    });
+
+    // Augment stats with Bracket Results and Override Rank
+    standings = standings.map((s, idx) => {
+      let { wins, losses, ties, twenties, pointsFor: pf, pointsAgainst: pa } = s.player;
+
+      if (tournament.bracketMatches) {
+        const pMatches = tournament.bracketMatches.filter(m =>
+          m.completed && (m.team1?.includes(s.player.id) || m.team2?.includes(s.player.id))
+        );
+
+        pMatches.forEach(m => {
+          const isTeam1 = m.team1?.includes(s.player.id);
+          if (isTeam1) {
+            if ((m.score1 || 0) > (m.score2 || 0)) wins++;
+            else if ((m.score1 || 0) < (m.score2 || 0)) losses++;
+            else ties++; // Unlikely in brackets but safest
+            twenties += m.twenties1 || 0;
+            pf += m.score1 || 0;
+            pa += m.score2 || 0;
+          } else {
+            if ((m.score2 || 0) > (m.score1 || 0)) wins++;
+            else if ((m.score2 || 0) < (m.score1 || 0)) losses++;
+            else ties++;
+            twenties += m.twenties2 || 0;
+            pf += m.score2 || 0;
+            pa += m.score1 || 0;
+          }
+        });
+      }
+
+      const newScore = (wins * 2) + ties;
+
+      return {
+        ...s,
+        rank: idx + 1,
+        score: newScore,
+        player: {
+          ...s.player,
+          wins, losses, ties, twenties, pointsFor: pf, pointsAgainst: pa
+        }
+      };
+    });
+  }
 
   return (
     <div id="standings-export" className="max-w-6xl mx-auto p-6 space-y-8">
@@ -111,21 +194,31 @@ export function Standings() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-display font-bold">
-            {isComplete ? 'Final Standings' : 'Current Standings'}
+            {showFinals && isFinalsActive ? 'Final Standings' : (isComplete ? 'Swiss Standings' : 'Current Standings')}
           </h2>
           <p className="text-[var(--color-text-secondary)] mt-1">
-            After Round {tournament.currentRound} of {tournament.totalRounds}
+            {showFinals && isFinalsActive ? 'Consolidated Results (Ranked by Bracket Outcomes)' : `After Round ${tournament.currentRound} of ${tournament.totalRounds}`}
           </p>
         </div>
-        <button
-          onClick={() => exportPageToPng('standings-export', `${tournament.name}-standings`)}
-          className="btn btn-secondary text-sm flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Export PNG
-        </button>
+        <div className="flex gap-3">
+          {isFinalsActive && (
+            <button
+              onClick={() => setShowFinals(!showFinals)}
+              className={`btn btn-sm flex items-center gap-2 ${showFinals ? 'btn-secondary' : 'btn-primary'}`}
+            >
+              {showFinals ? 'View Swiss Standings' : 'View Final Results'}
+            </button>
+          )}
+          <button
+            onClick={() => exportPageToPng('standings-export', `${tournament.name}-standings`)}
+            className="btn btn-secondary text-sm flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export PNG
+          </button>
+        </div>
       </div>
 
       {/* Main Standings Table */}
@@ -165,17 +258,23 @@ export function Standings() {
                   20s
                 </th>
                 <th className="px-3 py-2 text-left text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  History
+                  History {showFinals && isFinalsActive ? '(+ Finals)' : ''}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-border)]">
               {standings.map((standing, index) => {
                 const diff = standing.player.pointsFor - standing.player.pointsAgainst;
-                const isTopThree = index < 3 && isComplete;
+                const isTopThree = index < 3 && isComplete; // Top 3 logic?
+                // If showing finals, Rank 1-3 is truly Top 3.
+
+                // Pool Color Logic:
+                // If Final Results: Rank 1-8 is Pool A (usually).
+                // If Swiss: Rank 1-8 is Pool A (conceptually).
+
                 const poolIndex = getPoolForRank(standing.rank, poolSize);
                 const poolColor = getPoolColor(poolIndex);
-                
+
                 return (
                   <tr
                     key={standing.player.id}
@@ -188,10 +287,10 @@ export function Standings() {
                     <td className="px-3 py-2">
                       <span className={`
                         inline-flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold
-                        ${index === 0 ? 'bg-yellow-500/20 text-yellow-400' : ''}
-                        ${index === 1 ? 'bg-gray-400/20 text-gray-300' : ''}
-                        ${index === 2 ? 'bg-amber-600/20 text-amber-500' : ''}
-                        ${index > 2 ? 'text-[var(--color-text-muted)]' : ''}
+                        ${standing.rank === 1 ? 'bg-yellow-500/20 text-yellow-400' : ''}
+                        ${standing.rank === 2 ? 'bg-gray-400/20 text-gray-300' : ''}
+                        ${standing.rank === 3 ? 'bg-amber-600/20 text-amber-500' : ''}
+                        ${standing.rank > 3 ? 'text-[var(--color-text-muted)]' : ''}
                       `}>
                         {standing.rank}
                       </span>
@@ -233,7 +332,13 @@ export function Standings() {
                       {standing.player.twenties}
                     </td>
                     <td className="px-3 py-2">
-                      <MatchHistoryBadges history={getPlayerMatchHistory(standing.player.id, tournament.matches)} />
+                      <MatchHistoryBadges
+                        history={getPlayerMatchHistory(
+                          standing.player.id,
+                          tournament.matches,
+                          (isFinalsActive && showFinals) ? tournament.bracketMatches : undefined
+                        )}
+                      />
                     </td>
                   </tr>
                 );

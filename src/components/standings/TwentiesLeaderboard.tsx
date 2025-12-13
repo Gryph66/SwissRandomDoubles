@@ -5,8 +5,32 @@ export function TwentiesLeaderboard() {
 
   if (!tournament) return null;
 
+  const isFinalsActive = tournament.settings.finalsEnabled && (tournament.status === 'finals_active' || tournament.status === 'completed');
+
+  // Calculate twenties including bracket matches if Finals are active
+  const playersWithTotalTwenties = tournament.players.map(player => {
+    let totalTwenties = player.twenties;
+
+    // Add bracket match twenties if Finals are active
+    if (isFinalsActive && tournament.bracketMatches) {
+      const playerBracketMatches = tournament.bracketMatches.filter(m =>
+        m.completed && (m.team1?.includes(player.id) || m.team2?.includes(player.id))
+      );
+
+      playerBracketMatches.forEach(m => {
+        const isTeam1 = m.team1?.includes(player.id);
+        totalTwenties += isTeam1 ? (m.twenties1 || 0) : (m.twenties2 || 0);
+      });
+    }
+
+    return {
+      ...player,
+      twenties: totalTwenties
+    };
+  });
+
   // Sort players by twenties
-  const twentiesRanking = [...tournament.players]
+  const twentiesRanking = playersWithTotalTwenties
     .filter((p) => p.active && p.twenties > 0)
     .sort((a, b) => b.twenties - a.twenties);
 
