@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +12,13 @@ const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH
   : path.join(__dirname, '../tournaments.db'); // Local development
 
 console.log(`📁 Database path: ${dbPath}`);
+
+// Ensure directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  console.log(`📁 Creating directory: ${dbDir}`);
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
 // Initialize database
 export const db = new Database(dbPath);
