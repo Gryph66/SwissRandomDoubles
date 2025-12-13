@@ -66,7 +66,6 @@ export function BracketView() {
 
         // Build the bracket structure with proper nextMatchId links
         const finals = matches.find(m => m.round === 'final');
-        const thirdPlace = matches.find(m => m.round === 'third_place');
         
         if (finals) {
             const finalIdx = matches.indexOf(finals);
