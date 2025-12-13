@@ -50,6 +50,7 @@ export function createTournament(name: string, totalRounds: number): Tournament 
       playerScoreEntry: true,  // Enable by default for multi-device
       pointsPerMatch: 8,
       poolSize: 8,
+      finalsEnabled: false,
     },
     shareCode: '',  // Will be set when room is created
     createdAt: now,
