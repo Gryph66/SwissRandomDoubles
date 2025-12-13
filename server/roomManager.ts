@@ -41,6 +41,7 @@ export function createTournament(name: string, totalRounds: number): Tournament 
     name: name || 'New Tournament',
     players: [],
     matches: [],
+    bracketMatches: [],
     tables: [],
     currentRound: 0,
     totalRounds: totalRounds || 4,
