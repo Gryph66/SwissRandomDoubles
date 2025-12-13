@@ -12,7 +12,6 @@ import type {
   PartnerHistory,
   MatchHistory,
   SavedTournamentSummary,
-  PoolBracketConfig,
   BracketMatch,
   FinalStanding,
 } from '../types';
