@@ -357,19 +357,136 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
           </button>
           <button
             onClick={() => {
-              const standings = useTournamentStore.getState().getStandings();
+              let standings = useTournamentStore.getState().getStandings();
+              const isFinalsActive = tournament.settings.finalsEnabled && (tournament.status === 'finals_active' || tournament.status === 'completed');
+              
+              // If finals are active, augment stats with bracket results (matching Standings.tsx logic)
+              if (isFinalsActive) {
+                const finalResults = useTournamentStore.getState().getFinalStandings();
+                const rankMap = new Map(finalResults.map(f => [f.playerId, f.finalPosition]));
+                
+                // Sort by final position
+                standings.sort((a, b) => {
+                  const rA = rankMap.get(a.player.id) ?? 999;
+                  const rB = rankMap.get(b.player.id) ?? 999;
+                  return rA - rB;
+                });
+                
+                // Augment stats with bracket results
+                standings = standings.map((s) => {
+                  let { wins, losses, ties, twenties, pointsFor: pf, pointsAgainst: pa } = s.player;
+                  
+                  if (tournament.bracketMatches) {
+                    const pMatches = tournament.bracketMatches.filter(m =>
+                      m.completed && (m.team1?.includes(s.player.id) || m.team2?.includes(s.player.id))
+                    );
+                    
+                    pMatches.forEach(m => {
+                      const isTeam1 = m.team1?.includes(s.player.id);
+                      if (isTeam1) {
+                        if ((m.score1 || 0) > (m.score2 || 0)) wins++;
+                        else if ((m.score1 || 0) < (m.score2 || 0)) losses++;
+                        else ties++;
+                        twenties += m.twenties1 || 0;
+                        pf += m.score1 || 0;
+                        pa += m.score2 || 0;
+                      } else {
+                        if ((m.score2 || 0) > (m.score1 || 0)) wins++;
+                        else if ((m.score2 || 0) < (m.score1 || 0)) losses++;
+                        else ties++;
+                        twenties += m.twenties2 || 0;
+                        pf += m.score2 || 0;
+                        pa += m.score1 || 0;
+                      }
+                    });
+                  }
+                  
+                  const newScore = (wins * 2) + ties;
+                  const finalRank = rankMap.get(s.player.id) ?? s.rank;
+                  
+                  return {
+                    ...s,
+                    rank: finalRank,
+                    score: newScore,
+                    player: {
+                      ...s.player,
+                      wins,
+                      losses,
+                      ties,
+                      twenties,
+                      pointsFor: pf,
+                      pointsAgainst: pa,
+                    }
+                  };
+                });
+              }
+              
+              // Helper function to get match history
+              const getPlayerMatchHistory = (playerId: string): string => {
+                const history: string[] = [];
+                const sortedMatches = [...tournament.matches].sort((a, b) => a.round - b.round);
+                
+                for (const match of sortedMatches) {
+                  const inTeam1 = match.team1.includes(playerId);
+                  const inTeam2 = match.team2?.includes(playerId);
+                  if (!inTeam1 && !inTeam2) continue;
+                  
+                  if (match.isBye) {
+                    history.push('B');
+                    continue;
+                  }
+                  
+                  if (!match.completed || match.score1 === null || match.score2 === null) continue;
+                  
+                  if (inTeam1) {
+                    if (match.score1 > match.score2) history.push('W');
+                    else if (match.score1 < match.score2) history.push('L');
+                    else history.push('T');
+                  } else if (inTeam2) {
+                    if (match.score2 > match.score1) history.push('W');
+                    else if (match.score2 < match.score1) history.push('L');
+                    else history.push('T');
+                  }
+                }
+                
+                // Append bracket matches if finals are active
+                if (isFinalsActive && tournament.bracketMatches) {
+                  const relevant = tournament.bracketMatches.filter(m =>
+                    (m.team1?.includes(playerId) || m.team2?.includes(playerId)) && m.completed && m.score1 !== null && m.score2 !== null
+                  );
+                  
+                  const roundOrder: Record<string, number> = { 'quarterfinal': 1, 'semifinal': 2, 'third_place': 3, 'final': 4 };
+                  relevant.sort((a, b) => (roundOrder[a.round] || 0) - (roundOrder[b.round] || 0));
+                  
+                  for (const m of relevant) {
+                    const isTeam1 = m.team1?.includes(playerId);
+                    const isTeam2 = m.team2?.includes(playerId);
+                    
+                    if (isTeam1) {
+                      history.push(m.score1! > m.score2! ? 'W' : 'L');
+                    } else if (isTeam2) {
+                      history.push(m.score2! > m.score1! ? 'W' : 'L');
+                    }
+                  }
+                }
+                
+                return history.join(' ');
+              };
+              
               const csv = [
-                ['Rank', 'Name', 'Wins', 'Losses', 'Ties', 'Points For', 'Points Against', 'Diff', '20s'].join(','),
+                ['Rank', 'Name', 'Wins', 'Losses', 'Ties', 'Score', 'Points For', 'Points Against', 'Diff', '20s', 'History'].join(','),
                 ...standings.map((s) => [
                   s.rank,
                   `"${s.player.name}"`,
                   s.player.wins,
                   s.player.losses,
                   s.player.ties,
+                  s.score,
                   s.player.pointsFor,
                   s.player.pointsAgainst,
                   s.player.pointsFor - s.player.pointsAgainst,
                   s.player.twenties,
+                  `"${getPlayerMatchHistory(s.player.id)}"`,
                 ].join(','))
               ].join('\n');
               const blob = new Blob([csv], { type: 'text/csv' });
