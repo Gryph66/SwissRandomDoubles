@@ -45,7 +45,7 @@ export function JoinTournament() {
 
     // Navigate to appropriate page based on tournament status
     if (newTournament.status === 'active') {
-      setViewMode('history'); // Go to Matches page
+      setViewMode('schedule'); // Go to Schedule page to see upcoming matches
     } else if (newTournament.status === 'completed') {
       setViewMode('standings'); // Go to Standings page
     }
