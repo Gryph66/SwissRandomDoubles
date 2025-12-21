@@ -349,23 +349,36 @@ function CompactMatchCard({ match, isCurrentRound, scores, updateScore, onSubmit
   const isTeam1Winner = isComplete && match.score1 !== null && match.score2 !== null && match.score1 > match.score2;
   const isTeam2Winner = isComplete && match.score1 !== null && match.score2 !== null && match.score2 > match.score1;
   
+  // Check if this is a special match (1v1 or 2v1)
+  const isSpecialMatch = match.matchType === '1v1' || match.matchType === '2v1';
+  
   const pointsPerMatch = tournament.settings.pointsPerMatch || 8;
   const showEntry = (isCurrentRound && !isComplete) || isEditing;
+  
+  // Determine border and header colors
+  const borderColor = isComplete && !isEditing
+    ? 'border-[var(--color-success)]'
+    : isSpecialMatch
+      ? 'border-cyan-500'
+      : 'border-[var(--color-accent)]';
+  
+  const headerBg = isComplete && !isEditing
+    ? 'bg-[var(--color-success)]'
+    : isSpecialMatch
+      ? 'bg-cyan-600'
+      : 'bg-[var(--color-accent)]';
 
   return (
     <div
       className={`
         rounded-lg border overflow-hidden transition-all
-        ${isComplete && !isEditing
-          ? 'border-[var(--color-success)]' 
-          : 'border-[var(--color-accent)]'
-        }
+        ${borderColor}
       `}
     >
       {/* Compact Header */}
       <div className={`
         py-1.5 px-3 flex items-center justify-between
-        ${isComplete && !isEditing ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}
+        ${headerBg}
       `}>
         <span className="text-sm font-bold uppercase tracking-wide text-[var(--color-bg-primary)]">
           {table?.name || `Match ${match.id.slice(-4)}`}
