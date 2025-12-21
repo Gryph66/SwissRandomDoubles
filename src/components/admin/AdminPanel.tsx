@@ -96,7 +96,7 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
   };
 
   const shareUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}?code=${tournament.shareCode}`
+    ? `${window.location.origin}/join/${tournament.shareCode}`
     : '';
 
   const handleArchive = async () => {

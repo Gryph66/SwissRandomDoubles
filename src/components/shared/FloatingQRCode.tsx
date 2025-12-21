@@ -17,7 +17,7 @@ export function FloatingQRCode({ isOnline, isHost, isVisible, onToggle }: Floati
   }
   
   const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}?code=${tournament.shareCode}`
+    ? `${window.location.origin}/join/${tournament.shareCode}`
     : '';
   
   if (!isVisible) {

@@ -1,6 +1,6 @@
 // Landing page - Create or Join tournament
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Tournament } from '../../types';
 
 // Get build info
@@ -31,58 +31,17 @@ export function LandingPage({
   onLoadTournamentOnline,
   joinError,
 }: LandingPageProps) {
-  // Check URL for code parameter (from QR code scan)
-  // Use useMemo to ensure this only runs once on mount
-  const codeFromUrl = useMemo(() => {
-    // First check if we have a stored code from a previous mount (before socket connected)
-    const storedCode = sessionStorage.getItem('qr_join_code');
-    if (storedCode) {
-      console.log('[QR] Found code in sessionStorage:', storedCode);
-      return storedCode;
-    }
-    
-    // Try multiple methods as different phones/apps handle URLs differently
-    
-    // Method 1: Standard search params (?code=XXXXXX)
+  // Redirect legacy ?code= URLs to /join/:code
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const searchCode = urlParams.get('code')?.toUpperCase() || '';
-    if (searchCode) {
-      console.log('[QR] Found code in search params:', searchCode);
-      // Store in sessionStorage so it survives component remounts
-      sessionStorage.setItem('qr_join_code', searchCode);
-      return searchCode;
+    const code = urlParams.get('code');
+    if (code) {
+      console.log('[LandingPage] Redirecting legacy ?code= URL to /join/:code');
+      window.location.href = `/join/${code.toUpperCase()}`;
     }
-    
-    // Method 2: Hash params (#code=XXXXXX) - some apps use this
-    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
-    const hashCode = hashParams.get('code')?.toUpperCase() || '';
-    if (hashCode) {
-      console.log('[QR] Found code in hash:', hashCode);
-      sessionStorage.setItem('qr_join_code', hashCode);
-      return hashCode;
-    }
-    
-    // Method 3: Try to extract from full URL path (handles malformed URLs)
-    // Some camera apps append extra characters or encode the URL oddly
-    const fullUrl = window.location.href;
-    const codeMatch = fullUrl.match(/[?&#]code[=:]([A-Za-z0-9]{6})/i);
-    if (codeMatch) {
-      const extractedCode = codeMatch[1].toUpperCase();
-      console.log('[QR] Found code via regex extraction:', extractedCode);
-      sessionStorage.setItem('qr_join_code', extractedCode);
-      return extractedCode;
-    }
-    
-    console.log('[QR] No code found in URL:', fullUrl);
-    return '';
-  }, []); // Empty deps - only run once on mount
-  
-  // Store the initial mode determination in a ref so it persists across re-renders
-  const initialMode = useRef<'choose' | 'create' | 'join'>(codeFromUrl ? 'join' : 'choose');
+  }, []);
 
-  // If code is in URL, go directly to join mode
-  // Use initialMode.current to prevent reset on re-renders
-  const [mode, setMode] = useState<'choose' | 'create' | 'join'>(initialMode.current);
+  const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose');
 
   // Create form state
   const [tournamentName, setTournamentName] = useState('');
@@ -90,38 +49,9 @@ export function LandingPage({
   const [loadError, setLoadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Join form state - pre-fill code from URL if present
-  const [joinCode, setJoinCode] = useState(codeFromUrl);
+  // Join form state
+  const [joinCode, setJoinCode] = useState('');
   const [playerName, setPlayerName] = useState('');
-
-  // Clear URL param and sessionStorage after reading and state is set
-  // Use a slight delay to ensure React has processed the state updates
-  useEffect(() => {
-    if (codeFromUrl) {
-      console.log('[QR] Code found, mode should be join. Current mode:', mode);
-      // Small timeout to ensure state is set before clearing URL
-      const timer = setTimeout(() => {
-        window.history.replaceState({}, '', window.location.pathname);
-        console.log('[QR] Cleared URL parameters. Mode is:', mode);
-      }, 500); // Increased timeout to give socket time to connect
-      
-      // Cleanup sessionStorage when component unmounts (user navigates away or joins)
-      return () => {
-        clearTimeout(timer);
-        // Only clear sessionStorage if we're actually leaving the landing page
-        // (not just a remount during socket connection)
-        if (mode !== 'choose' || joinCode) {
-          sessionStorage.removeItem('qr_join_code');
-          console.log('[QR] Cleared sessionStorage on unmount');
-        }
-      };
-    }
-  }, [codeFromUrl, mode, joinCode]);
-  
-  // Debug: Log whenever mode changes
-  useEffect(() => {
-    console.log('[QR] Mode changed to:', mode, 'codeFromUrl:', codeFromUrl);
-  }, [mode, codeFromUrl]);
 
 
   const handleCreate = (e: React.FormEvent) => {

@@ -13,6 +13,7 @@ import { FinalsConfig } from './components/finals/FinalsConfig';
 import { BracketView } from './components/bracket/BracketView';
 import { LandingPage } from './components/landing/LandingPage';
 import { ViewTournament } from './pages/ViewTournament';
+import { JoinTournament } from './pages/JoinTournament';
 import { useTournamentStore } from './store/tournamentStore';
 import { useSocket } from './hooks/useSocket';
 import type { Tournament } from './types';
@@ -260,6 +261,9 @@ function App() {
     <Routes>
       {/* Public archive viewer route */}
       <Route path="/view/:code" element={<ViewTournament />} />
+      
+      {/* Live tournament viewer route */}
+      <Route path="/join/:code" element={<JoinTournament />} />
       
       {/* Main app route */}
       <Route path="*" element={<MainApp />} />
