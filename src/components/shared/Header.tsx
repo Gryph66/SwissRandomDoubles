@@ -84,10 +84,14 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
             {navItems.map((item) => {
               const isDisabled = item.requiresTournament && !tournament;
               const isActive = viewMode === item.mode || item.activeModes?.includes(viewMode);
+              
               // Hide host-only items from non-hosts
-              const showItem = !item.hostOnly || isHost;
-
-              if (!showItem) return null;
+              if (item.hostOnly && !isHost) return null;
+              
+              // Hide Score Entry from non-hosts if allowViewerScoreEntry is disabled
+              if (item.mode === 'history' && !isHost && tournament && !tournament.settings.allowViewerScoreEntry) {
+                return null;
+              }
 
               return (
                 <button

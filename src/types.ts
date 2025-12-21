@@ -40,10 +40,11 @@ export interface Table {
 export interface TournamentSettings {
   tableAssignment: boolean;
   playerScoreEntry: boolean;
-  pointsPerMatch: number; // Default 8 for Crokinole
-  poolSize: number; // Default 8 - for post-tournament pool grouping
-  finalsEnabled: boolean; // Enable Finals/Bracket mode
-  byeGameMode: ByeGameMode; // How to handle leftover players
+  pointsPerMatch: number;
+  poolSize: number;
+  finalsEnabled: boolean;
+  byeGameMode: ByeGameMode;
+  allowViewerScoreEntry: boolean; // Whether non-host viewers can enter scores (default: false, host-only)
 }
 
 export type TournamentStatus = 'setup' | 'active' | 'finals_setup' | 'finals_active' | 'completed';
