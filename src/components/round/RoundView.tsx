@@ -119,11 +119,15 @@ export function RoundView({ socket }: RoundViewProps) {
                     const isTeam1Winner = match.score1 !== null && match.score2 !== null && match.score1 > match.score2;
                     const isTeam2Winner = match.score1 !== null && match.score2 !== null && match.score2 > match.score1;
                     const isTie = match.score1 !== null && match.score2 !== null && match.score1 === match.score2;
+                    
+                    // Check if this is a special match (1v1 or 2v1)
+                    const isSpecialMatch = match.matchType === '1v1' || match.matchType === '2v1';
+                    const borderColor = isSpecialMatch ? 'border-cyan-500' : 'border-[var(--color-border)]';
 
                     return (
                       <div
                         key={match.id}
-                        className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg overflow-hidden"
+                        className={`bg-[var(--color-bg-secondary)] border ${borderColor} rounded-lg overflow-hidden`}
                       >
                         {/* Team 1 */}
                         <div className={`
