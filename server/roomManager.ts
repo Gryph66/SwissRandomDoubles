@@ -53,6 +53,7 @@ export function createTournament(name: string, totalRounds: number): Tournament 
       poolSize: 8,
       finalsEnabled: false,
       byeGameMode: 'byes_only',
+      allowViewerScoreEntry: false,  // Default: only host can enter scores
     },
     shareCode: '',  // Will be set when room is created
     createdAt: now,
