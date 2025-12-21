@@ -32,8 +32,39 @@ export function LandingPage({
   joinError,
 }: LandingPageProps) {
   // Check URL for code parameter (from QR code scan)
-  const urlParams = new URLSearchParams(window.location.search);
-  const codeFromUrl = urlParams.get('code')?.toUpperCase() || '';
+  // Try multiple methods as different phones/apps handle URLs differently
+  const getCodeFromUrl = (): string => {
+    // Method 1: Standard search params (?code=XXXXXX)
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchCode = urlParams.get('code')?.toUpperCase() || '';
+    if (searchCode) {
+      console.log('[QR] Found code in search params:', searchCode);
+      return searchCode;
+    }
+    
+    // Method 2: Hash params (#code=XXXXXX) - some apps use this
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+    const hashCode = hashParams.get('code')?.toUpperCase() || '';
+    if (hashCode) {
+      console.log('[QR] Found code in hash:', hashCode);
+      return hashCode;
+    }
+    
+    // Method 3: Try to extract from full URL path (handles malformed URLs)
+    // Some camera apps append extra characters or encode the URL oddly
+    const fullUrl = window.location.href;
+    const codeMatch = fullUrl.match(/[?&#]code[=:]([A-Za-z0-9]{6})/i);
+    if (codeMatch) {
+      const extractedCode = codeMatch[1].toUpperCase();
+      console.log('[QR] Found code via regex extraction:', extractedCode);
+      return extractedCode;
+    }
+    
+    console.log('[QR] No code found in URL:', fullUrl);
+    return '';
+  };
+  
+  const codeFromUrl = getCodeFromUrl();
 
   // If code is in URL, go directly to join mode
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>(codeFromUrl ? 'join' : 'choose');
@@ -54,6 +85,7 @@ export function LandingPage({
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [codeFromUrl]);
+
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();

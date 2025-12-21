@@ -12,6 +12,8 @@ interface PlayerRegistrationProps {
 export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
   const { tournament, addPlayer: localAddPlayer, removePlayer: localRemovePlayer, updatePlayer: localUpdatePlayer } = useTournamentStore();
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   
   const addPlayer = socket ? socket.addPlayer : localAddPlayer;
   const removePlayer = socket ? socket.removePlayer : localRemovePlayer;
@@ -32,8 +34,35 @@ export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
     }
   };
 
+  const handleStartEdit = (playerId: string, currentName: string) => {
+    setEditingPlayerId(playerId);
+    setEditingName(currentName);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingPlayerId && editingName.trim()) {
+      updatePlayer(editingPlayerId, { name: editingName.trim() });
+      setEditingPlayerId(null);
+      setEditingName('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPlayerId(null);
+    setEditingName('');
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
   const canRemove = tournament.status === 'setup';
-  const isActive = tournament.status === 'active';
+  const isActive = tournament.status === 'active' || tournament.status === 'finals_setup' || tournament.status === 'finals_active';
+  const canAddPlayers = tournament.status !== 'completed';
   const activePlayers = tournament.players.filter(p => p.active);
   const inactivePlayers = tournament.players.filter(p => !p.active);
 
@@ -46,24 +75,26 @@ export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
         </span>
       </div>
 
-      {/* Add Player Form */}
-      <div className="flex gap-3 mb-6">
-        <input
-          type="text"
-          value={newPlayerName}
-          onChange={(e) => setNewPlayerName(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter player name"
-          className="input flex-1"
-        />
-        <button
-          onClick={handleAddPlayer}
-          disabled={!newPlayerName.trim()}
-          className="btn btn-primary"
-        >
-          Add Player
-        </button>
-      </div>
+      {/* Add Player Form - available anytime except when tournament is completed */}
+      {canAddPlayers && (
+        <div className="flex gap-3 mb-6">
+          <input
+            type="text"
+            value={newPlayerName}
+            onChange={(e) => setNewPlayerName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={isActive ? "Add late arrival..." : "Enter player name"}
+            className="input flex-1"
+          />
+          <button
+            onClick={handleAddPlayer}
+            disabled={!newPlayerName.trim()}
+            className="btn btn-primary"
+          >
+            Add Player
+          </button>
+        </div>
+      )}
 
       {/* Player List */}
       {tournament.players.length === 0 ? (
@@ -81,24 +112,49 @@ export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
                   : 'bg-[var(--color-bg-tertiary)]/50 opacity-60'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[var(--color-text-muted)] font-mono w-6">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <span className="text-sm text-[var(--color-text-muted)] font-mono w-6 flex-shrink-0">
                   {index + 1}
                 </span>
-                <span className={`font-medium ${
-                  player.active 
-                    ? 'text-[var(--color-text-primary)]' 
-                    : 'text-[var(--color-text-muted)] line-through'
-                }`}>
-                  {player.name}
-                </span>
+                {editingPlayerId === player.id ? (
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={handleEditKeyDown}
+                    onBlur={handleSaveEdit}
+                    autoFocus
+                    className="input py-1 px-2 text-sm flex-1 min-w-0"
+                  />
+                ) : (
+                  <span className={`font-medium truncate ${
+                    player.active 
+                      ? 'text-[var(--color-text-primary)]' 
+                      : 'text-[var(--color-text-muted)] line-through'
+                  }`}>
+                    {player.name}
+                  </span>
+                )}
                 {!player.active && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 flex-shrink-0">
                     inactive
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Edit name button - shown during active tournament */}
+                {isActive && editingPlayerId !== player.id && (
+                  <button
+                    onClick={() => handleStartEdit(player.id, player.name)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-[var(--color-text-muted)] 
+                             hover:text-[var(--color-accent)] transition-all duration-200"
+                    title="Edit name"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
                 {/* Activate/Deactivate toggle - shown during active tournament */}
                 {isActive && (
                   <button
@@ -134,13 +190,23 @@ export function PlayerRegistration({ socket }: PlayerRegistrationProps) {
         </div>
       )}
 
-      {/* Quick Add Multiple */}
-      <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
-        <QuickAddPlayers addPlayer={addPlayer} />
-      </div>
+      {/* Quick Add Multiple - only during setup */}
+      {canRemove && (
+        <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
+          <QuickAddPlayers addPlayer={addPlayer} />
+        </div>
+      )}
+      
+      {/* Helper text during active tournament */}
+      {isActive && (
+        <div className="mt-4 text-xs text-[var(--color-text-muted)]">
+          💡 Tip: Click a player name to edit it, or add new players above. New players will join with zero stats.
+        </div>
+      )}
     </section>
   );
 }
+
 
 function QuickAddPlayers({ addPlayer }: { addPlayer: (name: string) => void }) {
   const [bulkText, setBulkText] = useState('');

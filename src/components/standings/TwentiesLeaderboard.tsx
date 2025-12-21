@@ -7,27 +7,46 @@ export function TwentiesLeaderboard() {
 
   const isFinalsActive = tournament.settings.finalsEnabled && (tournament.status === 'finals_active' || tournament.status === 'completed');
 
-  // Calculate twenties including bracket matches if Finals are active
-  const playersWithTotalTwenties = tournament.players.map(player => {
-    let totalTwenties = player.twenties;
-
+  // Calculate twenties from match data in real-time (not from stored player.twenties)
+  // This ensures immediate updates when matches are completed
+  const calculatePlayerTwenties = (playerId: string): number => {
+    let total = 0;
+    
+    // Add twenties from regular matches
+    tournament.matches.forEach(match => {
+      if (match.completed && !match.isBye) {
+        if (match.team1.includes(playerId)) {
+          total += match.twenties1 || 0;
+        } else if (match.team2?.includes(playerId)) {
+          total += match.twenties2 || 0;
+        }
+      }
+      // Also count bye match twenties (awarded based on tournament average)
+      if (match.completed && match.isBye && match.team1.includes(playerId)) {
+        total += match.twenties1 || 0;
+      }
+    });
+    
     // Add bracket match twenties if Finals are active
     if (isFinalsActive && tournament.bracketMatches) {
-      const playerBracketMatches = tournament.bracketMatches.filter(m =>
-        m.completed && (m.team1?.includes(player.id) || m.team2?.includes(player.id))
-      );
-
-      playerBracketMatches.forEach(m => {
-        const isTeam1 = m.team1?.includes(player.id);
-        totalTwenties += isTeam1 ? (m.twenties1 || 0) : (m.twenties2 || 0);
+      tournament.bracketMatches.forEach(match => {
+        if (match.completed) {
+          if (match.team1?.includes(playerId)) {
+            total += match.twenties1 || 0;
+          } else if (match.team2?.includes(playerId)) {
+            total += match.twenties2 || 0;
+          }
+        }
       });
     }
+    
+    return total;
+  };
 
-    return {
-      ...player,
-      twenties: totalTwenties
-    };
-  });
+  const playersWithTotalTwenties = tournament.players.map(player => ({
+    ...player,
+    twenties: calculatePlayerTwenties(player.id)
+  }));
 
   // Sort players by twenties
   const twentiesRanking = playersWithTotalTwenties

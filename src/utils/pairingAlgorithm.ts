@@ -327,6 +327,9 @@ function generateRandomTeams(players: Player[]): TeamPair[] {
 /**
  * Round 2+: Generate teams based on standings
  * Pair players with similar records, avoiding repeat partners
+ * 
+ * Algorithm: Use weighted matching to minimize partner repetitions
+ * Priority: 1) No repeat partners, 2) Similar standings within constraint
  */
 function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): TeamPair[] {
   // Sort players by standings: Score → PF → PA → 20s
@@ -344,33 +347,208 @@ function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): 
     'Avoiding repeat partners when possible',
   ]);
 
+  // Build partner count matrix: how many times each pair has partnered
+  const partnerCount: Map<string, number> = new Map();
+  for (const playerId of Object.keys(partnerHistory)) {
+    for (const partnerId of partnerHistory[playerId]) {
+      // Count each partnership (Set means they've been partners at least once)
+      const key = [playerId, partnerId].sort().join('-');
+      partnerCount.set(key, (partnerCount.get(key) || 0) + 1);
+    }
+  }
+  // Divide by 2 since we count each partnership from both sides
+  for (const [key, count] of partnerCount.entries()) {
+    partnerCount.set(key, Math.floor(count / 2) + 1);
+  }
+
+  const getPartnershipCount = (p1: string, p2: string): number => {
+    const key = [p1, p2].sort().join('-');
+    return partnerCount.get(key) || 0;
+  };
+
+  // Find the minimum partnership count among all possible pairs
+  const minPartnershipCount = getMinPartnershipCountPossible(sorted, getPartnershipCount);
+
+  logEntry('team_formation', `Minimum partnership threshold`, [
+    `All players can be paired with at least one partner who has ${minPartnershipCount} previous partnerships`,
+  ]);
+
+  // Use backtracking to find a valid pairing that minimizes repeat partners
+  // while still respecting standings as secondary priority
+  const teams = findOptimalPairing(sorted, getPartnershipCount, minPartnershipCount);
+  
+  if (!teams) {
+    // Fallback to greedy if backtracking fails (shouldn't happen)
+    logEntry('team_formation', 'Fallback to greedy pairing', []);
+    return greedyPairing(sorted, partnerHistory);
+  }
+
+  // Log the final pairings
+  for (const team of teams) {
+    const p1 = team.player1;
+    const p2 = team.player2;
+    const p1Rank = sorted.findIndex(p => p.id === p1.id) + 1;
+    const p2Rank = sorted.findIndex(p => p.id === p2.id) + 1;
+    const prevPartnerships = getPartnershipCount(p1.id, p2.id);
+    
+    logEntry('team_formation', `Team formed: ${getPlayerName(p1)} + ${getPlayerName(p2)}`, [
+      `${getPlayerName(p1)}: Rank ${p1Rank}, ${p1.wins}W`,
+      `${getPlayerName(p2)}: Rank ${p2Rank}, ${p2.wins}W`,
+      prevPartnerships > 0 
+        ? `⚠️ Previously partnered ${prevPartnerships} time(s)` 
+        : '✓ First time as partners',
+    ]);
+  }
+
+  return teams;
+}
+
+/**
+ * Find minimum partnership count possible for a complete pairing
+ */
+function getMinPartnershipCountPossible(
+  players: Player[], 
+  getPartnershipCount: (p1: string, p2: string) => number
+): number {
+  // Try to find a pairing where no one repeats partners
+  for (let threshold = 0; threshold <= players.length; threshold++) {
+    if (canFindPairingWithThreshold(players, getPartnershipCount, threshold)) {
+      return threshold;
+    }
+  }
+  return players.length; // Fallback
+}
+
+/**
+ * Check if we can pair everyone with at most 'threshold' previous partnerships
+ */
+function canFindPairingWithThreshold(
+  players: Player[],
+  getPartnershipCount: (p1: string, p2: string) => number,
+  threshold: number
+): boolean {
+  const used = new Set<string>();
+  
+  function backtrack(index: number): boolean {
+    // Find next unused player
+    while (index < players.length && used.has(players[index].id)) {
+      index++;
+    }
+    if (index >= players.length) return true; // All paired
+    
+    const p1 = players[index];
+    used.add(p1.id);
+    
+    // Try to pair with any unused player within threshold
+    for (let j = index + 1; j < players.length; j++) {
+      if (used.has(players[j].id)) continue;
+      
+      const p2 = players[j];
+      if (getPartnershipCount(p1.id, p2.id) <= threshold) {
+        used.add(p2.id);
+        if (backtrack(index + 1)) return true;
+        used.delete(p2.id);
+      }
+    }
+    
+    used.delete(p1.id);
+    return false;
+  }
+  
+  return backtrack(0);
+}
+
+/**
+ * Find optimal pairing minimizing partner repetitions, preferring standings-adjacent pairs
+ */
+function findOptimalPairing(
+  players: Player[],
+  getPartnershipCount: (p1: string, p2: string) => number,
+  targetThreshold: number
+): TeamPair[] | null {
   const teams: TeamPair[] = [];
   const used = new Set<string>();
+  
+  function backtrack(index: number): boolean {
+    // Find next unused player
+    while (index < players.length && used.has(players[index].id)) {
+      index++;
+    }
+    if (index >= players.length) return true; // All paired
+    
+    const p1 = players[index];
+    used.add(p1.id);
+    
+    // Build candidate list: prefer standings-adjacent, but filter by threshold
+    const candidates: Array<{player: Player, standingsDist: number}> = [];
+    for (let j = index + 1; j < players.length; j++) {
+      if (used.has(players[j].id)) continue;
+      
+      const p2 = players[j];
+      if (getPartnershipCount(p1.id, p2.id) <= targetThreshold) {
+        candidates.push({ player: p2, standingsDist: j - index });
+      }
+    }
+    
+    // Sort by standings distance (prefer adjacent in standings)
+    candidates.sort((a, b) => a.standingsDist - b.standingsDist);
+    
+    // Try each candidate
+    for (const candidate of candidates) {
+      used.add(candidate.player.id);
+      teams.push({ player1: p1, player2: candidate.player });
+      
+      if (backtrack(index + 1)) return true;
+      
+      teams.pop();
+      used.delete(candidate.player.id);
+    }
+    
+    used.delete(p1.id);
+    return false;
+  }
+  
+  if (backtrack(0)) {
+    return teams;
+  }
+  return null;
+}
 
-  // Pair adjacent players in standings, checking for valid pairings
+/**
+ * Fallback greedy pairing (original algorithm)
+ */
+function greedyPairing(players: Player[], partnerHistory: PartnerHistory): TeamPair[] {
+  const sorted = [...players].sort((a, b) => {
+    const aScore = a.wins * 2 + a.ties;
+    const bScore = b.wins * 2 + b.ties;
+    if (bScore !== aScore) return bScore - aScore;
+    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+    if (a.pointsAgainst !== b.pointsAgainst) return a.pointsAgainst - b.pointsAgainst;
+    return b.twenties - a.twenties;
+  });
+  
+  const teams: TeamPair[] = [];
+  const used = new Set<string>();
+  
   for (let i = 0; i < sorted.length; i++) {
     if (used.has(sorted[i].id)) continue;
-
+    
     const player1 = sorted[i];
     let partner: Player | null = null;
-    let usedFallback = false;
-
-    // Find the next available player who hasn't been a partner before
+    
     for (let j = i + 1; j < sorted.length; j++) {
       if (used.has(sorted[j].id)) continue;
-
+      
       const candidate = sorted[j];
       const hasBeenPartner = partnerHistory[player1.id]?.has(candidate.id) ?? false;
-
+      
       if (!hasBeenPartner) {
         partner = candidate;
         break;
       }
     }
-
-    // If no valid partner found (everyone has been partners), just take the next available
+    
     if (!partner) {
-      usedFallback = true;
       for (let j = i + 1; j < sorted.length; j++) {
         if (!used.has(sorted[j].id)) {
           partner = sorted[j];
@@ -378,22 +556,17 @@ function generateSwissTeams(players: Player[], partnerHistory: PartnerHistory): 
         }
       }
     }
-
+    
     if (partner) {
       teams.push({ player1, player2: partner });
       used.add(player1.id);
       used.add(partner.id);
-      
-      logEntry('team_formation', `Team formed: ${getPlayerName(player1)} + ${getPlayerName(partner)}`, [
-        `${getPlayerName(player1)}: Rank ${i + 1}, ${player1.wins}W`,
-        `${getPlayerName(partner)}: ${partner.wins}W`,
-        usedFallback ? '⚠️ Had to use repeat partner (all others already partnered before)' : '✓ First time as partners',
-      ]);
     }
   }
-
+  
   return teams;
 }
+
 
 /**
  * Round 1: Random match pairings between teams
