@@ -466,13 +466,7 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                 </span>
               </label>
 
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <label className="text-sm font-medium">Allow Viewer Score Entry</label>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    Allow viewers (non-hosts) to access the Score Entry page
-                  </p>
-                </div>
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={tournament.settings.allowViewerScoreEntry}
@@ -480,7 +474,10 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                   className="w-5 h-5 rounded border-[var(--color-border)] bg-[var(--color-bg-tertiary)] 
                            text-[var(--color-accent)] focus:ring-[var(--color-accent)] focus:ring-offset-0"
                 />
-              </div>
+                <span className="text-[var(--color-text-primary)]">
+                  Allow viewers to access Score Entry page
+                </span>
+              </label>
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
