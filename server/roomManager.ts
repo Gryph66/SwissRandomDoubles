@@ -52,6 +52,7 @@ export function createTournament(name: string, totalRounds: number): Tournament 
       pointsPerMatch: 8,
       poolSize: 8,
       finalsEnabled: false,
+      byeGameMode: 'byes_only',
     },
     shareCode: '',  // Will be set when room is created
     createdAt: now,
@@ -382,7 +383,8 @@ export function startTournament(code: string): boolean {
     room.tournament.matches,
     1,
     room.tournament.tables,
-    room.tournament.settings.tableAssignment
+    room.tournament.settings.tableAssignment,
+    room.tournament.settings.byeGameMode
   );
   
   room.tournament.matches = result.matches;
@@ -481,7 +483,8 @@ export function generateNextRound(code: string): boolean {
     room.tournament.matches,
     room.tournament.currentRound,
     room.tournament.tables,
-    room.tournament.settings.tableAssignment
+    room.tournament.settings.tableAssignment,
+    room.tournament.settings.byeGameMode
   );
   
   room.tournament.matches.push(...result.matches);

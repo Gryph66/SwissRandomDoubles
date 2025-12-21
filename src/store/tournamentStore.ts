@@ -54,6 +54,7 @@ const createEmptyTournament = (name: string, totalRounds: number): Tournament =>
     pointsPerMatch: 8,
     poolSize: 8,
     finalsEnabled: false,
+    byeGameMode: 'byes_only',
   },
   shareCode: nanoid(6).toUpperCase(),
   createdAt: Date.now(),
@@ -257,7 +258,8 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           [],
           1,
           state.tournament.tables,
-          state.tournament.settings.tableAssignment
+          state.tournament.settings.tableAssignment,
+          state.tournament.settings.byeGameMode
         );
 
         set({
@@ -347,7 +349,8 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           state.tournament.matches,
           nextRound,
           state.tournament.tables,
-          state.tournament.settings.tableAssignment
+          state.tournament.settings.tableAssignment,
+          state.tournament.settings.byeGameMode
         );
 
         set({

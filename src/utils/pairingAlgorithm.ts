@@ -46,7 +46,8 @@ export function generateRoundPairings(
   existingMatches: Match[],
   round: number,
   tables: Table[],
-  assignTables: boolean
+  assignTables: boolean,
+  byeGameMode: 'byes_only' | '1v1_2v1' | '1v1_1v1bye' = 'byes_only'
 ): PairingResult {
   const activePlayers = players.filter((p) => p.active);
   
@@ -79,9 +80,21 @@ export function generateRoundPairings(
     byeCount: p.byeCount,
   }));
   
+  const leftoverCount = activePlayers.length % 4;
+  
+  // Debug log for bye game issues
+  console.log('DEBUG PAIRING:', {
+    round,
+    activePlayers: activePlayers.length,
+    leftoverCount,
+    byeGameMode,
+    settingsReceived: byeGameMode
+  });
+
   logEntry('team_formation', `Starting Round ${round} pairing generation`, [
     `Active players: ${activePlayers.length}`,
-    `Byes needed: ${activePlayers.length % 4 === 0 ? 0 : (4 - (activePlayers.length % 4)) % 4 || activePlayers.length % 4}`,
+    `Leftover players: ${leftoverCount}`,
+    `Bye game mode: ${byeGameMode}`,
     round === 1 ? 'Using RANDOM pairing (Round 1)' : 'Using SWISS pairing (Round 2+)',
   ]);
   
@@ -89,16 +102,79 @@ export function generateRoundPairings(
   const partnerHistory = buildPartnerHistory(existingMatches);
   const matchHistory = buildMatchHistory(existingMatches);
 
-  // Handle players not divisible by 4 - assign byes
-  // For doubles: need exactly divisible by 4 (teams of 2 vs teams of 2)
+  // Handle players not divisible by 4
   let playersForRound = [...activePlayers];
   const byePlayers: Player[] = [];
+  const byeGamePlayers: Player[] = [];
 
-  // Assign byes until we have a number divisible by 4
-  while (playersForRound.length % 4 !== 0 && playersForRound.length > 0) {
-    const byePlayer = selectByePlayer(playersForRound, round);
-    byePlayers.push(byePlayer);
-    playersForRound = playersForRound.filter((p) => p.id !== byePlayer.id);
+  // Determine how to handle leftover players based on mode
+  if (leftoverCount > 0 && byeGameMode !== 'byes_only') {
+    console.log('DEBUG: Using custom bye game logic');
+    if (leftoverCount === 2) {
+      // 2 leftover: create 1v1 match
+      const bye1 = selectByePlayer(playersForRound, round);
+      byeGamePlayers.push(bye1);
+      playersForRound = playersForRound.filter((p) => p.id !== bye1.id);
+      
+      const bye2 = selectByePlayer(playersForRound, round);
+      byeGamePlayers.push(bye2);
+      playersForRound = playersForRound.filter((p) => p.id !== bye2.id);
+      
+      logEntry('bye_selection', `Creating 1v1 match for 2 leftover players`, [
+        `${getPlayerName(bye1)} vs ${getPlayerName(bye2)}`,
+      ]);
+    } else if (leftoverCount === 3) {
+      if (byeGameMode === '1v1_2v1') {
+        // 3 leftover: create 2v1 match
+        const bye1 = selectByePlayer(playersForRound, round);
+        byeGamePlayers.push(bye1);
+        playersForRound = playersForRound.filter((p) => p.id !== bye1.id);
+        
+        const bye2 = selectByePlayer(playersForRound, round);
+        byeGamePlayers.push(bye2);
+        playersForRound = playersForRound.filter((p) => p.id !== bye2.id);
+        
+        const bye3 = selectByePlayer(playersForRound, round);
+        byeGamePlayers.push(bye3);
+        playersForRound = playersForRound.filter((p) => p.id !== bye3.id);
+        
+        logEntry('bye_selection', `Creating 2v1 match for 3 leftover players`, [
+          `${getPlayerName(bye1)} vs ${getPlayerName(bye2)} + ${getPlayerName(bye3)}`,
+        ]);
+      } else {
+        // 3 leftover: create 1v1 + 1 bye
+        const bye1 = selectByePlayer(playersForRound, round);
+        byeGamePlayers.push(bye1);
+        playersForRound = playersForRound.filter((p) => p.id !== bye1.id);
+        
+        const bye2 = selectByePlayer(playersForRound, round);
+        byeGamePlayers.push(bye2);
+        playersForRound = playersForRound.filter((p) => p.id !== bye2.id);
+        
+        const bye3 = selectByePlayer(playersForRound, round);
+        byePlayers.push(bye3);
+        playersForRound = playersForRound.filter((p) => p.id !== bye3.id);
+        
+        logEntry('bye_selection', `Creating 1v1 match + 1 bye for 3 leftover players`, [
+          `${getPlayerName(bye1)} vs ${getPlayerName(bye2)}`,
+          `${getPlayerName(bye3)} gets bye`,
+        ]);
+      }
+    } else if (leftoverCount === 1) {
+      // Only 1 leftover: regular bye
+      const byePlayer = selectByePlayer(playersForRound, round);
+      byePlayers.push(byePlayer);
+      playersForRound = playersForRound.filter((p) => p.id !== byePlayer.id);
+    }
+  } else {
+    console.log('DEBUG: Using regular bye logic (mode=', byeGameMode, 'count=', leftoverCount);
+    // Regular byes mode or leftoverCount === 0
+    while (playersForRound.length % 4 !== 0 && playersForRound.length > 0) {
+      console.log('DEBUG: Assigning regular bye');
+      const byePlayer = selectByePlayer(playersForRound, round);
+      byePlayers.push(byePlayer);
+      playersForRound = playersForRound.filter((p) => p.id !== byePlayer.id);
+    }
   }
 
   // Check if we still have enough players for at least one match
@@ -178,6 +254,57 @@ export function generateRoundPairings(
   byePlayers.forEach((p) => {
     matches.push(createByeMatch(p, round, existingMatches));
   });
+
+  // Add bye game matches (1v1 or 2v1)
+  if (byeGamePlayers.length === 2) {
+    // Create 1v1 match
+    const match: Match = {
+      id: nanoid(8),
+      round,
+      team1: [byeGamePlayers[0].id],
+      team2: [byeGamePlayers[1].id],
+      score1: null,
+      score2: null,
+      twenties1: 0,
+      twenties2: 0,
+      tableId: null,
+      completed: false,
+      isBye: false,
+      matchType: '1v1',
+    };
+    matches.push(match);
+    
+    currentRoundLog!.finalPairings.push({
+      team1: [getPlayerName(byeGamePlayers[0])],
+      team2: [getPlayerName(byeGamePlayers[1])],
+      isBye: false,
+      reasoning: '1v1 bye game',
+    });
+  } else if (byeGamePlayers.length === 3) {
+    // Create 2v1 match (solo player vs team of 2)
+    const match: Match = {
+      id: nanoid(8),
+      round,
+      team1: [byeGamePlayers[0].id],
+      team2: [byeGamePlayers[1].id, byeGamePlayers[2].id],
+      score1: null,
+      score2: null,
+      twenties1: 0,
+      twenties2: 0,
+      tableId: null,
+      completed: false,
+      isBye: false,
+      matchType: '2v1',
+    };
+    matches.push(match);
+    
+    currentRoundLog!.finalPairings.push({
+      team1: [getPlayerName(byeGamePlayers[0])],
+      team2: [getPlayerName(byeGamePlayers[1]), getPlayerName(byeGamePlayers[2])],
+      isBye: false,
+      reasoning: '2v1 bye game',
+    });
+  }
 
   saveRoundLog(activePlayers.length, byePlayers.length);
   return { matches, byePlayer: byePlayers[0] || null };

@@ -1,6 +1,6 @@
 // Landing page - Create or Join tournament
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Tournament } from '../../types';
 
 // Get build info
@@ -32,8 +32,10 @@ export function LandingPage({
   joinError,
 }: LandingPageProps) {
   // Check URL for code parameter (from QR code scan)
-  // Try multiple methods as different phones/apps handle URLs differently
-  const getCodeFromUrl = (): string => {
+  // Use useMemo to ensure this only runs once on mount
+  const codeFromUrl = useMemo(() => {
+    // Try multiple methods as different phones/apps handle URLs differently
+    
     // Method 1: Standard search params (?code=XXXXXX)
     const urlParams = new URLSearchParams(window.location.search);
     const searchCode = urlParams.get('code')?.toUpperCase() || '';
@@ -62,9 +64,7 @@ export function LandingPage({
     
     console.log('[QR] No code found in URL:', fullUrl);
     return '';
-  };
-  
-  const codeFromUrl = getCodeFromUrl();
+  }, []); // Empty deps - only run once on mount
 
   // If code is in URL, go directly to join mode
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>(codeFromUrl ? 'join' : 'choose');
@@ -79,10 +79,16 @@ export function LandingPage({
   const [joinCode, setJoinCode] = useState(codeFromUrl);
   const [playerName, setPlayerName] = useState('');
 
-  // Clear URL param after reading (cleaner URLs)
+  // Clear URL param after reading and state is set
+  // Use a slight delay to ensure React has processed the state updates
   useEffect(() => {
     if (codeFromUrl) {
-      window.history.replaceState({}, '', window.location.pathname);
+      // Small timeout to ensure state is set before clearing URL
+      const timer = setTimeout(() => {
+        window.history.replaceState({}, '', window.location.pathname);
+        console.log('[QR] Cleared URL parameters');
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [codeFromUrl]);
 
@@ -219,11 +225,7 @@ export function LandingPage({
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
                   <div className="w-16 h-16 rounded-full bg-[var(--color-accent)]/20 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-accent)]">
-                      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                      <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" strokeWidth="1" />
-                      <circle cx="12" cy="12" r="2" fill="currentColor" />
-                    </svg>
+                    <img src="/crokinole_icon.svg" alt="App Logo" className="w-16 h-16 object-contain" />
                   </div>
                 </div>
 

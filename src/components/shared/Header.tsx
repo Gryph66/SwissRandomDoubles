@@ -59,12 +59,12 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
         <div className="flex items-center justify-between h-16">
           {/* Logo / Title */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--color-bg-primary)]">
-                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" strokeWidth="1" />
-                <circle cx="12" cy="12" r="2" fill="currentColor" />
-              </svg>
+            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+              <img 
+                src="/crokinole_icon.svg" 
+                alt="Logo" 
+                className="w-8 h-8"
+              />
             </div>
             <div>
               <h1 className="text-lg font-display font-semibold text-[var(--color-text-primary)]">

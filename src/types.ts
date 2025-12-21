@@ -13,11 +13,14 @@ export interface Player {
   active: boolean;
 }
 
+export type MatchType = 'doubles' | '1v1' | '2v1' | 'bye';
+export type ByeGameMode = 'byes_only' | '1v1_2v1' | '1v1_1v1bye';
+
 export interface Match {
   id: string;
   round: number;
-  team1: [string, string] | [string]; // Player IDs - single player for bye
-  team2: [string, string] | null;     // null for bye match
+  team1: [string, string] | [string]; // Player IDs - single player for bye or 1v1
+  team2: [string, string] | [string] | null; // null for bye, single for 1v1, pair for doubles/2v1
   score1: number | null;
   score2: number | null;
   twenties1: number;
@@ -25,6 +28,7 @@ export interface Match {
   tableId: string | null;
   completed: boolean;
   isBye: boolean;
+  matchType?: MatchType; // Type of match - optional for backwards compatibility
 }
 
 export interface Table {
@@ -39,6 +43,7 @@ export interface TournamentSettings {
   pointsPerMatch: number; // Default 8 for Crokinole
   poolSize: number; // Default 8 - for post-tournament pool grouping
   finalsEnabled: boolean; // Enable Finals/Bracket mode
+  byeGameMode: ByeGameMode; // How to handle leftover players
 }
 
 export type TournamentStatus = 'setup' | 'active' | 'finals_setup' | 'finals_active' | 'completed';

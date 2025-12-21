@@ -1,0 +1,1302 @@
+{
+  "id": "mjanydcxydf860rot",
+  "name": "BCA - Dec25",
+  "players": [
+    {
+      "id": "mjao03ik4qdzm3xhi",
+      "name": "Alan",
+      "wins": 1,
+      "losses": 2,
+      "ties": 1,
+      "pointsFor": 15,
+      "pointsAgainst": 17,
+      "twenties": 35,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjao03ile2jwrr4dh",
+      "name": "Randel",
+      "wins": 2,
+      "losses": 0,
+      "ties": 2,
+      "pointsFor": 21,
+      "pointsAgainst": 11,
+      "twenties": 30,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjao03iloudtc5hf1",
+      "name": "Shawn",
+      "wins": 4,
+      "losses": 0,
+      "ties": 0,
+      "pointsFor": 29,
+      "pointsAgainst": 3,
+      "twenties": 55,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjao03ilx8kxx6wu1",
+      "name": "Dustin",
+      "wins": 0,
+      "losses": 3,
+      "ties": 1,
+      "pointsFor": 8,
+      "pointsAgainst": 24,
+      "twenties": 16,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjao03ilfup2u65s1",
+      "name": "Jordan M",
+      "wins": 1,
+      "losses": 2,
+      "ties": 1,
+      "pointsFor": 12,
+      "pointsAgainst": 20,
+      "twenties": 21,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjao03il0aq073tml",
+      "name": "Jacob",
+      "wins": 2,
+      "losses": 1,
+      "ties": 1,
+      "pointsFor": 16,
+      "pointsAgainst": 16,
+      "twenties": 33,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjao03ilphg47r0zv",
+      "name": "Jason",
+      "wins": 1,
+      "losses": 1,
+      "ties": 2,
+      "pointsFor": 15,
+      "pointsAgainst": 17,
+      "twenties": 25,
+      "byeCount": 0,
+      "active": true
+    },
+    {
+      "id": "mjaof3ufwxefizk2b",
+      "name": "Bryan",
+      "wins": 1,
+      "losses": 3,
+      "ties": 0,
+      "pointsFor": 12,
+      "pointsAgainst": 20,
+      "twenties": 39,
+      "byeCount": 0,
+      "active": true
+    }
+  ],
+  "matches": [
+    {
+      "id": "8q7pCbMO",
+      "round": 1,
+      "team1": [
+        "mjao03il0aq073tml",
+        "mjao03ik4qdzm3xhi"
+      ],
+      "team2": [
+        "mjao03ilphg47r0zv",
+        "mjao03ile2jwrr4dh"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 6,
+      "twenties2": 4,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "lnBV477c",
+      "round": 1,
+      "team1": [
+        "mjao03iloudtc5hf1",
+        "mjaof3ufwxefizk2b"
+      ],
+      "team2": [
+        "mjao03ilx8kxx6wu1",
+        "mjao03ilfup2u65s1"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 15,
+      "twenties2": 6,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "LS7nbFug",
+      "round": 2,
+      "team1": [
+        "mjao03iloudtc5hf1",
+        "mjao03ik4qdzm3xhi"
+      ],
+      "team2": [
+        "mjaof3ufwxefizk2b",
+        "mjao03il0aq073tml"
+      ],
+      "score1": 8,
+      "score2": 0,
+      "twenties1": 16,
+      "twenties2": 11,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "zPFJbaeM",
+      "round": 2,
+      "team1": [
+        "mjao03ile2jwrr4dh",
+        "mjao03ilx8kxx6wu1"
+      ],
+      "team2": [
+        "mjao03ilphg47r0zv",
+        "mjao03ilfup2u65s1"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 6,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "jideWts4",
+      "round": 3,
+      "team1": [
+        "mjao03iloudtc5hf1",
+        "mjao03ilphg47r0zv"
+      ],
+      "team2": [
+        "mjao03ik4qdzm3xhi",
+        "mjaof3ufwxefizk2b"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 10,
+      "twenties2": 8,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "N4ApzBYE",
+      "round": 3,
+      "team1": [
+        "mjao03ile2jwrr4dh",
+        "mjao03il0aq073tml"
+      ],
+      "team2": [
+        "mjao03ilfup2u65s1",
+        "mjao03ilx8kxx6wu1"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 10,
+      "twenties2": 3,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "YgbydMjN",
+      "round": 4,
+      "team1": [
+        "mjao03iloudtc5hf1",
+        "mjao03ile2jwrr4dh"
+      ],
+      "team2": [
+        "mjao03ilphg47r0zv",
+        "mjao03ik4qdzm3xhi"
+      ],
+      "score1": 7,
+      "score2": 1,
+      "twenties1": 14,
+      "twenties2": 5,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "BAHJPi7X",
+      "round": 4,
+      "team1": [
+        "mjao03il0aq073tml",
+        "mjao03ilfup2u65s1"
+      ],
+      "team2": [
+        "mjaof3ufwxefizk2b",
+        "mjao03ilx8kxx6wu1"
+      ],
+      "score1": 6,
+      "score2": 2,
+      "twenties1": 6,
+      "twenties2": 5,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "j_DeTP5R",
+      "round": 5,
+      "team1": [
+        "mjao03iloudtc5hf1",
+        "mjao03il0aq073tml"
+      ],
+      "team2": [
+        "mjao03ile2jwrr4dh",
+        "mjao03ik4qdzm3xhi"
+      ],
+      "score1": 7,
+      "score2": 1,
+      "twenties1": 12,
+      "twenties2": 6,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    },
+    {
+      "id": "Qg3TWUsi",
+      "round": 5,
+      "team1": [
+        "mjao03ilphg47r0zv",
+        "mjaof3ufwxefizk2b"
+      ],
+      "team2": [
+        "mjao03ilfup2u65s1",
+        "mjao03ilx8kxx6wu1"
+      ],
+      "score1": 4,
+      "score2": 4,
+      "twenties1": 2,
+      "twenties2": 8,
+      "tableId": null,
+      "completed": true,
+      "isBye": false
+    }
+  ],
+  "bracketMatches": [
+    {
+      "id": "0x8aXeD4y7_1NQ_nTX4dx",
+      "poolId": "pool-0",
+      "round": "final",
+      "matchNumber": 1,
+      "team1": [
+        "mjao03il0aq073tml",
+        "mjao03ilfup2u65s1"
+      ],
+      "team2": [
+        "mjao03ile2jwrr4dh",
+        "mjao03ilphg47r0zv"
+      ],
+      "score1": 8,
+      "score2": 2,
+      "twenties1": 0,
+      "twenties2": 0,
+      "completed": true,
+      "winnerId": "mjao03il0aq073tml-mjao03ilfup2u65s1",
+      "nextMatchId": null,
+      "sourceMatch1Id": null,
+      "sourceMatch2Id": null
+    }
+  ],
+  "tables": [],
+  "currentRound": 5,
+  "totalRounds": 5,
+  "status": "completed",
+  "settings": {
+    "tableAssignment": false,
+    "playerScoreEntry": true,
+    "pointsPerMatch": 8,
+    "poolSize": 8,
+    "finalsEnabled": true
+  },
+  "shareCode": "K6MDA6",
+  "createdAt": 1766015371041,
+  "updatedAt": 1766028432719,
+  "pairingLogs": [
+    {
+      "round": 1,
+      "generatedAt": "2025-12-18T00:02:40.433Z",
+      "playerCount": 8,
+      "byesNeeded": 0,
+      "entries": [
+        {
+          "timestamp": "2025-12-18T00:02:40.433Z",
+          "round": 1,
+          "phase": "team_formation",
+          "decision": "Starting Round 1 pairing generation",
+          "details": [
+            "Active players: 8",
+            "Byes needed: 0",
+            "Using RANDOM pairing (Round 1)"
+          ]
+        }
+      ],
+      "standingsSnapshot": [
+        {
+          "rank": 1,
+          "name": "Alan",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 2,
+          "name": "Randel",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 3,
+          "name": "Shawn",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 4,
+          "name": "Dustin",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 5,
+          "name": "Jordan M",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 6,
+          "name": "Jacob",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 7,
+          "name": "Jason",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 8,
+          "name": "Bryan",
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        }
+      ],
+      "finalPairings": [
+        {
+          "team1": [
+            "Jacob",
+            "Alan"
+          ],
+          "team2": [
+            "Jason",
+            "Randel"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        },
+        {
+          "team1": [
+            "Shawn",
+            "Bryan"
+          ],
+          "team2": [
+            "Dustin",
+            "Jordan M"
+          ],
+          "isBye": false,
+          "reasoning": "Random pairing (Round 1)"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "generatedAt": "2025-12-18T00:48:55.747Z",
+      "playerCount": 8,
+      "byesNeeded": 0,
+      "entries": [
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "team_formation",
+          "decision": "Starting Round 2 pairing generation",
+          "details": [
+            "Active players: 8",
+            "Byes needed: 0",
+            "Using SWISS pairing (Round 2+)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "team_formation",
+          "decision": "Forming teams based on standings (Swiss)",
+          "details": [
+            "Pairing adjacent players in standings",
+            "Avoiding repeat partners when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "team_formation",
+          "decision": "Team formed: Shawn + Alan",
+          "details": [
+            "Shawn: Rank 1, 1W",
+            "Alan: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "team_formation",
+          "decision": "Team formed: Bryan + Jacob",
+          "details": [
+            "Bryan: Rank 2, 1W",
+            "Jacob: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "team_formation",
+          "decision": "Team formed: Randel + Dustin",
+          "details": [
+            "Randel: Rank 5, 0W",
+            "Dustin: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "team_formation",
+          "decision": "Team formed: Jason + Jordan M",
+          "details": [
+            "Jason: Rank 6, 0W",
+            "Jordan M: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "match_pairing",
+          "decision": "Pairing teams by combined standings (Swiss)",
+          "details": [
+            "Teams sorted by combined wins, then combined point differential",
+            "Avoiding repeat matchups when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "match_pairing",
+          "decision": "Match: Shawn + Alan vs Bryan + Jacob",
+          "details": [
+            "Team 1: 1 combined wins, +8 diff",
+            "Team 2: 1 combined wins, +8 diff",
+            "✓ First time playing each other"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T00:48:55.747Z",
+          "round": 2,
+          "phase": "match_pairing",
+          "decision": "Match: Randel + Dustin vs Jason + Jordan M",
+          "details": [
+            "Team 1: 0 combined wins, -8 diff",
+            "Team 2: 0 combined wins, -8 diff",
+            "✓ First time playing each other"
+          ]
+        }
+      ],
+      "standingsSnapshot": [
+        {
+          "rank": 1,
+          "name": "Shawn",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 8,
+          "byeCount": 0
+        },
+        {
+          "rank": 2,
+          "name": "Bryan",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 8,
+          "byeCount": 0
+        },
+        {
+          "rank": 3,
+          "name": "Alan",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 4,
+          "name": "Jacob",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 5,
+          "name": "Randel",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 6,
+          "name": "Jason",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 7,
+          "name": "Dustin",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "pointDiff": -8,
+          "byeCount": 0
+        },
+        {
+          "rank": 8,
+          "name": "Jordan M",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "pointDiff": -8,
+          "byeCount": 0
+        }
+      ],
+      "finalPairings": [
+        {
+          "team1": [
+            "Shawn",
+            "Alan"
+          ],
+          "team2": [
+            "Bryan",
+            "Jacob"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        },
+        {
+          "team1": [
+            "Randel",
+            "Dustin"
+          ],
+          "team2": [
+            "Jason",
+            "Jordan M"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "generatedAt": "2025-12-18T01:20:36.854Z",
+      "playerCount": 8,
+      "byesNeeded": 0,
+      "entries": [
+        {
+          "timestamp": "2025-12-18T01:20:36.853Z",
+          "round": 3,
+          "phase": "team_formation",
+          "decision": "Starting Round 3 pairing generation",
+          "details": [
+            "Active players: 8",
+            "Byes needed: 0",
+            "Using SWISS pairing (Round 2+)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "team_formation",
+          "decision": "Forming teams based on standings (Swiss)",
+          "details": [
+            "Pairing adjacent players in standings",
+            "Avoiding repeat partners when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "team_formation",
+          "decision": "Team formed: Shawn + Jason",
+          "details": [
+            "Shawn: Rank 1, 2W",
+            "Jason: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "team_formation",
+          "decision": "Team formed: Alan + Bryan",
+          "details": [
+            "Alan: Rank 2, 1W",
+            "Bryan: 1W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "team_formation",
+          "decision": "Team formed: Randel + Jacob",
+          "details": [
+            "Randel: Rank 5, 0W",
+            "Jacob: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "team_formation",
+          "decision": "Team formed: Jordan M + Dustin",
+          "details": [
+            "Jordan M: Rank 7, 0W",
+            "Dustin: 0W",
+            "⚠️ Had to use repeat partner (all others already partnered before)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "match_pairing",
+          "decision": "Pairing teams by combined standings (Swiss)",
+          "details": [
+            "Teams sorted by combined wins, then combined point differential",
+            "Avoiding repeat matchups when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "match_pairing",
+          "decision": "Match: Shawn + Jason vs Alan + Bryan",
+          "details": [
+            "Team 1: 2 combined wins, +16 diff",
+            "Team 2: 2 combined wins, +8 diff",
+            "✓ First time playing each other"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:20:36.854Z",
+          "round": 3,
+          "phase": "match_pairing",
+          "decision": "Match: Randel + Jacob vs Jordan M + Dustin",
+          "details": [
+            "Team 1: 0 combined wins, -8 diff",
+            "Team 2: 0 combined wins, -16 diff",
+            "✓ First time playing each other"
+          ]
+        }
+      ],
+      "standingsSnapshot": [
+        {
+          "rank": 1,
+          "name": "Shawn",
+          "wins": 2,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 16,
+          "byeCount": 0
+        },
+        {
+          "rank": 2,
+          "name": "Alan",
+          "wins": 1,
+          "losses": 0,
+          "ties": 1,
+          "pointDiff": 8,
+          "byeCount": 0
+        },
+        {
+          "rank": 3,
+          "name": "Bryan",
+          "wins": 1,
+          "losses": 1,
+          "ties": 0,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 4,
+          "name": "Jason",
+          "wins": 0,
+          "losses": 0,
+          "ties": 2,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 5,
+          "name": "Randel",
+          "wins": 0,
+          "losses": 0,
+          "ties": 2,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 6,
+          "name": "Jacob",
+          "wins": 0,
+          "losses": 1,
+          "ties": 1,
+          "pointDiff": -8,
+          "byeCount": 0
+        },
+        {
+          "rank": 7,
+          "name": "Jordan M",
+          "wins": 0,
+          "losses": 1,
+          "ties": 1,
+          "pointDiff": -8,
+          "byeCount": 0
+        },
+        {
+          "rank": 8,
+          "name": "Dustin",
+          "wins": 0,
+          "losses": 1,
+          "ties": 1,
+          "pointDiff": -8,
+          "byeCount": 0
+        }
+      ],
+      "finalPairings": [
+        {
+          "team1": [
+            "Shawn",
+            "Jason"
+          ],
+          "team2": [
+            "Alan",
+            "Bryan"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        },
+        {
+          "team1": [
+            "Randel",
+            "Jacob"
+          ],
+          "team2": [
+            "Jordan M",
+            "Dustin"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "generatedAt": "2025-12-18T01:49:09.359Z",
+      "playerCount": 8,
+      "byesNeeded": 0,
+      "entries": [
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "team_formation",
+          "decision": "Starting Round 4 pairing generation",
+          "details": [
+            "Active players: 8",
+            "Byes needed: 0",
+            "Using SWISS pairing (Round 2+)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "team_formation",
+          "decision": "Forming teams based on standings (Swiss)",
+          "details": [
+            "Pairing adjacent players in standings",
+            "Avoiding repeat partners when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "team_formation",
+          "decision": "Team formed: Shawn + Randel",
+          "details": [
+            "Shawn: Rank 1, 3W",
+            "Randel: 1W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "team_formation",
+          "decision": "Team formed: Jason + Alan",
+          "details": [
+            "Jason: Rank 2, 1W",
+            "Alan: 1W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "team_formation",
+          "decision": "Team formed: Jacob + Jordan M",
+          "details": [
+            "Jacob: Rank 5, 1W",
+            "Jordan M: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "team_formation",
+          "decision": "Team formed: Bryan + Dustin",
+          "details": [
+            "Bryan: Rank 6, 1W",
+            "Dustin: 0W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "match_pairing",
+          "decision": "Pairing teams by combined standings (Swiss)",
+          "details": [
+            "Teams sorted by combined wins, then combined point differential",
+            "Avoiding repeat matchups when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "match_pairing",
+          "decision": "Match: Shawn + Randel vs Jason + Alan",
+          "details": [
+            "Team 1: 4 combined wins, +24 diff",
+            "Team 2: 2 combined wins, +8 diff",
+            "✓ First time playing each other"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T01:49:09.359Z",
+          "round": 4,
+          "phase": "match_pairing",
+          "decision": "Match: Jacob + Jordan M vs Bryan + Dustin",
+          "details": [
+            "Team 1: 1 combined wins, -16 diff",
+            "Team 2: 1 combined wins, -16 diff",
+            "✓ First time playing each other"
+          ]
+        }
+      ],
+      "standingsSnapshot": [
+        {
+          "rank": 1,
+          "name": "Shawn",
+          "wins": 3,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 20,
+          "byeCount": 0
+        },
+        {
+          "rank": 2,
+          "name": "Jason",
+          "wins": 1,
+          "losses": 0,
+          "ties": 2,
+          "pointDiff": 4,
+          "byeCount": 0
+        },
+        {
+          "rank": 3,
+          "name": "Randel",
+          "wins": 1,
+          "losses": 0,
+          "ties": 2,
+          "pointDiff": 4,
+          "byeCount": 0
+        },
+        {
+          "rank": 4,
+          "name": "Alan",
+          "wins": 1,
+          "losses": 1,
+          "ties": 1,
+          "pointDiff": 4,
+          "byeCount": 0
+        },
+        {
+          "rank": 5,
+          "name": "Jacob",
+          "wins": 1,
+          "losses": 1,
+          "ties": 1,
+          "pointDiff": -4,
+          "byeCount": 0
+        },
+        {
+          "rank": 6,
+          "name": "Bryan",
+          "wins": 1,
+          "losses": 2,
+          "ties": 0,
+          "pointDiff": -4,
+          "byeCount": 0
+        },
+        {
+          "rank": 7,
+          "name": "Jordan M",
+          "wins": 0,
+          "losses": 2,
+          "ties": 1,
+          "pointDiff": -12,
+          "byeCount": 0
+        },
+        {
+          "rank": 8,
+          "name": "Dustin",
+          "wins": 0,
+          "losses": 2,
+          "ties": 1,
+          "pointDiff": -12,
+          "byeCount": 0
+        }
+      ],
+      "finalPairings": [
+        {
+          "team1": [
+            "Shawn",
+            "Randel"
+          ],
+          "team2": [
+            "Jason",
+            "Alan"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        },
+        {
+          "team1": [
+            "Jacob",
+            "Jordan M"
+          ],
+          "team2": [
+            "Bryan",
+            "Dustin"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "generatedAt": "2025-12-18T02:28:34.449Z",
+      "playerCount": 8,
+      "byesNeeded": 0,
+      "entries": [
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "team_formation",
+          "decision": "Starting Round 5 pairing generation",
+          "details": [
+            "Active players: 8",
+            "Byes needed: 0",
+            "Using SWISS pairing (Round 2+)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "team_formation",
+          "decision": "Forming teams based on standings (Swiss)",
+          "details": [
+            "Pairing adjacent players in standings",
+            "Avoiding repeat partners when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "team_formation",
+          "decision": "Team formed: Shawn + Jacob",
+          "details": [
+            "Shawn: Rank 1, 4W",
+            "Jacob: 2W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "team_formation",
+          "decision": "Team formed: Randel + Alan",
+          "details": [
+            "Randel: Rank 2, 2W",
+            "Alan: 1W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "team_formation",
+          "decision": "Team formed: Jason + Bryan",
+          "details": [
+            "Jason: Rank 4, 1W",
+            "Bryan: 1W",
+            "✓ First time as partners"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "team_formation",
+          "decision": "Team formed: Jordan M + Dustin",
+          "details": [
+            "Jordan M: Rank 6, 1W",
+            "Dustin: 0W",
+            "⚠️ Had to use repeat partner (all others already partnered before)"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "match_pairing",
+          "decision": "Pairing teams by combined standings (Swiss)",
+          "details": [
+            "Teams sorted by combined wins, then combined point differential",
+            "Avoiding repeat matchups when possible"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "match_pairing",
+          "decision": "Match: Shawn + Jacob vs Randel + Alan",
+          "details": [
+            "Team 1: 6 combined wins, +26 diff",
+            "Team 2: 3 combined wins, +8 diff",
+            "✓ First time playing each other"
+          ]
+        },
+        {
+          "timestamp": "2025-12-18T02:28:34.449Z",
+          "round": 5,
+          "phase": "match_pairing",
+          "decision": "Match: Jason + Bryan vs Jordan M + Dustin",
+          "details": [
+            "Team 1: 2 combined wins, -10 diff",
+            "Team 2: 1 combined wins, -24 diff",
+            "✓ First time playing each other"
+          ]
+        }
+      ],
+      "standingsSnapshot": [
+        {
+          "rank": 1,
+          "name": "Shawn",
+          "wins": 4,
+          "losses": 0,
+          "ties": 0,
+          "pointDiff": 26,
+          "byeCount": 0
+        },
+        {
+          "rank": 2,
+          "name": "Randel",
+          "wins": 2,
+          "losses": 0,
+          "ties": 2,
+          "pointDiff": 10,
+          "byeCount": 0
+        },
+        {
+          "rank": 3,
+          "name": "Jacob",
+          "wins": 2,
+          "losses": 1,
+          "ties": 1,
+          "pointDiff": 0,
+          "byeCount": 0
+        },
+        {
+          "rank": 4,
+          "name": "Jason",
+          "wins": 1,
+          "losses": 1,
+          "ties": 2,
+          "pointDiff": -2,
+          "byeCount": 0
+        },
+        {
+          "rank": 5,
+          "name": "Alan",
+          "wins": 1,
+          "losses": 2,
+          "ties": 1,
+          "pointDiff": -2,
+          "byeCount": 0
+        },
+        {
+          "rank": 6,
+          "name": "Jordan M",
+          "wins": 1,
+          "losses": 2,
+          "ties": 1,
+          "pointDiff": -8,
+          "byeCount": 0
+        },
+        {
+          "rank": 7,
+          "name": "Bryan",
+          "wins": 1,
+          "losses": 3,
+          "ties": 0,
+          "pointDiff": -8,
+          "byeCount": 0
+        },
+        {
+          "rank": 8,
+          "name": "Dustin",
+          "wins": 0,
+          "losses": 3,
+          "ties": 1,
+          "pointDiff": -16,
+          "byeCount": 0
+        }
+      ],
+      "finalPairings": [
+        {
+          "team1": [
+            "Shawn",
+            "Jacob"
+          ],
+          "team2": [
+            "Randel",
+            "Alan"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        },
+        {
+          "team1": [
+            "Jason",
+            "Bryan"
+          ],
+          "team2": [
+            "Jordan M",
+            "Dustin"
+          ],
+          "isBye": false,
+          "reasoning": "Swiss pairing based on combined team standings"
+        }
+      ]
+    }
+  ],
+  "finalsConfig": {
+    "enabled": true,
+    "poolConfigs": [
+      {
+        "poolId": "pool-0",
+        "poolName": "Pool A",
+        "bracketType": "final",
+        "playerIds": [
+          "mjao03iloudtc5hf1",
+          "mjao03il0aq073tml",
+          "mjao03ile2jwrr4dh",
+          "mjao03ilphg47r0zv"
+        ],
+        "includeThirdPlace": false,
+        "manualTeams": [
+          [
+            "mjao03il0aq073tml",
+            "mjao03ilfup2u65s1"
+          ],
+          [
+            "mjao03ile2jwrr4dh",
+            "mjao03ilphg47r0zv"
+          ]
+        ]
+      }
+    ],
+    "configured": true
+  }
+}

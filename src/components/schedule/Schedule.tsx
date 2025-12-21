@@ -208,18 +208,32 @@ export function Schedule({ socket }: ScheduleProps) {
           }}
         >
           {/* Regular Matches */}
-          {currentMatches.map((match) => (
+          {currentMatches.map((match) => {
+            // Determine if this is a special match (1v1 or 2v1)
+            const isSpecialMatch = match.matchType === '1v1' || match.matchType === '2v1';
+            const borderColor = match.completed 
+              ? 'border-[var(--color-success)]' 
+              : isSpecialMatch 
+                ? 'border-cyan-500' 
+                : 'border-[var(--color-accent)]';
+            const headerBg = match.completed 
+              ? 'bg-[var(--color-success)]' 
+              : isSpecialMatch 
+                ? 'bg-cyan-600' 
+                : 'bg-[var(--color-accent)]';
+            
+            return (
             <div
               key={match.id}
               className={`
                 flex flex-col overflow-hidden rounded-xl
-                border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]'}
+                border-2 ${borderColor}
               `}
             >
               {/* Match Header Banner - like Score Entry */}
               <div className={`
                 py-2 px-3 flex-shrink-0
-                ${match.completed ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}
+                ${headerBg}
               `}>
                 <span className="text-lg md:text-xl font-bold italic uppercase tracking-wide text-[var(--color-bg-primary)]">
                   {getMatchLabel(match)}
@@ -233,10 +247,14 @@ export function Schedule({ socket }: ScheduleProps) {
                   <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {getPlayerName(match.team1[0])}
                   </span>
-                  <span className="text-[clamp(0.8rem,2vw,1.2rem)] text-[var(--color-text-muted)] mx-1">&</span>
-                  <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
-                    {getPlayerName(match.team1[1])}
-                  </span>
+                  {match.team1[1] && (
+                    <>
+                      <span className="text-[clamp(0.8rem,2vw,1.2rem)] text-[var(--color-text-muted)] mx-1">&</span>
+                      <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
+                        {getPlayerName(match.team1[1])}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 {/* VS */}
@@ -249,10 +267,14 @@ export function Schedule({ socket }: ScheduleProps) {
                   <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
                     {match.team2 && getPlayerName(match.team2[0])}
                   </span>
-                  <span className="text-[clamp(0.8rem,2vw,1.2rem)] text-[var(--color-text-muted)] mx-1">&</span>
-                  <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
-                    {match.team2 && getPlayerName(match.team2[1])}
-                  </span>
+                  {match.team2 && match.team2[1] && (
+                    <>
+                      <span className="text-[clamp(0.8rem,2vw,1.2rem)] text-[var(--color-text-muted)] mx-1">&</span>
+                      <span className="text-[clamp(1rem,2.5vw,1.5rem)] font-bold text-[var(--color-text-primary)]">
+                        {getPlayerName(match.team2[1])}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 {/* Score if completed */}
@@ -265,7 +287,8 @@ export function Schedule({ socket }: ScheduleProps) {
                 )}
               </div>
             </div>
-          ))}
+          );
+          })}
 
           {/* Bye Boxes - Purple styling with banner */}
           {byeMatches.map((match, index) => (
@@ -296,18 +319,31 @@ export function Schedule({ socket }: ScheduleProps) {
 
       {/* Mobile: Scrollable stacked list */}
       <div className="md:hidden flex-1 overflow-y-auto space-y-2 pb-4">
-        {currentMatches.map((match) => (
+        {currentMatches.map((match) => {
+          const isSpecialMatch = match.matchType === '1v1' || match.matchType === '2v1';
+          const borderColor = match.completed 
+            ? 'border-[var(--color-success)]' 
+            : isSpecialMatch 
+              ? 'border-cyan-500' 
+              : 'border-[var(--color-accent)]';
+          const headerBg = match.completed 
+            ? 'bg-[var(--color-success)]' 
+            : isSpecialMatch 
+              ? 'bg-cyan-600' 
+              : 'bg-[var(--color-accent)]';
+          
+          return (
           <div
             key={match.id}
             className={`
               overflow-hidden rounded-xl
-              border-2 ${match.completed ? 'border-[var(--color-success)]' : 'border-[var(--color-accent)]'}
+              border-2 ${borderColor}
             `}
           >
             {/* Match Header Banner */}
             <div className={`
               py-2 px-3
-              ${match.completed ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}
+              ${headerBg}
             `}>
               <span className="text-lg font-bold italic uppercase tracking-wide text-[var(--color-bg-primary)]">
                 {getMatchLabel(match)}
@@ -317,11 +353,17 @@ export function Schedule({ socket }: ScheduleProps) {
             {/* Teams */}
             <div className="p-3 bg-[var(--color-bg-secondary)] text-center">
               <div className="text-base font-bold text-[var(--color-text-primary)]">
-                {getPlayerName(match.team1[0])} <span className="text-[var(--color-text-muted)]">&</span> {getPlayerName(match.team1[1])}
+                {getPlayerName(match.team1[0])}
+                {match.team1[1] && (
+                  <> <span className="text-[var(--color-text-muted)]">&</span> {getPlayerName(match.team1[1])}</>
+                )}
               </div>
               <div className="text-xs font-bold text-[var(--color-accent)] my-0.5">vs</div>
               <div className="text-base font-bold text-[var(--color-text-primary)]">
-                {match.team2 && getPlayerName(match.team2[0])} <span className="text-[var(--color-text-muted)]">&</span> {match.team2 && getPlayerName(match.team2[1])}
+                {match.team2 && getPlayerName(match.team2[0])}
+                {match.team2 && match.team2[1] && (
+                  <> <span className="text-[var(--color-text-muted)]">&</span> {getPlayerName(match.team2[1])}</>
+                )}
               </div>
               {match.completed && match.score1 !== null && (
                 <div className="text-sm font-bold text-[var(--color-success)] mt-1">
@@ -330,7 +372,8 @@ export function Schedule({ socket }: ScheduleProps) {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {/* Bye cards for mobile */}
         {byeMatches.map((match, index) => (

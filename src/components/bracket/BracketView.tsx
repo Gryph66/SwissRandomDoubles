@@ -6,7 +6,7 @@ import { CustomMatch } from './CustomMatch';
 import { BracketMatch as BracketMatchType } from '../../types';
 
 export function BracketView() {
-    const { tournament, setViewMode } = useTournamentStore();
+    const { tournament, setViewMode, isHost } = useTournamentStore();
     const bracketMatches = tournament?.bracketMatches || [];
     const [selectedMatch, setSelectedMatch] = useState<BracketMatchType | null>(null);
 
@@ -108,13 +108,15 @@ export function BracketView() {
         <div className="max-w-[95vw] mx-auto p-6 overflow-x-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-display font-bold">Playoff Brackets</h1>
-                <button
-                    onClick={() => setViewMode('finals_config')}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)] transition-colors text-sm font-medium"
-                >
-                    <span className="text-lg">⚙️</span>
-                    Edit Configuration
-                </button>
+                {isHost && (
+                    <button
+                        onClick={() => setViewMode('finals_config')}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)] transition-colors text-sm font-medium"
+                    >
+                        <span className="text-lg">⚙️</span>
+                        Edit Configuration
+                    </button>
+                )}
             </div>
 
             {poolIds.map(poolId => {
@@ -131,6 +133,9 @@ export function BracketView() {
                 const bracketHeight = hasQuarters ? 500 : 400;
 
                 const handleMatchClick = (match: any) => {
+                    // Only allow host to edit bracket scores
+                    if (!isHost) return;
+                    
                     console.log('Match clicked - full object:', match);
                     console.log('Match properties:', Object.keys(match));
                     console.log('Match.match:', match.match);

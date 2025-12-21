@@ -501,7 +501,67 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
                 </div>
               </label>
 
+              <div className="pt-4 pb-2 border-t border-[var(--color-border)]">
+                <label className="label text-sm mb-2">Bye Game Mode</label>
+                <p className="text-xs text-[var(--color-text-muted)] mb-3">
+                  How to handle leftover players when count doesn't divide evenly by 4
+                </p>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
+                    <input
+                      type="radio"
+                      name="byeGameMode"
+                      value="byes_only"
+                      checked={tournament.settings.byeGameMode === 'byes_only'}
+                      onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
+                      className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    />
+                    <div className="flex-1">
+                      <span className="text-[var(--color-text-primary)] font-medium">Regular byes only</span>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        Leftover players sit out (default)
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
+                    <input
+                      type="radio"
+                      name="byeGameMode"
+                      value="1v1_2v1"
+                      checked={tournament.settings.byeGameMode === '1v1_2v1'}
+                      onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
+                      className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    />
+                    <div className="flex-1">
+                      <span className="text-[var(--color-text-primary)] font-medium">1v1 / 2v1 games</span>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        2 leftover: 1v1 match • 3 leftover: 2v1 match
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
+                    <input
+                      type="radio"
+                      name="byeGameMode"
+                      value="1v1_1v1bye"
+                      checked={tournament.settings.byeGameMode === '1v1_1v1bye'}
+                      onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
+                      className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    />
+                    <div className="flex-1">
+                      <span className="text-[var(--color-text-primary)] font-medium">1v1 / 1v1+bye games</span>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        2 leftover: 1v1 match • 3 leftover: 1v1 match + 1 bye
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <div className="pt-2">
+
                 <label className="label text-sm">Pool Size (for analysis & finals)</label>
                 <input
                   type="number"
