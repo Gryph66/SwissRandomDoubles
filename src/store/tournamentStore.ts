@@ -770,17 +770,12 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           state.tournament.finalsConfig.poolConfigs.forEach((config) => {
             if (config.bracketType === 'none') return;
 
-            const poolPlayers = state.tournament!.players.filter(p => config.playerIds.includes(p.id));
-            // Sort by Swiss rank (using standings logic implicitly or just sort by current performance)
-            // But config.playerIds usually comes sorted from FinalsConfig.
-            // Let's re-sort to be safe: wins > pointsFor > pointsAgainst > twenties
-            poolPlayers.sort((a, b) => {
-              const aScore = a.wins * 2 + a.ties;
-              const bScore = b.wins * 2 + b.ties;
-              if (bScore !== aScore) return bScore - aScore;
-              if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
-              return b.twenties - a.twenties;
-            });
+            // config.playerIds comes in standings order from FinalsConfig
+            // Map IDs to player objects while preserving that order
+            const playerMap = new Map(state.tournament!.players.map(p => [p.id, p]));
+            const poolPlayers = config.playerIds
+              .map(id => playerMap.get(id))
+              .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
             // 1. Form Teams
             let teams: [string, string][] = [];
@@ -908,15 +903,12 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           poolConfigs.forEach((config) => {
             if (config.bracketType === 'none') return;
 
-            const poolPlayers = state.tournament!.players.filter(p => config.playerIds.includes(p.id));
-
-            poolPlayers.sort((a, b) => {
-              const aScore = a.wins * 2 + a.ties;
-              const bScore = b.wins * 2 + b.ties;
-              if (bScore !== aScore) return bScore - aScore;
-              if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
-              return b.twenties - a.twenties;
-            });
+            // config.playerIds comes in standings order from FinalsConfig
+            // Map IDs to player objects while preserving that order
+            const playerMap = new Map(state.tournament!.players.map(p => [p.id, p]));
+            const poolPlayers = config.playerIds
+              .map(id => playerMap.get(id))
+              .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
             let teams: [string, string][] = [];
 

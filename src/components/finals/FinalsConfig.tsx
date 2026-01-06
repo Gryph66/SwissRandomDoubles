@@ -290,7 +290,7 @@ export function FinalsConfig() {
                                         )}
                                         {!config.showCustomize && (
                                             <p className="text-sm text-[var(--color-text-muted)] self-center">
-                                                Default: High-Low Seeding (1v4, 2v3)
+                                                Default: High-Low Seeding (1+8, 2+7, 3+6, 4+5)
                                             </p>
                                         )}
                                     </div>
