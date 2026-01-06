@@ -50,18 +50,71 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
   const isCurrentRound = tournament && displayRound === tournament.currentRound && tournament.status !== 'completed';
   
   // Initialize scores from match data
+  // Track the last displayed round to detect round changes
+  const [lastDisplayRound, setLastDisplayRound] = useState<number | null>(null);
+  
   useEffect(() => {
-    const newScores: MatchScores = {};
-    regularMatches.forEach(match => {
-      newScores[match.id] = {
-        score1: match.score1?.toString() ?? '',
-        score2: match.score2?.toString() ?? '',
-        twenties1: match.twenties1 ? match.twenties1.toString() : '',
-        twenties2: match.twenties2 ? match.twenties2.toString() : '',
-      };
-    });
-    setScores(newScores);
-    setEditingMatches(new Set());
+    // If round changed, reset all scores
+    const isRoundChange = lastDisplayRound !== null && lastDisplayRound !== displayRound;
+    
+    if (isRoundChange) {
+      const newScores: MatchScores = {};
+      regularMatches.forEach(match => {
+        newScores[match.id] = {
+          score1: match.score1?.toString() ?? '',
+          score2: match.score2?.toString() ?? '',
+          twenties1: match.twenties1 ? match.twenties1.toString() : '',
+          twenties2: match.twenties2 ? match.twenties2.toString() : '',
+        };
+      });
+      setScores(newScores);
+      setEditingMatches(new Set());
+    } else {
+      // Same round - preserve user-entered scores for pending matches
+      // Only update scores for: newly completed matches, or matches we don't have scores for yet
+      setScores(prevScores => {
+        const newScores: MatchScores = { ...prevScores };
+        regularMatches.forEach(match => {
+          const existingScore = prevScores[match.id];
+          const hasLocalEntry = existingScore && (existingScore.score1 !== '' || existingScore.score2 !== '');
+          
+          // If match is now completed (and wasn't before), use server data
+          // If no local entry exists, initialize from match data
+          if (match.completed || !hasLocalEntry) {
+            newScores[match.id] = {
+              score1: match.score1?.toString() ?? '',
+              score2: match.score2?.toString() ?? '',
+              twenties1: match.twenties1 ? match.twenties1.toString() : '',
+              twenties2: match.twenties2 ? match.twenties2.toString() : '',
+            };
+          }
+          // Otherwise, keep the existing local entry
+        });
+        
+        // Remove scores for matches no longer in this round
+        const matchIds = new Set(regularMatches.map(m => m.id));
+        Object.keys(newScores).forEach(id => {
+          if (!matchIds.has(id)) {
+            delete newScores[id];
+          }
+        });
+        
+        return newScores;
+      });
+      
+      // Clear editing state for matches that are now completed
+      setEditingMatches(prev => {
+        const next = new Set(prev);
+        regularMatches.forEach(match => {
+          if (match.completed) {
+            next.delete(match.id);
+          }
+        });
+        return next;
+      });
+    }
+    
+    setLastDisplayRound(displayRound);
   }, [displayRound, tournament?.updatedAt]);
 
   if (!tournament) {
