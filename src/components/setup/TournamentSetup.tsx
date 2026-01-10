@@ -502,61 +502,123 @@ export function TournamentSetup({ socket }: TournamentSetupProps) {
               </label>
 
               <div className="pt-4 pb-2 border-t border-[var(--color-border)]">
+                <div className="flex items-center gap-3">
+                  <label className="label text-sm">Boards Available</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={tournament.settings.boardsAvailable ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value.trim();
+                      if (val === '') {
+                        updateSettings({ boardsAvailable: null });
+                      } else {
+                        const num = parseInt(val);
+                        if (!isNaN(num) && num >= 1 && num <= 99) {
+                          updateSettings({ boardsAvailable: num });
+                        }
+                      }
+                    }}
+                    className="input w-16 text-center"
+                  />
+                </div>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  Leave blank for unlimited, or enter number of boards (extra players get byes)
+                </p>
+                {(() => {
+                  const boards = tournament.settings.boardsAvailable;
+                  if (boards == null || boards <= 0) return null;
+                  const activePlayers = tournament.players.filter(p => p.active).length;
+                  const maxPlayers = boards * 4;
+                  const forcedByes = Math.max(0, activePlayers - maxPlayers);
+                  return forcedByes > 0 ? (
+                    <p className="text-xs text-[var(--color-accent)] mt-2">
+                      ⚠️ {forcedByes} player{forcedByes > 1 ? 's' : ''} will receive forced byes each round (only {maxPlayers} can play on {boards} boards)
+                    </p>
+                  ) : null;
+                })()}
+              </div>
+
+              <div className="pt-4 pb-2 border-t border-[var(--color-border)]">
                 <label className="label text-sm mb-2">Bye Game Mode</label>
                 <p className="text-xs text-[var(--color-text-muted)] mb-3">
                   How to handle leftover players when count doesn't divide evenly by 4
                 </p>
+                {(() => {
+                  const boards = tournament.settings.boardsAvailable;
+                  if (boards == null || boards <= 0) return null;
+                  const activePlayers = tournament.players.filter(p => p.active).length;
+                  const maxPlayers = boards * 4;
+                  return activePlayers > maxPlayers ? (
+                    <p className="text-xs text-amber-400 mb-3">
+                      ⚠️ Bye options disabled - no extra boards available for side games when board count is limited
+                    </p>
+                  ) : null;
+                })()}
                 <div className="space-y-2">
-                  <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
-                    <input
-                      type="radio"
-                      name="byeGameMode"
-                      value="byes_only"
-                      checked={tournament.settings.byeGameMode === 'byes_only'}
-                      onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
-                      className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-                    />
-                    <div className="flex-1">
-                      <span className="text-[var(--color-text-primary)] font-medium">Regular byes only</span>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                        Leftover players sit out (default)
-                      </p>
-                    </div>
-                  </label>
+                  {(() => {
+                    const boards = tournament.settings.boardsAvailable;
+                    const activePlayers = tournament.players.filter(p => p.active).length;
+                    const boardsLimited = boards != null && boards > 0 && 
+                                          activePlayers > boards * 4;
+                    return (
+                      <>
+                        <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
+                          <input
+                            type="radio"
+                            name="byeGameMode"
+                            value="byes_only"
+                            checked={tournament.settings.byeGameMode === 'byes_only'}
+                            onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
+                            className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                          />
+                          <div className="flex-1">
+                            <span className="text-[var(--color-text-primary)] font-medium">Regular byes only</span>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                              Leftover players sit out (default)
+                            </p>
+                          </div>
+                        </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
-                    <input
-                      type="radio"
-                      name="byeGameMode"
-                      value="1v1_2v1"
-                      checked={tournament.settings.byeGameMode === '1v1_2v1'}
-                      onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
-                      className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-                    />
-                    <div className="flex-1">
-                      <span className="text-[var(--color-text-primary)] font-medium">1v1 / 2v1 games</span>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                        2 leftover: 1v1 match • 3 leftover: 2v1 match
-                      </p>
-                    </div>
-                  </label>
+                        <label className={`flex items-start gap-3 p-2 rounded ${boardsLimited ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[var(--color-bg-tertiary)]'}`}>
+                          <input
+                            type="radio"
+                            name="byeGameMode"
+                            value="1v1_2v1"
+                            checked={tournament.settings.byeGameMode === '1v1_2v1'}
+                            onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
+                            disabled={boardsLimited}
+                            className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)] disabled:opacity-50"
+                          />
+                          <div className="flex-1">
+                            <span className="text-[var(--color-text-primary)] font-medium">1v1 / 2v1 games</span>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                              2 leftover: 1v1 match • 3 leftover: 2v1 match
+                            </p>
+                          </div>
+                        </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-[var(--color-bg-tertiary)]">
-                    <input
-                      type="radio"
-                      name="byeGameMode"
-                      value="1v1_1v1bye"
-                      checked={tournament.settings.byeGameMode === '1v1_1v1bye'}
-                      onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
-                      className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-                    />
-                    <div className="flex-1">
-                      <span className="text-[var(--color-text-primary)] font-medium">1v1 / 1v1+bye games</span>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                        2 leftover: 1v1 match • 3 leftover: 1v1 match + 1 bye
-                      </p>
-                    </div>
-                  </label>
+                        <label className={`flex items-start gap-3 p-2 rounded ${boardsLimited ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[var(--color-bg-tertiary)]'}`}>
+                          <input
+                            type="radio"
+                            name="byeGameMode"
+                            value="1v1_1v1bye"
+                            checked={tournament.settings.byeGameMode === '1v1_1v1bye'}
+                            onChange={(e) => updateSettings({ byeGameMode: e.target.value as any })}
+                            disabled={boardsLimited}
+                            className="mt-0.5 w-4 h-4 text-[var(--color-accent)] focus:ring-[var(--color-accent)] disabled:opacity-50"
+                          />
+                          <div className="flex-1">
+                            <span className="text-[var(--color-text-primary)] font-medium">1v1 / 1v1+bye games</span>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                              2 leftover: 1v1 match • 3 leftover: 1v1 match + 1 bye
+                            </p>
+                          </div>
+                        </label>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

@@ -45,6 +45,7 @@ export interface TournamentSettings {
   finalsEnabled: boolean;
   byeGameMode: ByeGameMode;
   allowViewerScoreEntry: boolean; // Whether non-host viewers can enter scores (default: false, host-only)
+  boardsAvailable: number | null; // null = unlimited (default), number = fixed board count
 }
 
 export type TournamentStatus = 'setup' | 'active' | 'finals_setup' | 'finals_active' | 'completed';

@@ -47,7 +47,8 @@ export function generateRoundPairings(
   round: number,
   tables: Table[],
   assignTables: boolean,
-  byeGameMode: 'byes_only' | '1v1_2v1' | '1v1_1v1bye' = 'byes_only'
+  byeGameMode: 'byes_only' | '1v1_2v1' | '1v1_1v1bye' = 'byes_only',
+  boardsAvailable: number | null = null
 ): PairingResult {
   const activePlayers = players.filter((p) => p.active);
   
@@ -80,23 +81,27 @@ export function generateRoundPairings(
     byeCount: p.byeCount,
   }));
   
-  const leftoverCount = activePlayers.length % 4;
+  // Calculate board constraints
+  // Each board accommodates 4 players (2v2)
+  // Use != null to catch both null and undefined (for backwards compatibility)
+  const maxPlayersWithBoards = (boardsAvailable != null && boardsAvailable > 0) ? boardsAvailable * 4 : activePlayers.length;
+  const forcedByeCount = Math.max(0, activePlayers.length - maxPlayersWithBoards);
   
-  // Debug log for bye game issues
-  console.log('DEBUG PAIRING:', {
-    round,
-    activePlayers: activePlayers.length,
-    leftoverCount,
-    byeGameMode,
-    settingsReceived: byeGameMode
-  });
+  // When boards are limited, we can only use 'byes_only' mode (no boards for 1v1/2v1 games)
+  const effectiveByeGameMode = forcedByeCount > 0 ? 'byes_only' : byeGameMode;
+  
+  // After forced byes, check for any remaining leftover that won't fit into 2v2 matches
+  const playersAfterForcedByes = activePlayers.length - forcedByeCount;
+  const leftoverCount = playersAfterForcedByes % 4;
 
   logEntry('team_formation', `Starting Round ${round} pairing generation`, [
     `Active players: ${activePlayers.length}`,
-    `Leftover players: ${leftoverCount}`,
-    `Bye game mode: ${byeGameMode}`,
+    (boardsAvailable != null && boardsAvailable > 0) ? `Boards available: ${boardsAvailable} (max ${maxPlayersWithBoards} players)` : 'Boards: unlimited',
+    forcedByeCount > 0 ? `Forced byes due to board limit: ${forcedByeCount}` : '',
+    `Additional leftover players: ${leftoverCount}`,
+    `Bye game mode: ${effectiveByeGameMode}${forcedByeCount > 0 ? ' (forced to byes_only due to board limit)' : ''}`,
     round === 1 ? 'Using RANDOM pairing (Round 1)' : 'Using SWISS pairing (Round 2+)',
-  ]);
+  ].filter(Boolean));
   
   // Build history from existing matches
   const partnerHistory = buildPartnerHistory(existingMatches);
@@ -106,9 +111,19 @@ export function generateRoundPairings(
   let playersForRound = [...activePlayers];
   const byePlayers: Player[] = [];
   const byeGamePlayers: Player[] = [];
+  
+  // First, assign forced byes due to board limits
+  for (let i = 0; i < forcedByeCount; i++) {
+    const byePlayer = selectByePlayer(playersForRound, round);
+    byePlayers.push(byePlayer);
+    playersForRound = playersForRound.filter((p) => p.id !== byePlayer.id);
+    logEntry('bye_selection', `Forced bye (board limit): ${getPlayerName(byePlayer)}`, [
+      `Bye ${i + 1} of ${forcedByeCount} forced byes`,
+    ]);
+  }
 
   // Determine how to handle leftover players based on mode
-  if (leftoverCount > 0 && byeGameMode !== 'byes_only') {
+  if (leftoverCount > 0 && effectiveByeGameMode !== 'byes_only') {
     console.log('DEBUG: Using custom bye game logic');
     if (leftoverCount === 2) {
       // 2 leftover: create 1v1 match
@@ -124,7 +139,7 @@ export function generateRoundPairings(
         `${getPlayerName(bye1)} vs ${getPlayerName(bye2)}`,
       ]);
     } else if (leftoverCount === 3) {
-      if (byeGameMode === '1v1_2v1') {
+      if (effectiveByeGameMode === '1v1_2v1') {
         // 3 leftover: create 2v1 match
         const bye1 = selectByePlayer(playersForRound, round);
         byeGamePlayers.push(bye1);

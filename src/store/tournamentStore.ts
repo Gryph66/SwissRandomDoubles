@@ -56,6 +56,7 @@ const createEmptyTournament = (name: string, totalRounds: number): Tournament =>
     finalsEnabled: false,
     byeGameMode: 'byes_only',
     allowViewerScoreEntry: false, // Default: only host can enter scores
+    boardsAvailable: null, // null = unlimited boards
   },
   shareCode: nanoid(6).toUpperCase(),
   createdAt: Date.now(),
@@ -260,7 +261,8 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           1,
           state.tournament.tables,
           state.tournament.settings.tableAssignment,
-          state.tournament.settings.byeGameMode
+          state.tournament.settings.byeGameMode,
+          state.tournament.settings.boardsAvailable
         );
 
         set({
@@ -351,7 +353,8 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
           nextRound,
           state.tournament.tables,
           state.tournament.settings.tableAssignment,
-          state.tournament.settings.byeGameMode
+          state.tournament.settings.byeGameMode,
+          state.tournament.settings.boardsAvailable
         );
 
         set({
