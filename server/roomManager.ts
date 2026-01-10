@@ -54,6 +54,7 @@ export function createTournament(name: string, totalRounds: number): Tournament 
       finalsEnabled: false,
       byeGameMode: 'byes_only',
       allowViewerScoreEntry: false,  // Default: only host can enter scores
+      boardsAvailable: null,  // Default: unlimited boards
     },
     shareCode: '',  // Will be set when room is created
     createdAt: now,
@@ -385,7 +386,8 @@ export function startTournament(code: string): boolean {
     1,
     room.tournament.tables,
     room.tournament.settings.tableAssignment,
-    room.tournament.settings.byeGameMode
+    room.tournament.settings.byeGameMode,
+    room.tournament.settings.boardsAvailable
   );
   
   room.tournament.matches = result.matches;
@@ -485,7 +487,8 @@ export function generateNextRound(code: string): boolean {
     room.tournament.currentRound,
     room.tournament.tables,
     room.tournament.settings.tableAssignment,
-    room.tournament.settings.byeGameMode
+    room.tournament.settings.byeGameMode,
+    room.tournament.settings.boardsAvailable
   );
   
   room.tournament.matches.push(...result.matches);
