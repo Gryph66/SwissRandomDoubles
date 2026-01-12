@@ -34,6 +34,7 @@ interface UseSocketReturn {
   socket: TypedSocket | null;
   isConnected: boolean;
   isConnecting: boolean;
+  isReconnecting: boolean;
   error: string | null;
   
   // Connection
@@ -62,6 +63,7 @@ interface UseSocketReturn {
   startTournament: () => void;
   generateNextRound: () => void;
   completeTournament: () => void;
+  undoCompleteTournament: () => void;
   resetTournament: () => void;
   
   // Score submission
@@ -87,7 +89,9 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   const socketRef = useRef<TypedSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasConnectedOnce = useRef(false);
   
   // Store options in ref to avoid stale closures
   const optionsRef = useRef(options);
@@ -109,11 +113,14 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     }) as TypedSocket;
     
     socket.on('connect', () => {
-      console.log('[Socket] Connected');
+      const wasReconnect = hasConnectedOnce.current;
+      console.log('[Socket] Connected', wasReconnect ? '(reconnected)' : '(first time)');
+      hasConnectedOnce.current = true;
       setIsConnected(true);
       setIsConnecting(false);
+      setIsReconnecting(false);
       setError(null);
-      
+
       // Auto-rejoin tournament if we were in one
       if (sessionInfo.roomCode && sessionInfo.playerName) {
         console.log(`[Socket] Auto-rejoining tournament ${sessionInfo.roomCode} as ${sessionInfo.isHost ? 'host' : 'player'}`);
@@ -124,10 +131,14 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
         });
       }
     });
-    
+
     socket.on('disconnect', (reason) => {
       console.log('[Socket] Disconnected:', reason);
       setIsConnected(false);
+      // If we were connected before, we're now reconnecting
+      if (hasConnectedOnce.current) {
+        setIsReconnecting(true);
+      }
       // Don't clear session info - we want to rejoin on reconnect
     });
     
@@ -200,14 +211,15 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   // Auto-connect on mount
   useEffect(() => {
     connect();
-    
-    // Keep-alive ping every 2 minutes
+
+    // Keep-alive ping every 30 seconds - helps detect dead connections faster
+    // especially after device sleep/wake cycles
     const keepAliveInterval = setInterval(() => {
       if (socketRef.current?.connected) {
         socketRef.current.emit('keep_alive');
       }
-    }, 2 * 60 * 1000);
-    
+    }, 30 * 1000);
+
     return () => {
       clearInterval(keepAliveInterval);
       disconnect();
@@ -308,7 +320,11 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   const completeTournament = useCallback(() => {
     socketRef.current?.emit('complete_tournament');
   }, []);
-  
+
+  const undoCompleteTournament = useCallback(() => {
+    socketRef.current?.emit('undo_complete_tournament');
+  }, []);
+
   const resetTournament = useCallback(() => {
     socketRef.current?.emit('reset_tournament');
   }, []);
@@ -329,6 +345,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     socket: socketRef.current,
     isConnected,
     isConnecting,
+    isReconnecting,
     error,
     connect,
     disconnect,
@@ -349,6 +366,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     startTournament,
     generateNextRound,
     completeTournament,
+    undoCompleteTournament,
     resetTournament,
     submitScore,
     editScore,

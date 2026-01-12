@@ -17,12 +17,13 @@ interface HeaderProps {
   connectedCount?: number;
   isOnline?: boolean;
   isConnected?: boolean;
+  isReconnecting?: boolean;
   isHost?: boolean;
   showQRCode?: boolean;
   onToggleQRCode?: () => void;
 }
 
-export function Header({ connectedCount, isOnline, isConnected, isHost: isHostProp, showQRCode, onToggleQRCode }: HeaderProps) {
+export function Header({ connectedCount, isOnline, isConnected, isReconnecting, isHost: isHostProp, showQRCode, onToggleQRCode }: HeaderProps) {
   const { tournament, viewMode, setViewMode, isHost: storeIsHost } = useTournamentStore();
   const isHost = isHostProp ?? storeIsHost;
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -133,6 +134,13 @@ export function Header({ connectedCount, isOnline, isConnected, isHost: isHostPr
                         ({connectedCount})
                       </span>
                     )}
+                  </>
+                ) : isReconnecting ? (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                    <span className="text-xs text-yellow-400">
+                      Reconnecting...
+                    </span>
                   </>
                 ) : (
                   <>

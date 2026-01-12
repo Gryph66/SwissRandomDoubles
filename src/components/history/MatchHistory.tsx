@@ -12,18 +12,20 @@ interface MatchHistoryProps {
 }
 
 export function MatchHistory({ socket }: MatchHistoryProps) {
-  const { 
-    tournament, 
-    getPlayerById, 
-    getMatchesByRound, 
-    submitScore: localSubmitScore, 
-    generateNextRound: localGenerateNextRound, 
-    completeTournament: localCompleteTournament, 
+  const {
+    tournament,
+    getPlayerById,
+    getMatchesByRound,
+    submitScore: localSubmitScore,
+    editScore: localEditScore,
+    generateNextRound: localGenerateNextRound,
+    completeTournament: localCompleteTournament,
     setViewMode,
     isHost,
   } = useTournamentStore();
-  
+
   const submitScore = socket ? socket.submitScore : localSubmitScore;
+  const editScore = socket ? socket.editScore : localEditScore;
   const generateNextRound = socket ? socket.generateNextRound : localGenerateNextRound;
   const completeTournament = socket ? socket.completeTournament : localCompleteTournament;
   
@@ -63,8 +65,12 @@ export function MatchHistory({ socket }: MatchHistoryProps) {
     }
   };
 
-  const handleSubmitScore = (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => {
-    submitScore(matchId, score1, score2, twenties1, twenties2);
+  const handleSubmitScore = (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number, isEdit: boolean) => {
+    if (isEdit) {
+      editScore(matchId, score1, score2, twenties1, twenties2);
+    } else {
+      submitScore(matchId, score1, score2, twenties1, twenties2);
+    }
     setSelectedMatch(null);
   };
 
@@ -323,7 +329,7 @@ function CompactMatchCard({ match, isCurrentRound, onOpenModal }: CompactMatchCa
 interface ScoreEntryModalProps {
   match: Match;
   onClose: () => void;
-  onSubmit: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+  onSubmit: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number, isEdit: boolean) => void;
 }
 
 function ScoreEntryModal({ match, onClose, onSubmit }: ScoreEntryModalProps) {
@@ -385,7 +391,8 @@ function ScoreEntryModal({ match, onClose, onSubmit }: ScoreEntryModalProps) {
       return;
     }
 
-    onSubmit(match.id, s1, s2, t1, t2);
+    // Pass isEdit flag based on whether match was already completed
+    onSubmit(match.id, s1, s2, t1, t2, match.completed);
   };
 
   // Close on backdrop click

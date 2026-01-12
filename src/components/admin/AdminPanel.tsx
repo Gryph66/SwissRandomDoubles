@@ -33,6 +33,8 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
   const resetTournament = socket ? socket.resetTournament : localResetTournament;
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showUndoCompleteConfirm, setShowUndoCompleteConfirm] = useState(false);
+  const [showCompleteEarlyConfirm, setShowCompleteEarlyConfirm] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [showQR, setShowQR] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -182,10 +184,53 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
         </div>
       </section>
 
+      {/* Complete Swiss Early (when active and not on final round) */}
+      {tournament.status === 'active' && tournament.currentRound < tournament.totalRounds && (
+        <section className="card p-6 border-amber-500/30">
+          <h3 className="text-lg font-display font-semibold mb-2">Complete Swiss Early</h3>
+          <p className="text-sm text-[var(--color-text-muted)] mb-4">
+            End the Swiss phase now (Round {tournament.currentRound} of {tournament.totalRounds}).
+            Remaining rounds will be skipped.
+          </p>
+          {!showCompleteEarlyConfirm ? (
+            <button
+              onClick={() => setShowCompleteEarlyConfirm(true)}
+              className="btn btn-secondary"
+            >
+              Complete Swiss Early
+            </button>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-amber-400">
+                Are you sure? This will skip rounds {tournament.currentRound + 1}-{tournament.totalRounds} and
+                {tournament.settings.finalsEnabled ? ' move to Finals configuration.' : ' complete the tournament.'}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    useTournamentStore.getState().completeTournament();
+                    setShowCompleteEarlyConfirm(false);
+                  }}
+                  className="btn btn-primary"
+                >
+                  Yes, Complete Swiss Now
+                </button>
+                <button
+                  onClick={() => setShowCompleteEarlyConfirm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Complete Tournament (for finals_active status) */}
       {tournament.status === 'finals_active' && (
         <section className="card p-6">
-          <h3 className="text-lg font-bold mb-2">🏁 Complete Tournament</h3>
+          <h3 className="text-lg font-bold mb-2">Complete Tournament</h3>
           <p className="text-sm text-[var(--color-text-muted)] mb-4">
             All Finals matches are complete. Click below to mark the tournament as completed.
           </p>
@@ -203,6 +248,51 @@ export function AdminPanel({ socket, showQRCode, onToggleQRCode }: AdminPanelPro
           >
             Mark Tournament as Completed
           </button>
+        </section>
+      )}
+
+      {/* Undo Complete Tournament */}
+      {(tournament.status === 'completed' || tournament.status === 'finals_setup') && (
+        <section className="card p-6 border-amber-500/30">
+          <h3 className="text-lg font-display font-semibold mb-2">Undo Tournament Completion</h3>
+          <p className="text-sm text-[var(--color-text-muted)] mb-4">
+            {tournament.status === 'completed'
+              ? 'Revert the tournament back to active Swiss phase. Use this if you accidentally completed the tournament.'
+              : 'Return to the active Swiss phase. Use this if you want to continue playing Swiss rounds.'}
+          </p>
+          {!showUndoCompleteConfirm ? (
+            <button
+              onClick={() => setShowUndoCompleteConfirm(true)}
+              className="btn btn-secondary"
+            >
+              Undo Completion
+            </button>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-amber-400">
+                Are you sure? This will return the tournament to active Swiss phase.
+                {tournament.status === 'completed' && tournament.bracketMatches && tournament.bracketMatches.length > 0 &&
+                  ' Note: Bracket matches will be preserved but the tournament status will revert.'}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    useTournamentStore.getState().undoCompleteTournament();
+                    setShowUndoCompleteConfirm(false);
+                  }}
+                  className="btn btn-primary"
+                >
+                  Yes, Undo Completion
+                </button>
+                <button
+                  onClick={() => setShowUndoCompleteConfirm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       )}
 

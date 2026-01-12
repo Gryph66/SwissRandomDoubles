@@ -23,6 +23,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Trust proxy when behind a reverse proxy (Railway, Heroku, etc.)
+// This is required for express-rate-limit to work correctly with X-Forwarded-For headers
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 const httpServer = createServer(app);
 
 const io = new Server<
@@ -547,10 +554,25 @@ io.on('connection', (socket) => {
       socket.emit('action_error', { action: 'reset_tournament', message: 'Not authorized' });
       return;
     }
-    
+
     if (RoomManager.resetTournament(socket.data.roomCode)) {
       broadcastState(socket.data.roomCode);
       console.log(`[Tournament] Reset: ${socket.data.roomCode}`);
+    }
+  });
+
+  // Undo complete tournament - revert from completed/finals_setup back to active
+  socket.on('undo_complete_tournament', () => {
+    if (!socket.data.roomCode || !socket.data.isHost) {
+      socket.emit('action_error', { action: 'undo_complete_tournament', message: 'Not authorized' });
+      return;
+    }
+
+    if (RoomManager.undoCompleteTournament(socket.data.roomCode)) {
+      broadcastState(socket.data.roomCode);
+      console.log(`[Tournament] Undo complete: ${socket.data.roomCode}`);
+    } else {
+      socket.emit('action_error', { action: 'undo_complete_tournament', message: 'Cannot undo - tournament is not in completed or finals_setup state' });
     }
   });
   

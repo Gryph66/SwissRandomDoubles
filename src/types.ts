@@ -229,6 +229,7 @@ export interface TournamentState {
   editScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
 
   completeTournament: () => void;
+  undoCompleteTournament: () => void;
   resetTournament: () => void;
 
   // Tournament history

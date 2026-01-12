@@ -488,6 +488,26 @@ export const useTournamentStore = create<ExtendedTournamentState>()(
         });
       },
 
+      // Undo complete tournament - revert from completed/finals_setup back to active
+      undoCompleteTournament: () => {
+        const state = get();
+        if (!state.tournament) return;
+
+        // Can only undo from completed or finals_setup
+        if (state.tournament.status !== 'completed' && state.tournament.status !== 'finals_setup') {
+          return;
+        }
+
+        set({
+          tournament: {
+            ...state.tournament,
+            status: 'active',
+            updatedAt: Date.now(),
+          },
+          viewMode: 'history',
+        });
+      },
+
       setViewMode: (mode: ViewMode) => {
         set({ viewMode: mode });
       },

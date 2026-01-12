@@ -576,11 +576,33 @@ export function completeTournament(code: string): boolean {
   const room = getRoom(code);
   if (!room) return false;
   if (room.tournament.status !== 'active') return false;
-  
-  room.tournament.status = 'completed';
+
+  // Recalculate stats before completing to ensure accuracy
+  recalculatePlayerStats(room);
+
+  // Check if finals are enabled
+  const finalsEnabled = room.tournament.settings.finalsEnabled;
+  room.tournament.status = finalsEnabled ? 'finals_setup' : 'completed';
   room.tournament.updatedAt = Date.now();
   touchRoom(code);
-  
+
+  return true;
+}
+
+// Undo complete tournament - reverts from completed/finals_setup back to active
+export function undoCompleteTournament(code: string): boolean {
+  const room = getRoom(code);
+  if (!room) return false;
+
+  // Can only undo from completed or finals_setup status
+  if (room.tournament.status !== 'completed' && room.tournament.status !== 'finals_setup') {
+    return false;
+  }
+
+  room.tournament.status = 'active';
+  room.tournament.updatedAt = Date.now();
+  touchRoom(code);
+
   return true;
 }
 

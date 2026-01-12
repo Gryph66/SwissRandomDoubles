@@ -67,6 +67,7 @@ export interface ClientToServerEvents {
   start_tournament: () => void;
   generate_next_round: () => void;
   complete_tournament: () => void;
+  undo_complete_tournament: () => void;
   reset_tournament: () => void;
   manual_update_tournament: (tournament: Tournament) => void;
   

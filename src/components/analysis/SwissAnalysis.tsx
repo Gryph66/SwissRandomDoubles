@@ -26,8 +26,12 @@ interface PlayerRoundData {
 }
 
 export function SwissAnalysis() {
-  const { tournament, getPlayerById } = useTournamentStore();
+  const { tournament, getPlayerById, getFinalStandings } = useTournamentStore();
   const [showProgressionTable, setShowProgressionTable] = useState(false);
+
+  // Check if we're in finals/completed mode
+  const isFinalsMode = tournament?.settings.finalsEnabled &&
+    (tournament.status === 'finals_setup' || tournament.status === 'finals_active' || tournament.status === 'completed');
 
   const analysis = useMemo(() => {
     if (!tournament || tournament.currentRound === 0) return null;
@@ -172,7 +176,47 @@ export function SwissAnalysis() {
     );
   }
 
-  const finalRanking = analysis[analysis.length - 1].rankings;
+  // Get rankings - use final standings if in finals mode, otherwise use last Swiss round
+  const swissRanking = analysis[analysis.length - 1].rankings;
+
+  // For finals mode, get the final standings which incorporate bracket results
+  const finalStandingsData = isFinalsMode ? getFinalStandings() : null;
+
+  // Build final ranking array - either from bracket results or Swiss standings
+  const finalRanking = useMemo(() => {
+    if (finalStandingsData && finalStandingsData.length > 0) {
+      // Map final standings back to the ranking format we need
+      return finalStandingsData.map((fs) => {
+        // Find the player data from Swiss rankings
+        const swissData = swissRanking.find(r => r.player.id === fs.playerId);
+        if (swissData) {
+          return {
+            ...swissData,
+            rank: fs.finalPosition,
+          };
+        }
+        // Fallback - create minimal data
+        const player = tournament!.players.find(p => p.id === fs.playerId);
+        return {
+          player: player!,
+          rank: fs.finalPosition,
+          wins: 0,
+          ties: 0,
+          score: 0,
+          pointsFor: 0,
+          pointsAgainst: 0,
+          twenties: 0,
+          pointDiff: 0,
+          partnerId: null,
+          partnerRank: null,
+          wasWinner: null,
+          hadBye: false,
+        };
+      }).sort((a, b) => a.rank - b.rank);
+    }
+    return swissRanking;
+  }, [finalStandingsData, swissRanking, tournament]);
+
   const poolSize = tournament.settings.poolSize || 8; // Default to 8 if not set
   const numPools = Math.ceil(finalRanking.length / poolSize);
 
@@ -229,10 +273,14 @@ export function SwissAnalysis() {
 
       {/* Pool Separation */}
       <section className="card p-4 md:p-6">
-        <h3 className="text-xl font-display font-semibold mb-4">Pool Separation</h3>
+        <h3 className="text-xl font-display font-semibold mb-4">
+          {isFinalsMode ? 'Final Standings' : 'Pool Separation'}
+        </h3>
         <p className="text-sm md:text-base text-[var(--color-text-muted)] mb-4 md:mb-6">
-          Players are grouped into pools of {poolSize} based on their final ranking. 
-          The Swiss format pairs similar-ranked players as partners, causing skill levels to naturally separate.
+          {isFinalsMode
+            ? `Players are grouped into pools of ${poolSize} based on their final tournament position (including playoff results).`
+            : `Players are grouped into pools of ${poolSize} based on their final ranking. The Swiss format pairs similar-ranked players as partners, causing skill levels to naturally separate.`
+          }
         </p>
         {/* Mobile: stack vertically, Desktop: 4-column grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">

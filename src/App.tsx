@@ -240,6 +240,7 @@ function App() {
           connectedCount={appMode === 'online' ? connectedCount : undefined}
           isOnline={appMode === 'online'}
           isConnected={socket.isConnected}
+          isReconnecting={socket.isReconnecting}
           isHost={isHost}
           showQRCode={showQRCode}
           onToggleQRCode={() => setShowQRCode(!showQRCode)}
