@@ -59,22 +59,22 @@ export function Header({ connectedCount, isOnline, isConnected, isReconnecting, 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo / Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-              <img 
-                src="/crokinole_icon.svg" 
-                alt="Logo" 
-                className="w-8 h-8"
+          <div className="flex items-center gap-3 min-w-0 flex-shrink">
+            <div className="h-12 w-12 flex items-center justify-center flex-shrink-0">
+              <img
+                src="/crokinole_icon.svg"
+                alt="Logo"
+                className="h-12 w-12"
               />
             </div>
-            <div>
-              <h1 className="text-lg font-display font-semibold text-[var(--color-text-primary)]">
+            <div className="min-w-0 hidden sm:block">
+              <h1 className="text-base font-display font-semibold text-[var(--color-text-primary)] truncate max-w-[140px] md:max-w-[200px]">
                 {tournament?.name || 'Swiss Doubles'}
               </h1>
               {tournament && (
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  Round {tournament.currentRound} of {tournament.totalRounds}
-                  {tournament.status === 'completed' && ' - Complete'}
+                  R{tournament.currentRound}/{tournament.totalRounds}
+                  {tournament.status === 'completed' && ' - Done'}
                 </p>
               )}
             </div>

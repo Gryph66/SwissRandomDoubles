@@ -6,6 +6,33 @@ import type { Match, BracketMatch } from '../../types';
 
 type MatchResult = 'W' | 'L' | 'T' | 'B'; // Win, Loss, Tie, Bye
 
+// JSON export data structure
+interface StandingsExportRow {
+  rank: number;
+  playerName: string;
+  byeCount: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  score: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  differential: number;
+  twenties: number;
+  history: MatchResult[];
+  pool: string;
+}
+
+interface StandingsExportData {
+  tournamentName: string;
+  exportedAt: string;
+  isFinalStandings: boolean;
+  totalRounds: number;
+  currentRound: number;
+  poolSize: number;
+  standings: StandingsExportRow[];
+}
+
 function getPlayerMatchHistory(playerId: string, matches: Match[], bracketMatches?: BracketMatch[]): MatchResult[] {
   const history: MatchResult[] = [];
 
@@ -116,6 +143,19 @@ function getPoolLabel(poolIndex: number): string {
   return String.fromCharCode(65 + poolIndex); // A, B, C, D...
 }
 
+function downloadJson(data: StandingsExportData, filename: string) {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export function Standings() {
   const { tournament, getStandings, getFinalStandings } = useTournamentStore();
   const [showFinals, setShowFinals] = useState(true);
@@ -188,6 +228,47 @@ export function Standings() {
     });
   }
 
+  // Build export data for JSON download
+  const buildExportData = (): StandingsExportData => {
+    const isFinal = showFinals && isFinalsActive;
+    return {
+      tournamentName: tournament.name,
+      exportedAt: new Date().toISOString(),
+      isFinalStandings: isFinal,
+      totalRounds: tournament.totalRounds,
+      currentRound: tournament.currentRound,
+      poolSize: poolSize,
+      standings: standings.map(s => {
+        const poolIndex = getPoolForRank(s.rank, poolSize);
+        return {
+          rank: s.rank,
+          playerName: s.player.name,
+          byeCount: s.player.byeCount,
+          wins: s.player.wins,
+          losses: s.player.losses,
+          ties: s.player.ties,
+          score: s.score,
+          pointsFor: s.player.pointsFor,
+          pointsAgainst: s.player.pointsAgainst,
+          differential: s.player.pointsFor - s.player.pointsAgainst,
+          twenties: s.player.twenties,
+          history: getPlayerMatchHistory(
+            s.player.id,
+            tournament.matches,
+            isFinal ? tournament.bracketMatches : undefined
+          ),
+          pool: getPoolLabel(poolIndex)
+        };
+      })
+    };
+  };
+
+  const handleExportJson = () => {
+    const data = buildExportData();
+    const suffix = showFinals && isFinalsActive ? 'final-standings' : 'standings';
+    downloadJson(data, `${tournament.name}-${suffix}.json`);
+  };
+
   return (
     <div id="standings-export" className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header */}
@@ -209,6 +290,15 @@ export function Standings() {
               {showFinals ? 'View Swiss Standings' : 'View Final Results'}
             </button>
           )}
+          <button
+            onClick={handleExportJson}
+            className="btn btn-secondary text-sm flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            Export JSON
+          </button>
           <button
             onClick={() => exportPageToPng('standings-export', `${tournament.name}-standings`)}
             className="btn btn-secondary text-sm flex items-center gap-2"
