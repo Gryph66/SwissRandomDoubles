@@ -1,6 +1,6 @@
 // Room management for tournament sessions
 
-import type { Tournament, Player, Table, TournamentSettings, Match } from '../src/types.js';
+import type { Tournament, Player, Table, TournamentSettings, Match, BracketMatch, PoolBracketConfig } from '../src/types.js';
 import { TournamentRoom, ConnectedPlayer, ROOM_CONFIG } from './types.js';
 import { generateRoundPairings } from '../src/utils/pairingAlgorithm.js';
 import { getPairingLogs } from '../src/utils/pairingLog.js';
@@ -624,7 +624,190 @@ export function resetTournament(code: string): boolean {
   });
   room.tournament.updatedAt = Date.now();
   touchRoom(code);
-  
+
+  return true;
+}
+
+// ============================================
+// Finals / Bracket Actions
+// ============================================
+
+export function generateFinals(code: string, poolConfigs: PoolBracketConfig[]): boolean {
+  const room = getRoom(code);
+  if (!room) return false;
+
+  const bracketMatches: BracketMatch[] = [];
+
+  poolConfigs.forEach((config) => {
+    if (config.bracketType === 'none') return;
+
+    const playerMap = new Map(room.tournament.players.map(p => [p.id, p]));
+    const poolPlayers = config.playerIds
+      .map(id => playerMap.get(id))
+      .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+    let teams: [string, string][] = [];
+
+    if (config.manualTeams && config.manualTeams.length > 0) {
+      teams = config.manualTeams;
+    } else {
+      const count = poolPlayers.length;
+      const numTeams = count / 2;
+      for (let i = 0; i < numTeams; i++) {
+        teams.push([poolPlayers[i].id, poolPlayers[count - 1 - i].id]);
+      }
+    }
+
+    const createMatch = (
+      round: BracketMatch['round'],
+      matchNum: number,
+      t1: [string, string] | null,
+      t2: [string, string] | null,
+      nextId: string | null = null
+    ): BracketMatch => ({
+      id: generateId(),
+      poolId: config.poolId,
+      round,
+      matchNumber: matchNum,
+      team1: t1,
+      team2: t2,
+      score1: null,
+      score2: null,
+      twenties1: 0,
+      twenties2: 0,
+      completed: false,
+      winnerId: null,
+      nextMatchId: nextId,
+      sourceMatch1Id: null,
+      sourceMatch2Id: null,
+    });
+
+    if (config.bracketType === 'final') {
+      bracketMatches.push(createMatch('final', 1, teams[0], teams[1]));
+    } else if (config.bracketType === 'semifinals') {
+      const finalMatch = createMatch('final', 3, null, null);
+      const semi1 = createMatch('semifinal', 1, teams[0], teams[3], finalMatch.id);
+      const semi2 = createMatch('semifinal', 2, teams[1], teams[2], finalMatch.id);
+      finalMatch.sourceMatch1Id = semi1.id;
+      finalMatch.sourceMatch2Id = semi2.id;
+      bracketMatches.push(semi1, semi2, finalMatch);
+
+      if (config.includeThirdPlace) {
+        const thirdPlace = createMatch('third_place', 4, null, null);
+        thirdPlace.sourceMatch1Id = semi1.id;
+        thirdPlace.sourceMatch2Id = semi2.id;
+        bracketMatches.push(thirdPlace);
+      }
+    } else if (config.bracketType === 'quarterfinals') {
+      const finalMatch = createMatch('final', 7, null, null);
+      const semi1 = createMatch('semifinal', 5, null, null, finalMatch.id);
+      const semi2 = createMatch('semifinal', 6, null, null, finalMatch.id);
+      finalMatch.sourceMatch1Id = semi1.id;
+      finalMatch.sourceMatch2Id = semi2.id;
+
+      const qf1 = createMatch('quarterfinal', 1, teams[0], teams[7], semi1.id);
+      const qf2 = createMatch('quarterfinal', 2, teams[3], teams[4], semi1.id);
+      semi1.sourceMatch1Id = qf1.id;
+      semi1.sourceMatch2Id = qf2.id;
+
+      const qf3 = createMatch('quarterfinal', 3, teams[1], teams[6], semi2.id);
+      const qf4 = createMatch('quarterfinal', 4, teams[2], teams[5], semi2.id);
+      semi2.sourceMatch1Id = qf3.id;
+      semi2.sourceMatch2Id = qf4.id;
+
+      bracketMatches.push(qf1, qf2, qf3, qf4, semi1, semi2, finalMatch);
+
+      if (config.includeThirdPlace) {
+        const thirdPlace = createMatch('third_place', 8, null, null);
+        thirdPlace.sourceMatch1Id = semi1.id;
+        thirdPlace.sourceMatch2Id = semi2.id;
+        bracketMatches.push(thirdPlace);
+      }
+    }
+  });
+
+  room.tournament.finalsConfig = {
+    enabled: true,
+    poolConfigs,
+    configured: true,
+  };
+  room.tournament.bracketMatches = bracketMatches;
+  room.tournament.status = 'finals_active';
+  room.tournament.updatedAt = Date.now();
+  touchRoom(code);
+
+  return true;
+}
+
+export function submitBracketScore(
+  code: string,
+  matchId: string,
+  score1: number,
+  score2: number,
+  twenties1: number,
+  twenties2: number
+): boolean {
+  const room = getRoom(code);
+  if (!room) return false;
+
+  const matchIndex = room.tournament.bracketMatches.findIndex(m => m.id === matchId);
+  if (matchIndex === -1) return false;
+
+  const match = room.tournament.bracketMatches[matchIndex];
+
+  let winnerId: string | null = null;
+  let winningTeam: [string, string] | null = null;
+  let losingTeam: [string, string] | null = null;
+
+  if (score1 > score2) {
+    winningTeam = match.team1;
+    losingTeam = match.team2;
+  } else if (score2 > score1) {
+    winningTeam = match.team2;
+    losingTeam = match.team1;
+  }
+
+  if (winningTeam) {
+    winnerId = [...winningTeam].sort().join('-');
+  }
+
+  // Update current match
+  match.score1 = score1;
+  match.score2 = score2;
+  match.twenties1 = twenties1;
+  match.twenties2 = twenties2;
+  match.completed = true;
+  match.winnerId = winnerId;
+
+  // Propagate winner to next match
+  if (match.nextMatchId && winningTeam) {
+    const nextMatch = room.tournament.bracketMatches.find(m => m.id === match.nextMatchId);
+    if (nextMatch) {
+      if (nextMatch.sourceMatch1Id === match.id) {
+        nextMatch.team1 = winningTeam;
+      } else if (nextMatch.sourceMatch2Id === match.id) {
+        nextMatch.team2 = winningTeam;
+      }
+    }
+  }
+
+  // Propagate loser to third place match
+  if (losingTeam) {
+    const thirdPlace = room.tournament.bracketMatches.find(m =>
+      m.round === 'third_place' && (m.sourceMatch1Id === match.id || m.sourceMatch2Id === match.id)
+    );
+    if (thirdPlace) {
+      if (thirdPlace.sourceMatch1Id === match.id) {
+        thirdPlace.team1 = losingTeam;
+      } else if (thirdPlace.sourceMatch2Id === match.id) {
+        thirdPlace.team2 = losingTeam;
+      }
+    }
+  }
+
+  room.tournament.updatedAt = Date.now();
+  touchRoom(code);
+
   return true;
 }
 

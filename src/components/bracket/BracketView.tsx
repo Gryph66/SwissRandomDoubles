@@ -5,7 +5,13 @@ import { BracketScoreModal } from './BracketScoreModal';
 import { CustomMatch } from './CustomMatch';
 import { BracketMatch as BracketMatchType } from '../../types';
 
-export function BracketView() {
+interface BracketViewProps {
+    socket?: {
+        submitBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+    };
+}
+
+export function BracketView({ socket }: BracketViewProps = {}) {
     const { tournament, setViewMode, isHost } = useTournamentStore();
     const bracketMatches = tournament?.bracketMatches || [];
     const [selectedMatch, setSelectedMatch] = useState<BracketMatchType | null>(null);
@@ -193,6 +199,7 @@ export function BracketView() {
                 <BracketScoreModal
                     match={selectedMatch}
                     onClose={() => setSelectedMatch(null)}
+                    socket={socket}
                 />
             )}
 

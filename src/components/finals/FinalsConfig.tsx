@@ -17,8 +17,15 @@ interface PoolConfig {
     manualTeams?: [string, string][]; // Custom teams defined by player IDs
 }
 
-export function FinalsConfig() {
-    const { tournament, generateFinals } = useTournamentStore();
+interface FinalsConfigProps {
+    socket?: {
+        generateFinals: (poolConfigs: PoolBracketConfig[]) => void;
+    };
+}
+
+export function FinalsConfig({ socket }: FinalsConfigProps = {}) {
+    const { tournament, generateFinals: localGenerateFinals } = useTournamentStore();
+    const generateFinals = socket ? socket.generateFinals : localGenerateFinals;
     const [poolConfigs, setPoolConfigs] = useState<Map<string, PoolConfig>>(new Map());
 
     if (!tournament || !tournament.settings.finalsEnabled) {

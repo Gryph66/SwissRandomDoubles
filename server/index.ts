@@ -656,9 +656,52 @@ io.on('connection', (socket) => {
   });
   
   // ----------------------------------------
+  // Finals / Bracket
+  // ----------------------------------------
+
+  socket.on('generate_finals', (data) => {
+    if (!socket.data.roomCode || !socket.data.isHost) {
+      socket.emit('action_error', { action: 'generate_finals', message: 'Not authorized' });
+      return;
+    }
+
+    if (RoomManager.generateFinals(socket.data.roomCode, data.poolConfigs)) {
+      broadcastState(socket.data.roomCode);
+      console.log(`[Tournament] Finals generated: ${socket.data.roomCode}`);
+    } else {
+      socket.emit('action_error', { action: 'generate_finals', message: 'Failed to generate finals' });
+    }
+  });
+
+  socket.on('submit_bracket_score', (data) => {
+    if (!socket.data.roomCode) {
+      socket.emit('action_error', { action: 'submit_bracket_score', message: 'Not in a tournament' });
+      return;
+    }
+
+    // Only host can submit bracket scores
+    if (!socket.data.isHost) {
+      socket.emit('action_error', { action: 'submit_bracket_score', message: 'Not authorized' });
+      return;
+    }
+
+    if (RoomManager.submitBracketScore(
+      socket.data.roomCode,
+      data.matchId,
+      data.score1,
+      data.score2,
+      data.twenties1,
+      data.twenties2
+    )) {
+      broadcastState(socket.data.roomCode);
+      console.log(`[Bracket] Score submitted for match ${data.matchId}`);
+    }
+  });
+
+  // ----------------------------------------
   // Disconnect
   // ----------------------------------------
-  
+
   socket.on('disconnect', () => {
     console.log(`[Socket] Disconnected: ${socket.id}`);
     leaveCurrentRoom(socket);

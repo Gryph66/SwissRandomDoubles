@@ -60,6 +60,10 @@ function App() {
       setViewMode('history'); // Go to Matches page
     } else if (newTournament.status === 'completed') {
       setViewMode('standings'); // Go to Standings page
+    } else if (newTournament.status === 'finals_active') {
+      setViewMode('bracket');
+    } else if (newTournament.status === 'finals_setup') {
+      setViewMode('finals_config');
     }
     // If status is 'setup', stay on setup (default)
   }, [setTournament, setIsHost, setConnectedPlayerId, setOnlineMode, setViewMode]);
@@ -87,6 +91,16 @@ function App() {
     // Navigate to Standings when tournament completes
     if (prevTournament?.status === 'active' && updatedTournament.status === 'completed') {
       setViewMode('standings');
+    }
+
+    // Navigate to bracket view when finals are generated
+    if (prevTournament?.status !== 'finals_active' && updatedTournament.status === 'finals_active') {
+      setViewMode('bracket');
+    }
+
+    // Navigate to finals config when entering finals_setup
+    if (prevTournament?.status === 'active' && updatedTournament.status === 'finals_setup') {
+      setViewMode('finals_config');
     }
   }, [setTournament, setViewMode]);
 
@@ -160,6 +174,10 @@ function App() {
       setViewMode('setup');
     } else if (loadedTournament.status === 'completed') {
       setViewMode('standings');
+    } else if (loadedTournament.status === 'finals_active') {
+      setViewMode('bracket');
+    } else if (loadedTournament.status === 'finals_setup') {
+      setViewMode('finals_config');
     } else {
       setViewMode('history'); // Show match history for active tournaments
     }
@@ -177,6 +195,10 @@ function App() {
       setViewMode('setup');
     } else if (loadedTournament.status === 'completed') {
       setViewMode('standings');
+    } else if (loadedTournament.status === 'finals_active') {
+      setViewMode('bracket');
+    } else if (loadedTournament.status === 'finals_setup') {
+      setViewMode('finals_config');
     } else {
       setViewMode('schedule'); // Show schedule for active tournaments
     }
@@ -202,9 +224,9 @@ function App() {
       case 'analysis':
         return <SwissAnalysis />;
       case 'finals_config':
-        return <FinalsConfig />;
+        return <FinalsConfig socket={appMode === 'online' ? socket : undefined} />;
       case 'bracket':
-        return <BracketView />;
+        return <BracketView socket={appMode === 'online' ? socket : undefined} />;
       case 'admin':
         return <AdminPanel
           socket={appMode === 'online' ? socket : undefined}

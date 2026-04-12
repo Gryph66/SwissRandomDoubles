@@ -5,10 +5,14 @@ import { useTournamentStore } from '../../store/tournamentStore';
 interface BracketScoreModalProps {
     match: BracketMatch;
     onClose: () => void;
+    socket?: {
+        submitBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+    };
 }
 
-export function BracketScoreModal({ match, onClose }: BracketScoreModalProps) {
-    const { tournament, submitBracketScore } = useTournamentStore();
+export function BracketScoreModal({ match, onClose, socket }: BracketScoreModalProps) {
+    const { tournament, submitBracketScore: localSubmitBracketScore } = useTournamentStore();
+    const submitBracketScore = socket ? socket.submitBracketScore : localSubmitBracketScore;
     const [score1, setScore1] = useState<string>(match.score1?.toString() || '');
     const [score2, setScore2] = useState<string>(match.score2?.toString() || '');
     const [error, setError] = useState<string | null>(null);

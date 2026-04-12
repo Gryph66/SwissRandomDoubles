@@ -69,6 +69,10 @@ interface UseSocketReturn {
   // Score submission
   submitScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
   editScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
+
+  // Finals / Bracket
+  generateFinals: (poolConfigs: import('../types').PoolBracketConfig[]) => void;
+  submitBracketScore: (matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => void;
 }
 
 // Store session info for reconnection
@@ -340,7 +344,19 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   const editScore = useCallback((matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => {
     socketRef.current?.emit('edit_score', { matchId, score1, score2, twenties1, twenties2 });
   }, []);
-  
+
+  // ----------------------------------------
+  // Finals / Bracket
+  // ----------------------------------------
+
+  const generateFinals = useCallback((poolConfigs: import('../types').PoolBracketConfig[]) => {
+    socketRef.current?.emit('generate_finals', { poolConfigs });
+  }, []);
+
+  const submitBracketScore = useCallback((matchId: string, score1: number, score2: number, twenties1: number, twenties2: number) => {
+    socketRef.current?.emit('submit_bracket_score', { matchId, score1, score2, twenties1, twenties2 });
+  }, []);
+
   return {
     socket: socketRef.current,
     isConnected,
@@ -370,6 +386,8 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     resetTournament,
     submitScore,
     editScore,
+    generateFinals,
+    submitBracketScore,
   };
 }
 

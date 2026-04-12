@@ -80,9 +80,22 @@ export interface ClientToServerEvents {
     twenties2: number;
   }) => void;
   
-  edit_score: (data: { 
-    matchId: string; 
-    score1: number; 
+  edit_score: (data: {
+    matchId: string;
+    score1: number;
+    score2: number;
+    twenties1: number;
+    twenties2: number;
+  }) => void;
+
+  // Bracket/Finals (host only)
+  generate_finals: (data: {
+    poolConfigs: import('../src/types.js').PoolBracketConfig[];
+  }) => void;
+
+  submit_bracket_score: (data: {
+    matchId: string;
+    score1: number;
     score2: number;
     twenties1: number;
     twenties2: number;
